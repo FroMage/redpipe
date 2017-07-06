@@ -1,0 +1,8 @@
+- async cdi injection
+-- select() returns CompletionStage (promise)
+-- means @Inject too, in which case it's actually not needed if injections are promises
+- init
+-- fire init events before we open the ports?
+-- how to stop init if something goes wrong?
+-- how to know all init is done?
+-- instead of using init listeners, perhaps inject init providers ?
