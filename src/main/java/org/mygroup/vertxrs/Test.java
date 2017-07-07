@@ -2,10 +2,6 @@ package org.mygroup.vertxrs;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.CDI;
@@ -24,24 +20,20 @@ import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.resteasy.cdi.ResteasyCdiExtension;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.weld.bean.builtin.BeanManagerProxy;
-import org.jboss.weld.context.ApplicationContext;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.vertx.VertxExtension;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.DefaultJaxrsConfig;
-import io.swagger.jaxrs.config.DefaultJaxrsScanner;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.config.ConfigRetriever;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import rx.plugins.RxJavaHooks;
-import rx.plugins.RxJavaSchedulersHook;
 
 public class Test {
 	public static void main(String[] args) {
@@ -137,6 +129,7 @@ public class Test {
 			BeanConfig swaggerConfig = new BeanConfig();
 			swaggerConfig.setVersion("1.0");
 			swaggerConfig.setSchemes(new String[]{"http"});
+			// FIXME: port does not come from config
 			swaggerConfig.setHost("localhost:9000");
 			swaggerConfig.setBasePath("/");
 			swaggerConfig.setResourcePackage("org.mygroup.vertxrs");
@@ -157,21 +150,16 @@ public class Test {
 
 			ConfigRetriever retriever = ConfigRetriever.create(vertx, configRetrieverOptions);
 			retriever.rxGetConfig().subscribe(config -> {
-				System.out.println("Got config");
 
 				AppGlobals globals = CDI.current().select(AppGlobals.class).get();
-				System.out.println("Got config 2");
 
 				try{
 					JDBCClient dbClient = JDBCClient.createNonShared(vertx, new JsonObject()
 							.put("url", config.getString("db_url", "jdbc:hsqldb:file:db/wiki"))
 							.put("driver_class", config.getString("db_driver", "org.hsqldb.jdbcDriver"))
 							.put("max_pool_size", config.getInteger("max_pool", 30))); 
-					System.out.println("Created driver");
 					globals.init(config, dbClient);
 					
-//					RxJavaHooks.setOnScheduleAction(new ResteasyContextPropagatingOnScheduleAction());
-//					RxJavaHooks.setOnSingleStart(new ResteasyContextPropagatingOnStartAction());
 					RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
 
 					VertxExtension vertxExtension = CDI.current().select(VertxExtension.class).get();
