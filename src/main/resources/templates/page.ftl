@@ -4,7 +4,7 @@
 
   <div class="col-md-12 mt-1">
       <span class="float-xs-right">
-        <a class="btn btn-outline-primary" href="/" role="button" aria-pressed="true">Home</a>
+        <a class="btn btn-outline-primary" href="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).build()}" role="button" aria-pressed="true">Home</a>
         <button class="btn btn-outline-warning" type="button" data-toggle="collapse"
                 data-target="#editor" aria-expanded="false" aria-controls="editor">Edit</button>
       </span>
@@ -20,7 +20,7 @@
   </div>
 
   <div class="col-md-12 collapsable collapse clearfix" id="editor">
-    <form action="/save" method="post">
+    <form action="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'save').build()}" method="post">
       <div class="form-group">
         <input type="hidden" name="id" value="${context.id}">
         <input type="hidden" name="title" value="${context.title}">
@@ -29,7 +29,7 @@
       </div>
       <button type="submit" class="btn btn-primary">Save</button>
     <#if context.id != -1>
-      <button type="submit" formaction="/delete" class="btn btn-danger float-xs-right">Delete</button>
+      <button type="submit" formaction="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'delete').build()}" class="btn btn-danger float-xs-right">Delete</button>
     </#if>
     </form>
   </div>

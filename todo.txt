@@ -6,3 +6,6 @@
 -- how to stop init if something goes wrong?
 -- how to know all init is done?
 -- instead of using init listeners, perhaps inject init providers ?
+- better router
+- extension methods
+- pluggable templates

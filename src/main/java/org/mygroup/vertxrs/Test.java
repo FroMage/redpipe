@@ -170,7 +170,9 @@ public class Test {
 					System.out.println("Created driver");
 					globals.init(config, dbClient);
 					
-					RxJavaHooks.setOnScheduleAction(new ResteasyContextPropagatingOnScheduleAction());
+//					RxJavaHooks.setOnScheduleAction(new ResteasyContextPropagatingOnScheduleAction());
+//					RxJavaHooks.setOnSingleStart(new ResteasyContextPropagatingOnStartAction());
+					RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
 
 					VertxExtension vertxExtension = CDI.current().select(VertxExtension.class).get();
 					BeanManager beanManager = CDI.current().getBeanManager();

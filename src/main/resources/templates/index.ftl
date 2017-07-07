@@ -4,7 +4,7 @@
 
   <div class="col-md-12 mt-1">
     <div class="float-xs-right">
-      <form class="form-inline" action="${context.uriInfo.getBaseUriBuilder().path(WikiResource.class, 'create').build()}" method="post">
+      <form class="form-inline" action="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'create').build()}" method="post">
         <div class="form-group">
           <input type="text" class="form-control" id="name" name="name" placeholder="New page name">
         </div>
@@ -19,7 +19,7 @@
     <h2>Pages:</h2>
     <ul>
       <#items as page>
-        <li><a href="/wiki/${page}">${page}</a></li>
+        <li><a href="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'renderPage').build(page)}">${page}</a></li>
       </#items>
     </ul>
   <#else>
