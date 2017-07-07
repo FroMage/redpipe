@@ -46,13 +46,13 @@ import rx.plugins.RxJavaSchedulersHook;
 public class Test {
 	public static void main(String[] args) {
 
-		        final ConsoleHandler consoleHandler = new ConsoleHandler();
-		        consoleHandler.setLevel(Level.FINEST);
-		        consoleHandler.setFormatter(new SimpleFormatter());
-		
-		        final Logger app = Logger.getLogger("org.jboss.weld.vertx");
-		        app.setLevel(Level.FINEST);
-		        app.addHandler(consoleHandler);
+//		        final ConsoleHandler consoleHandler = new ConsoleHandler();
+//		        consoleHandler.setLevel(Level.FINEST);
+//		        consoleHandler.setFormatter(new SimpleFormatter());
+//		
+//		        final Logger app = Logger.getLogger("org.jboss.weld.vertx");
+//		        app.setLevel(Level.FINEST);
+//		        app.addHandler(consoleHandler);
 
 		// CDI
 		Weld weld = new Weld();

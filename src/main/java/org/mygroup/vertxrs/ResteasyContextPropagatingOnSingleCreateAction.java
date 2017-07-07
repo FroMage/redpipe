@@ -13,7 +13,6 @@ public class ResteasyContextPropagatingOnSingleCreateAction implements Func1<OnS
 
 	@Override
 	public OnSubscribe call(OnSubscribe t) {
-		System.err.println("On create: "+t);
 		return new ContextCapturerSingle(t);
 	}
 	
@@ -46,7 +45,6 @@ public class ResteasyContextPropagatingOnSingleCreateAction implements Func1<OnS
 
 	        @Override
 	        public void onError(Throwable e) {
-				System.err.println("Subscriber start error");
 				ResteasyProviderFactory.pushContextDataMap(contextDataMap);
 	            actual.onError(e);
 				ResteasyProviderFactory.removeContextDataLevel();
@@ -54,7 +52,6 @@ public class ResteasyContextPropagatingOnSingleCreateAction implements Func1<OnS
 
 	        @Override
 	        public void onSuccess(T t) {
-				System.err.println("Subscriber start success");
 				ResteasyProviderFactory.pushContextDataMap(contextDataMap);
 	            actual.onSuccess(t);
 				ResteasyProviderFactory.removeContextDataLevel();

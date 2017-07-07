@@ -46,18 +46,15 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 	
 	@Override
 	public void initialize(Async arg0) {
-		System.err.println("initialize called: "+bean);
 	}
 
 	@Override
 	public boolean isValid(Object ret, ConstraintValidatorContext arg1) {
 		if(ret == null)
 			return true;
-		System.err.println("isValid called");
 		// glue: 
 		HttpRequest req = ResteasyProviderFactory.getContextData(org.jboss.resteasy.spi.HttpRequest.class);
 		if(req.getAsyncContext().isSuspended()){
-			System.err.println("isValid seems already called: giving up");
 			return true;
 		}
 		ResteasyAsynchronousResponse asyncResponse = req.getAsyncContext().suspend();
@@ -73,12 +70,10 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 		// FIXME: allow cancelation even of single results?
 		if(ret instanceof CompletionStage){
 			((CompletionStage<?>) ret).thenAccept(resp -> {
-				System.err.println("Future got response from validator");
 				ResteasyProviderFactory.pushContextDataMap(contextData);
 				resume(asyncResponse, req, resp);
 				ResteasyProviderFactory.removeContextDataLevel();
 			}).exceptionally((error) -> {
-				System.err.println("Future got error from validator");
 				if(error instanceof CompletionException){
 					error = error.getCause();
 				}
@@ -89,12 +84,10 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 			});
 		}else if(ret instanceof Single<?>){
 			((Single<?>) ret).subscribe(resp -> {
-				System.err.println("Single got response from validator");
 				ResteasyProviderFactory.pushContextDataMap(contextData);
 				resume(asyncResponse, req, resp);
 				ResteasyProviderFactory.removeContextDataLevel();
 			}, error -> {
-				System.err.println("Single got error from validator");
 				ResteasyProviderFactory.pushContextDataMap(contextData);
 				asyncResponse.resume(error);
 				ResteasyProviderFactory.removeContextDataLevel();
@@ -121,12 +114,10 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 			Subscription subscription;
 			if(noStreaming){
 				subscription = ((Observable<?>) ret).toList().subscribe(resp -> {
-					System.err.println("Observable got response from validator");
 					ResteasyProviderFactory.pushContextDataMap(contextData);
 					resume(asyncResponse, req, resp);
 					ResteasyProviderFactory.removeContextDataLevel();
 				}, error -> {
-					System.err.println("Observable got error from validator");
 					ResteasyProviderFactory.pushContextDataMap(contextData);
 					asyncResponse.resume(error);
 					ResteasyProviderFactory.removeContextDataLevel();
@@ -148,7 +139,6 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 					throw new RuntimeException(e);
 				}
 				subscription = ((Observable<?>) ret).subscribe(resp -> {
-					System.err.println("Observable got response from validator");
 					try {
 						// FIXME: id, encoding of \n\n
 						ResteasyProviderFactory.pushContextDataMap(contextData);
@@ -168,7 +158,6 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 						throw new RuntimeException(e);
 					}
 				}, error -> {
-					System.err.println("Observable got error from validator");
 					// FIXME: what to do here, really?
 					// FIXME: id, encoding of \n\n
 					try {
@@ -190,7 +179,6 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 				
 			if(vertxResponse != null && subscription != null){
 				vertxResponse.closeHandler(nada -> {
-					System.err.println("Closed!!!");
 					subscription.unsubscribe();
 				});
 			}

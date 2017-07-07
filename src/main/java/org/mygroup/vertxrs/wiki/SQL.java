@@ -19,7 +19,6 @@ public class SQL {
 		Single<SQLConnection> connection = CDI.current().select(new TypeLiteral<Single<SQLConnection>>(){}).get();
 		return connection.flatMap(conn -> {
 			return func.call(conn).doAfterTerminate(() -> {
-				System.err.println("Closed connection");
 				conn.close();
 			});
 		});
