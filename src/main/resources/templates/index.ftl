@@ -25,6 +25,18 @@
   <#else>
     <p>The wiki is currently empty!</p>
   </#list>
+  <#if context.backup_gist_url?has_content>
+    <div class="alert alert-success" role="alert">
+      Successfully created a backup:
+      <a href="${context.backup_gist_url}" class="alert-link">${context.backup_gist_url}</a>
+    </div>
+  <#else>
+    <p>
+      <form action="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'backup').build()}" method="post">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">Backup</button>
+      </form>
+    </p>
+  </#if>
   </div>
 
 </div>

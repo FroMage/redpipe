@@ -2,7 +2,9 @@ package org.mygroup.vertxrs.wiki;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.FormParam;
@@ -12,6 +14,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
@@ -21,10 +24,18 @@ import org.mygroup.vertxrs.Template;
 import com.github.rjeschke.txtmark.Processor;
 
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.ext.web.client.HttpResponse;
+import io.vertx.rxjava.ext.web.client.WebClient;
+import io.vertx.rxjava.ext.web.codec.BodyCodec;
 import rx.Single;
 
 @Path("/wiki")
 public class WikiResource {
+	
+	private Map<String, Object> flash = new HashMap<String, Object>();
 
 	private static final String EMPTY_PAGE_MARKDOWN =
 			  "# A new page\n" +
@@ -51,7 +62,8 @@ public class WikiResource {
 					.set("pages", pages)
 					.set("uriInfo", uriInfo)
 					// workaround because I couldn't find how to put class literals in freemarker
-					.set("WikiResource", WikiResource.class);
+					.set("WikiResource", WikiResource.class)
+					.set("backup_gist_url", flash.get("backup_gist_url"));
 		});
 	}
 
@@ -130,5 +142,49 @@ public class WikiResource {
 					  return Response.seeOther(location).build();
 				  });
 	}
-	
+
+	@Async
+	@Path("/backup")
+	@POST
+	public Single<Object> backup(@Context Vertx vertx){
+		return SQL.doInConnection(connection -> connection.rxQuery(SQL.SQL_ALL_PAGES_DATA))
+		.flatMap(res -> {
+			JsonObject filesObject = new JsonObject();
+			JsonObject gistPayload = new JsonObject() 
+					.put("files", filesObject)
+			        .put("description", "A wiki backup")
+			        .put("public", true);
+
+			res.getResults()
+				.forEach(page -> {
+					JsonObject fileObject = new JsonObject(); 
+					filesObject.put(page.getString(0), fileObject);
+					fileObject.put("content", page.getString(2));
+				});
+
+			WebClient webClient = WebClient.create(vertx, new WebClientOptions()
+					  .setSsl(true)
+					  .setUserAgent("vert-x3"));
+			return webClient.post(443, "api.github.com", "/gists") 
+			        .putHeader("Accept", "application/vnd.github.v3+json") 
+			        .putHeader("Content-Type", "application/json")
+			        .as(BodyCodec.jsonObject())
+			        .rxSendJsonObject(gistPayload);
+		}).flatMap(response -> {
+			if (response.statusCode() == 201) {
+				flash.put("backup_gist_url", response.body().getString("html_url"));
+				return index();
+			} else {
+				StringBuilder message = new StringBuilder()
+						.append("Could not backup the wiki: ")
+						.append(response.statusMessage());
+				JsonObject body = response.body();
+				if (body != null) {
+					message.append(System.getProperty("line.separator"))
+					.append(body.encodePrettily());
+				}
+				return Single.just(Response.status(Status.BAD_GATEWAY).entity(message).build());
+			}
+		});
+	}
 }
