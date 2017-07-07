@@ -2,9 +2,7 @@ package org.mygroup.vertxrs.wiki;
 
 import java.net.URI;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.FormParam;
@@ -48,14 +46,12 @@ public class WikiResource {
 					.sorted()
 					.collect(Collectors.toList());
 
-			Map<String, Object> context = new HashMap<>();
-			context.put("title", "Wiki home");
-			context.put("pages", pages);
-			context.put("uriInfo", uriInfo);
-			// workaround because I couldn't find how to put class literals in freemarker
-			context.put("WikiResource", WikiResource.class);
-
-			return new Template("templates/index.ftl", context);
+			return new Template("templates/index.ftl")
+					.set("title", "Wiki home")
+					.set("pages", pages)
+					.set("uriInfo", uriInfo)
+					// workaround because I couldn't find how to put class literals in freemarker
+					.set("WikiResource", WikiResource.class);
 		});
 	}
 
@@ -72,18 +68,16 @@ public class WikiResource {
 			Integer id = row.getInteger(0);
 			String rawContent = row.getString(1);
 
-			Map<String, Object> context = new HashMap<>();
-			context.put("title", page);
-			context.put("id", id);
-			context.put("newPage", res.getResults().size() == 0 ? "yes" : "no");
-			context.put("rawContent", rawContent);
-			context.put("content", Processor.process(rawContent));
-			context.put("timestamp", new Date().toString());
-			context.put("uriInfo", uriInfo);
-			// workaround because I couldn't find how to put class literals in freemarker
-			context.put("WikiResource", WikiResource.class);
-
-			return new Template("templates/page.ftl", context);
+			return new Template("templates/page.ftl")
+					.set("title", page)
+					.set("id", id)
+					.set("newPage", res.getResults().size() == 0 ? "yes" : "no")
+					.set("rawContent", rawContent)
+					.set("content", Processor.process(rawContent))
+					.set("timestamp", new Date().toString())
+					.set("uriInfo", uriInfo)
+					// workaround because I couldn't find how to put class literals in freemarker
+					.set("WikiResource", WikiResource.class);
 		  });
 
 	}
