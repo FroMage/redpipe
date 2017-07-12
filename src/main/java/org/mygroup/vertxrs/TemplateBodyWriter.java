@@ -26,8 +26,7 @@ public class TemplateBodyWriter implements MessageBodyWriter<Template>{
 
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		// TODO: check if it accepts HTML
-		return true;
+		return type == Template.class;
 	}
 
 	public Buffer render(String template, Map<String,Object> variables){
