@@ -78,10 +78,8 @@ public class ApiResource {
 	@Async
 	@POST
 	@Path("pages")
-	public Single<Response> apiCreatePage(JsonObject page, @Context HttpServerRequest req){
-		// FIXME: use BeanValidation?
-		validateJsonPageDocument(req, page, "name", "markdown");
-		
+	public Single<Response> apiCreatePage(@ApiUpdateValid({"name", "markdown"}) JsonObject page, 
+			@Context HttpServerRequest req){
 		JsonArray params = new JsonArray();
 		params.add(page.getString("name")).add(page.getString("markdown"));
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
@@ -89,21 +87,12 @@ public class ApiResource {
 				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
 	}
 
-	private void validateJsonPageDocument(HttpServerRequest req, JsonObject page, String... expectedKeys) {
-		if (!Arrays.stream(expectedKeys).allMatch(page::containsKey)) {
-			System.err.println("Bad page creation JSON payload: " + page.encodePrettily() + " from " + req.remoteAddress());
-			throw new ApiException(Status.BAD_REQUEST, "Bad request payload");
-		}
-	}
-
 	@Async
 	@PUT
 	@Path("pages/{id}")
-	public Single<Response> apiUpdatePage(@PathParam("id") String id, JsonObject page,
+	public Single<Response> apiUpdatePage(@PathParam("id") String id, 
+			@ApiUpdateValid("markdown") JsonObject page,
 			@Context HttpServerRequest req){
-		// FIXME: use BeanValidation?
-		validateJsonPageDocument(req, page, "markdown");
-		
 		JsonArray params = new JsonArray();
 		params.add(page.getString("markdown")).add(id);
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_SAVE_PAGE, params))
