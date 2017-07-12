@@ -70,27 +70,19 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 		// FIXME: allow cancelation even of single results?
 		if(ret instanceof CompletionStage){
 			((CompletionStage<?>) ret).thenAccept(resp -> {
-				ResteasyProviderFactory.pushContextDataMap(contextData);
-				resume(asyncResponse, req, resp);
-				ResteasyProviderFactory.removeContextDataLevel();
+				resumeResponse(contextData, asyncResponse, req, resp);
 			}).exceptionally((error) -> {
 				if(error instanceof CompletionException){
 					error = error.getCause();
 				}
-				ResteasyProviderFactory.pushContextDataMap(contextData);
-				asyncResponse.resume(error);
-				ResteasyProviderFactory.removeContextDataLevel();
+				resumeError(contextData, asyncResponse, req, error);
 				return null;
 			});
 		}else if(ret instanceof Single<?>){
 			((Single<?>) ret).subscribe(resp -> {
-				ResteasyProviderFactory.pushContextDataMap(contextData);
-				resume(asyncResponse, req, resp);
-				ResteasyProviderFactory.removeContextDataLevel();
+				resumeResponse(contextData, asyncResponse, req, resp);
 			}, error -> {
-				ResteasyProviderFactory.pushContextDataMap(contextData);
-				asyncResponse.resume(error);
-				ResteasyProviderFactory.removeContextDataLevel();
+				resumeError(contextData, asyncResponse, req, error);
 			});
 		}else if(ret instanceof Observable<?>){
 			boolean noStreaming = isNoStreaming(asyncResponse);
@@ -114,13 +106,9 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 			Subscription subscription;
 			if(noStreaming){
 				subscription = ((Observable<?>) ret).toList().subscribe(resp -> {
-					ResteasyProviderFactory.pushContextDataMap(contextData);
-					resume(asyncResponse, req, resp);
-					ResteasyProviderFactory.removeContextDataLevel();
+					resumeResponse(contextData, asyncResponse, req, resp);
 				}, error -> {
-					ResteasyProviderFactory.pushContextDataMap(contextData);
-					asyncResponse.resume(error);
-					ResteasyProviderFactory.removeContextDataLevel();
+					resumeError(contextData, asyncResponse, req, error);
 				});
 			}else{
 				boolean chunked = isChunked(asyncResponse);
@@ -188,22 +176,58 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
 		}
 	}
 
-	private boolean isNoStreaming(ResteasyAsynchronousResponse asyncResponse) {
+	private void resumeError(Map<Class<?>, Object> contextData, 
+			ResteasyAsynchronousResponse asyncResponse,
+			HttpRequest req, 
+			Throwable error) {
+		WithErrorMapper withErrorMapper = getAnnotation(asyncResponse, WithErrorMapper.class);
+		if(withErrorMapper != null){
+			// FIXME: CDI, @Context injection, all that?
+			try {
+				ErrorMapper errorMapper = withErrorMapper.value().newInstance();
+				resumeResponse(contextData, asyncResponse, req, errorMapper.toErrorResponse(error));
+			} catch (InstantiationException | IllegalAccessException e) {
+				ResteasyProviderFactory.pushContextDataMap(contextData);
+				asyncResponse.resume(e);
+				ResteasyProviderFactory.removeContextDataLevel();
+			}
+		}else{
+			ResteasyProviderFactory.pushContextDataMap(contextData);
+			asyncResponse.resume(error);
+			ResteasyProviderFactory.removeContextDataLevel();
+		}
+	}
+
+	private void resumeResponse(Map<Class<?>, Object> contextData, 
+			ResteasyAsynchronousResponse asyncResponse,
+			HttpRequest req, 
+			Object resp) {
+		ResteasyProviderFactory.pushContextDataMap(contextData);
+		resume(asyncResponse, req, resp);
+		ResteasyProviderFactory.removeContextDataLevel();
+		
+	}
+
+	private <T extends Annotation> T getAnnotation(ResteasyAsynchronousResponse asyncResponse, Class<? extends T> annotationType) {
 		for (Annotation annotation : asyncResponse.getMethod().getMethodAnnotations()) {
-			if(annotation.annotationType() == CollectUntilComplete.class){
-				return true;
+			if(annotation.annotationType() == annotationType){
+				return (T) annotation;
 			}
 		}
-		return false; 
+		for (Annotation annotation : asyncResponse.getMethod().getResourceClass().getAnnotations()){
+			if(annotation.annotationType() == annotationType){
+				return (T) annotation;
+			}
+		}
+		return null; 
+	}
+
+	private boolean isNoStreaming(ResteasyAsynchronousResponse asyncResponse) {
+		return getAnnotation(asyncResponse, CollectUntilComplete.class) != null;
 	}
 
 	private boolean isChunked(ResteasyAsynchronousResponse asyncResponse) {
-		for (Annotation annotation : asyncResponse.getMethod().getMethodAnnotations()) {
-			if(annotation.annotationType() == Chunked.class){
-				return true;
-			}
-		}
-		return false; 
+		return getAnnotation(asyncResponse, Chunked.class) != null;
 	}
 
 	private BuiltResponse getBuiltResponse(ResteasyAsynchronousResponse asyncResponse, HttpRequest request, Object entity) {

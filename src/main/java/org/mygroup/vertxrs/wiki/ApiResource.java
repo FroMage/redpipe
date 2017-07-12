@@ -1,6 +1,5 @@
 package org.mygroup.vertxrs.wiki;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.mygroup.vertxrs.Async;
+import org.mygroup.vertxrs.WithErrorMapper;
 
 import com.github.rjeschke.txtmark.Processor;
 
@@ -27,6 +27,7 @@ import rx.Single;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/wiki/api")
+@WithErrorMapper(ApiExceptionMapper.class)
 public class ApiResource {
 	@Async
 	@GET
@@ -45,7 +46,7 @@ public class ApiResource {
 					.put("success", true)
 					.put("pages", pages);
 					return Response.ok(response).build();
-				}).onErrorResumeNext(x -> Single.error(new ApiException(x)));
+				});
 	}
 
 	@Async
@@ -72,7 +73,7 @@ public class ApiResource {
 						.put("error", "There is no page with ID " + id);
 						return Response.status(Status.NOT_FOUND).entity(response).build();
 					}
-				}).onErrorResumeNext(x -> Single.error(new ApiException(x)));
+				});
 	}
 
 	@Async
@@ -83,8 +84,7 @@ public class ApiResource {
 		JsonArray params = new JsonArray();
 		params.add(page.getString("name")).add(page.getString("markdown"));
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
-				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build())
-				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
+				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build());
 	}
 
 	@Async
@@ -96,8 +96,7 @@ public class ApiResource {
 		JsonArray params = new JsonArray();
 		params.add(page.getString("markdown")).add(id);
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_SAVE_PAGE, params))
-				.map(res -> Response.ok(new JsonObject().put("success", true)).build())
-				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
+				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
 	}
 
 	@Async
@@ -105,7 +104,6 @@ public class ApiResource {
 	@Path("pages/{id}")
 	public Single<Response> apiDeletePage(@PathParam("id") String id){
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_DELETE_PAGE, new JsonArray().add(id)))
-				.map(res -> Response.ok(new JsonObject().put("success", true)).build())
-				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
+				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
 	}
 }
