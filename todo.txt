@@ -9,3 +9,4 @@
 - better router
 - extension methods
 - pluggable templates
+- define error handler per resource? (for API)
