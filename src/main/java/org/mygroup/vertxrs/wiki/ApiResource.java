@@ -45,14 +45,7 @@ public class ApiResource {
 					.put("success", true)
 					.put("pages", pages);
 					return Response.ok(response).build();
-				}).onErrorReturn(x -> {
-					// FIXME: turn into custom exception reporter
-					JsonObject response = new JsonObject();
-					response
-					.put("success", false)
-					.put("error", x.getMessage());
-					return Response.serverError().entity(response).build();
-				});
+				}).onErrorResumeNext(x -> Single.error(new ApiException(x)));
 	}
 
 	@Async
@@ -79,14 +72,7 @@ public class ApiResource {
 						.put("error", "There is no page with ID " + id);
 						return Response.status(Status.NOT_FOUND).entity(response).build();
 					}
-				}).onErrorReturn(x -> {
-					// FIXME: turn into custom exception reporter
-					JsonObject response = new JsonObject();
-					response
-					.put("success", false)
-					.put("error", x.getMessage());
-					return Response.serverError().entity(response).build();
-				});
+				}).onErrorResumeNext(x -> Single.error(new ApiException(x)));
 	}
 
 	@Async
@@ -94,34 +80,20 @@ public class ApiResource {
 	@Path("pages")
 	public Single<Response> apiCreatePage(JsonObject page, @Context HttpServerRequest req){
 		// FIXME: use BeanValidation?
-		Response errorResponse = validateJsonPageDocument(req, page, "name", "markdown");
-		if (errorResponse != null) {
-			return Single.just(errorResponse);
-		}
+		validateJsonPageDocument(req, page, "name", "markdown");
+		
 		JsonArray params = new JsonArray();
 		params.add(page.getString("name")).add(page.getString("markdown"));
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
 				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build())
-				.onErrorReturn(x -> {
-					// FIXME: turn into custom exception reporter
-					JsonObject response = new JsonObject();
-					response
-					.put("success", false)
-					.put("error", x.getMessage());
-					return Response.serverError().entity(response).build();
-				});
+				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
 	}
 
-	private Response validateJsonPageDocument(HttpServerRequest req, JsonObject page, String... expectedKeys) {
+	private void validateJsonPageDocument(HttpServerRequest req, JsonObject page, String... expectedKeys) {
 		if (!Arrays.stream(expectedKeys).allMatch(page::containsKey)) {
 			System.err.println("Bad page creation JSON payload: " + page.encodePrettily() + " from " + req.remoteAddress());
-			return Response.status(Status.BAD_REQUEST)
-					.entity(new JsonObject()
-							.put("success", false)
-							.put("error", "Bad request payload"))
-					.build();
+			throw new ApiException(Status.BAD_REQUEST, "Bad request payload");
 		}
-		return null;
 	}
 
 	@Async
@@ -130,22 +102,13 @@ public class ApiResource {
 	public Single<Response> apiUpdatePage(@PathParam("id") String id, JsonObject page,
 			@Context HttpServerRequest req){
 		// FIXME: use BeanValidation?
-		Response errorResponse = validateJsonPageDocument(req, page, "markdown");
-		if (errorResponse != null) {
-			return Single.just(errorResponse);
-		}
+		validateJsonPageDocument(req, page, "markdown");
+		
 		JsonArray params = new JsonArray();
 		params.add(page.getString("markdown")).add(id);
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_SAVE_PAGE, params))
 				.map(res -> Response.ok(new JsonObject().put("success", true)).build())
-				.onErrorReturn(x -> {
-					// FIXME: turn into custom exception reporter
-					JsonObject response = new JsonObject();
-					response
-					.put("success", false)
-					.put("error", x.getMessage());
-					return Response.serverError().entity(response).build();
-				});
+				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
 	}
 
 	@Async
@@ -154,13 +117,6 @@ public class ApiResource {
 	public Single<Response> apiDeletePage(@PathParam("id") String id){
 		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_DELETE_PAGE, new JsonArray().add(id)))
 				.map(res -> Response.ok(new JsonObject().put("success", true)).build())
-				.onErrorReturn(x -> {
-					// FIXME: turn into custom exception reporter
-					JsonObject response = new JsonObject();
-					response
-					.put("success", false)
-					.put("error", x.getMessage());
-					return Response.serverError().entity(response).build();
-				});
+				.onErrorResumeNext(x -> Single.error(new ApiException(x)));
 	}
 }
