@@ -89,7 +89,8 @@ public class Server {
 		// Non-CDI
 		//		        .requestHandler(new VertxRequestHandler(vertx, deployment))
 		.listen(config.getInteger("http_port", 9000), ar -> {
-			handler.handle((AsyncResult)ar);
+			if(handler != null)
+				handler.handle((AsyncResult)ar);
 			if(ar.failed()){
 				ar.cause().printStackTrace();
 			}
