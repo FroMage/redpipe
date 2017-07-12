@@ -29,6 +29,8 @@ import javax.ws.rs.ext.Provider;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
 
 @Provider
 public class RxVertxProvider implements ContainerRequestFilter {
@@ -350,6 +352,11 @@ public class RxVertxProvider implements ContainerRequestFilter {
 		System.err.println("Filter!");
 		Vertx vertx = ResteasyProviderFactory.getContextData(io.vertx.core.Vertx.class);
 		ResteasyProviderFactory.pushContext(io.vertx.rxjava.core.Vertx.class, io.vertx.rxjava.core.Vertx.newInstance(vertx));
+        HttpServerRequest req = ResteasyProviderFactory.getContextData(HttpServerRequest.class);
+		ResteasyProviderFactory.pushContext(io.vertx.rxjava.core.http.HttpServerRequest.class, io.vertx.rxjava.core.http.HttpServerRequest.newInstance(req));
+        HttpServerResponse resp = ResteasyProviderFactory.getContextData(HttpServerResponse.class);
+		ResteasyProviderFactory.pushContext(io.vertx.rxjava.core.http.HttpServerResponse.class, io.vertx.rxjava.core.http.HttpServerResponse.newInstance(resp));
+
 		ResteasyProviderFactory.pushContext(ServletContext.class, ServletContext);
 	}
 
