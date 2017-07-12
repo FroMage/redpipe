@@ -10,3 +10,4 @@
 - extension methods
 - pluggable templates
 - define error handler per resource? (for API)
+- apparently test/unit has rx TestContext and Async but won't inject them
