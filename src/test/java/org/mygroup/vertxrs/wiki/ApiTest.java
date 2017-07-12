@@ -55,7 +55,6 @@ public class ApiTest {
 		    .rxSendJsonObject(page)
 		    .map(r -> r.body())
 		    .flatMap(response -> {
-		    	System.err.println(response);
 			    context.assertTrue(response.getBoolean("success"));
 		    	return webClient.get("/wiki/api/pages")
 				    .as(BodyCodec.jsonObject())
