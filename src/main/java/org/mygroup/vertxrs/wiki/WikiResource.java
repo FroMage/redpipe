@@ -19,6 +19,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.mygroup.vertxrs.Async;
+import org.mygroup.vertxrs.MainResource;
 import org.mygroup.vertxrs.Template;
 
 import com.github.rjeschke.txtmark.Processor;
@@ -32,6 +33,7 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.codec.BodyCodec;
 import rx.Single;
 
+@MainResource
 @Path("/wiki")
 public class WikiResource {
 	

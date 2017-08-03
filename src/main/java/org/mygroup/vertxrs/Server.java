@@ -66,9 +66,17 @@ public class Server {
 				.put("driver_class", config.getString("db_driver", "org.hsqldb.jdbcDriver"))
 				.put("max_pool_size", config.getInteger("max_pool", 30)));
 
+		Class<?> mainClass = null;
+		for (Class<?> resourceClass : deployment.getActualResourceClasses()) {
+			if(resourceClass.getAnnotation(MainResource.class) != null){
+				mainClass = resourceClass;
+				break;
+			}
+		}
+		
 		// Save our injected globals
 		AppGlobals globals = CDI.current().select(AppGlobals.class).get();
-		globals.init(config, dbClient);
+		globals.init(config, dbClient, mainClass);
 
 		// Propagate the Resteasy context on RxJava
 		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());

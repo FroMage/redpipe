@@ -13,10 +13,12 @@ public class AppGlobals {
 
 	private JsonObject config;
 	private JDBCClient dbClient;
+	private Class<?> mainClass;
 	
-	public void init(JsonObject config, JDBCClient dbClient) {
+	public void init(JsonObject config, JDBCClient dbClient, Class<?> mainClass) {
 		this.config = config;
 		this.dbClient = dbClient;
+		this.mainClass = mainClass;
 	}
 
 	@Produces @Config
@@ -28,7 +30,12 @@ public class AppGlobals {
 	public JDBCClient getDbClient() {
 		return dbClient;
 	}
-	
+
+	@Produces
+	public Class getMainClass() {
+		return mainClass;
+	}
+
 	@Produces
 	public Single<SQLConnection> getDbConnection(){
 		return dbClient.rxGetConnection();
