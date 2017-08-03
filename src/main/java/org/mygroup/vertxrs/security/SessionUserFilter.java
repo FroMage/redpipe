@@ -3,11 +3,11 @@ package org.mygroup.vertxrs.security;
 import java.io.IOException;
 
 import javax.annotation.Priority;
+import javax.enterprise.inject.spi.CDI;
+import javax.enterprise.util.AnnotationLiteral;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
@@ -20,9 +20,10 @@ import org.apache.shiro.subject.SubjectContext;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.util.ThreadContext;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.mygroup.vertxrs.Config;
 import org.mygroup.vertxrs.Session;
-import org.mygroup.vertxrs.SessionImpl;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 
 @Priority(Priorities.AUTHENTICATION)
@@ -36,7 +37,8 @@ public class SessionUserFilter implements ContainerRequestFilter {
 
 	public SessionUserFilter() {
 	    PropertiesRealm realm = new PropertiesRealm();
-	    realm.setResourcePath("classpath:wiki-users.properties");
+	    JsonObject config = CDI.current().select(JsonObject.class, new AnnotationLiteral<Config>() {}).get();
+	    realm.setResourcePath(config.getString("security_definitions"));
 	    realm.init();
 	    this.securityManager = new DefaultSecurityManager(realm);
 	    this.realmName = realm.getName();

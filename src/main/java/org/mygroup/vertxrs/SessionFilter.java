@@ -3,6 +3,7 @@ package org.mygroup.vertxrs;
 import java.io.IOException;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -13,11 +14,16 @@ import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
+import io.vertx.core.json.JsonObject;
+
 @Priority(Priorities.AUTHENTICATION - 500)
 @PreMatching
 @Provider
 public class SessionFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
+	@Inject @Config 
+	private JsonObject config;
+	
 	@Override
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
 			throws IOException {
@@ -28,7 +34,7 @@ public class SessionFilter implements ContainerRequestFilter, ContainerResponseF
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		Session session = SessionImpl.restore(requestContext);
+		Session session = SessionImpl.restore(requestContext, config);
 		ResteasyProviderFactory.pushContext(Session.class, session);
 	}
 }

@@ -16,29 +16,32 @@ import javax.ws.rs.core.NewCookie;
 
 import org.apache.commons.codec.binary.Hex;
 
+import io.vertx.core.json.JsonObject;
+
 public class SessionImpl implements Session {
 
 	private static final String SESSION_COOKIE = "VERTXRS_SESSION";
-	private final static String SECRET_KEY = "6df5a5d160b141454d9cf38a2a88ffdd30a7dc80876698f53a4fbf071a2e16c4";
 	private static final String TIMESTAMP = "__TS";
 	private static final long EXPIRE = 1000 /*1 sec*/ * 60 /*1 min*/ * 60 /*1 hour*/ * 24 /*1 day*/ * 7 /* 1 week */;
 
 	private boolean changed;
 	private Map<String, String> data;
+	private String secretKey;
 
-	public SessionImpl(Map<String, String> data) {
+	public SessionImpl(JsonObject config, Map<String, String> data) {
 		this.data = data;
+		this.secretKey = config.getString("session_key");
 	}
 
-	public SessionImpl() {
-		this(new HashMap<>());
+	public SessionImpl(JsonObject config) {
+		this(config, new HashMap<>());
 	}
 
 	public void save(ContainerResponseContext responseContext) {
 		if(changed){
 			data.put(TIMESTAMP, String.valueOf(System.currentTimeMillis() + EXPIRE));
 			String newData = encodeCookie(data);
-			String sign = sign(newData);
+			String sign = sign(secretKey, newData);
 			NewCookie cookie = new NewCookie(SESSION_COOKIE, newData+"-"+sign, "/", null, Cookie.DEFAULT_VERSION, null, (int)EXPIRE, false);
 			responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, cookie);
 		}
@@ -78,10 +81,10 @@ public class SessionImpl implements Session {
 	//
 	// Utils
 	
-	private static String sign(String data){
+	private static String sign(String secretKey, String data){
 		try{
 			Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-			SecretKeySpec secret_key = new SecretKeySpec(SECRET_KEY.getBytes("UTF-8"), "HmacSHA256");
+			SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes("UTF-8"), "HmacSHA256");
 			sha256_HMAC.init(secret_key);
 
 			return Hex.encodeHexString(sha256_HMAC.doFinal(data.getBytes("UTF-8")));
@@ -90,7 +93,7 @@ public class SessionImpl implements Session {
 		}
 	}
 
-	public static SessionImpl restore(ContainerRequestContext requestContext) {
+	public static SessionImpl restore(ContainerRequestContext requestContext, JsonObject config) {
 		Cookie cookie = requestContext.getCookies().get(SESSION_COOKIE);
 		SessionImpl session = null;
 		if(cookie != null){
@@ -100,19 +103,19 @@ public class SessionImpl implements Session {
 				if(dash > 0){
 					String data = value.substring(0, dash);
 					String signature = value.substring(dash+1);
-					if(!signature.isEmpty() && !data.isEmpty() && sign(data).equals(signature)){
+					if(!signature.isEmpty() && !data.isEmpty() && sign(config.getString("session_key"), data).equals(signature)){
 						Map<String, String> values = decodeCookie(data);
 						String ts = values.get(TIMESTAMP);
 						if(ts != null && Long.valueOf(ts) >= System.currentTimeMillis()){
 							values.remove(TIMESTAMP);
-							session = new SessionImpl(values);
+							session = new SessionImpl(config, values);
 						}
 					}
 				}
 			}
 		}
 		if(session == null){
-			session = new SessionImpl();
+			session = new SessionImpl(config);
 		}
 		return session;
 	}
