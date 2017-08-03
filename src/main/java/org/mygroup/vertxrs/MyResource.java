@@ -233,7 +233,7 @@ public class MyResource {
 	@Produces("text/json")
 	@GET
 	@Async
-	public Single<User> hello8User(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Single<DataClass> hello8User(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
@@ -247,7 +247,7 @@ public class MyResource {
 		System.err.println("Created client");
 		return responseHandler.map(body -> {
 			System.err.println("Got body");
-			return new User(body.body().toString());
+			return new DataClass(body.body().toString());
 		});
 	}
 
@@ -327,11 +327,11 @@ public class MyResource {
 	@Path("9user")
 	@GET
 	@Async
-	public Observable<User> hello9User(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Observable<DataClass> hello9User(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
 			System.err.println("Tick: "+r);
-			return new User("Timer: "+System.currentTimeMillis());
+			return new DataClass("Timer: "+System.currentTimeMillis());
 		});
 	}
 

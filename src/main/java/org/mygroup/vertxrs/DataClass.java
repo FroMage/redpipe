@@ -1,10 +1,10 @@
 package org.mygroup.vertxrs;
 
-public class User {
+public class DataClass {
 
 	public final String name;
 
-	public User(String string) {
+	public DataClass(String string) {
 		this.name = string;
 	}
 
