@@ -3,11 +3,13 @@
 <div class="row">
 
   <div class="col-md-12 mt-1">
+  <#if context.canUpdatePage>
       <span class="float-xs-right">
         <a class="btn btn-outline-primary" href="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).build()}" role="button" aria-pressed="true">Home</a>
         <button class="btn btn-outline-warning" type="button" data-toggle="collapse"
                 data-target="#editor" aria-expanded="false" aria-controls="editor">Edit</button>
       </span>
+  </#if>
     <h1 class="display-4">
       <span class="text-muted">{</span>
     ${context.title}
@@ -28,7 +30,7 @@
         <textarea class="form-control" id="markdown" name="markdown" rows="15">${context.rawContent}</textarea>
       </div>
       <button type="submit" class="btn btn-primary">Save</button>
-    <#if context.id != -1>
+    <#if context.id != -1 && context.canDeletePage>
       <button type="submit" formaction="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'delete').build()}" class="btn btn-danger float-xs-right">Delete</button>
     </#if>
     </form>
