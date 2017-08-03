@@ -74,9 +74,6 @@ public class VertxCdiRequestHandler implements Handler<HttpServerRequest>
    {
       request.bodyHandler(buff -> {
          Context ctx = vertx.getOrCreateContext();
-         System.err.println(ctx.getDelegate());
-         System.err.println("el: "+ctx.isEventLoopContext());
-         System.err.println("worker: "+ctx.isWorkerContext());
          ResteasyUriInfo uriInfo = VertxUtil.extractUriInfo(request.getDelegate(), servletMappingPrefix);
          ResteasyHttpHeaders headers = VertxUtil.extractHttpHeaders(request.getDelegate());
          HttpServerResponse response = request.response();

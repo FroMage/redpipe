@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Priority;
 import javax.servlet.Filter;
 import javax.servlet.FilterRegistration;
 import javax.servlet.FilterRegistration.Dynamic;
@@ -24,6 +25,7 @@ import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -32,7 +34,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 
+@Priority(0)
 @Provider
+@PreMatching
 public class RxVertxProvider implements ContainerRequestFilter {
 
 	static final ServletContext ServletContext = new ServletContext(){
@@ -349,7 +353,6 @@ public class RxVertxProvider implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		System.err.println("Filter!");
 		Vertx vertx = ResteasyProviderFactory.getContextData(io.vertx.core.Vertx.class);
 		ResteasyProviderFactory.pushContext(io.vertx.rxjava.core.Vertx.class, io.vertx.rxjava.core.Vertx.newInstance(vertx));
         HttpServerRequest req = ResteasyProviderFactory.getContextData(HttpServerRequest.class);
