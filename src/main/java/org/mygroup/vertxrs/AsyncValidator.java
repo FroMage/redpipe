@@ -252,6 +252,9 @@ public class AsyncValidator implements ConstraintValidator<Async, Object>{
         	else if(rawType == Observable.class)
         		returnType = ((ParameterizedType) returnType).getActualTypeArguments()[0];
         }
+        // try to be helpful and get the entity type from the entity itself
+        if(returnType == Object.class)
+        	returnType = entity.getClass();
         if(isNoStreaming(asyncResponse)){
         	Type elementType = returnType;
         	// we want a List<returnType>
