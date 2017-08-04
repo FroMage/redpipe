@@ -16,6 +16,15 @@ public class ShiroUser implements User {
 	}
 
 	@Override
+	public Single<Void> checkAuthorised(String permission) {
+		return isAuthorised(permission).map(ok -> {
+			if(!ok)
+				throw new AuthorizationException("Not authorized");
+			return null;
+		});
+	}
+	
+	@Override
 	public Single<Boolean> isAuthorised(String permission) {
 		return vertx.rxExecuteBlocking(fut -> fut.complete(subject.isPermitted(permission)));
 	}

@@ -20,6 +20,7 @@ import javax.ws.rs.core.UriInfo;
 import org.mygroup.vertxrs.Async;
 import org.mygroup.vertxrs.MainResource;
 import org.mygroup.vertxrs.Template;
+import org.mygroup.vertxrs.security.AuthorizationException;
 import org.mygroup.vertxrs.security.RequiresPermissions;
 import org.mygroup.vertxrs.security.RequiresUser;
 import org.mygroup.vertxrs.security.User;
@@ -79,7 +80,7 @@ public class WikiResource {
 	@Async
 	@Path("/wiki/{page}")
 	@GET
-	public Single<Object> renderPage(@PathParam("page") String page){
+	public Single<Template> renderPage(@PathParam("page") String page){
 		return SQL.doInConnection(connection -> connection.rxQueryWithParams(SQL.SQL_GET_PAGE, new JsonArray().add(page)))
 				.flatMap(res -> {
 					JsonArray row = res.getResults()
@@ -100,15 +101,14 @@ public class WikiResource {
 						permCheck = user.isAuthorised("create");
 					else 
 						permCheck = Single.just(true);
-					// FIXME: replace with an exception-throwing call?
-					return permCheck.flatMap(hasPermission -> {
+					return Single.zip(
+							permCheck,
+							user.isAuthorised("update"),
+							user.isAuthorised("delete"),
+							(hasPermission, canUpdate, canDelete) -> {
 						if(!hasPermission)
-							return Single.just(Response.status(Status.FORBIDDEN).build());
-						return user.isAuthorised("update")
-								.flatMap(canUpdate ->
-								user.isAuthorised("delete")
-								.map(canDelete -> 
-								new Template("templates/page.ftl")
+							throw new AuthorizationException("Not authorized");
+						return new Template("templates/page.ftl")
 								.set("title", page)
 								.set("id", id)
 								.set("newPage", newPage ? "yes" : "no")
@@ -119,9 +119,8 @@ public class WikiResource {
 								.set("timestamp", new Date().toString())
 								.set("uriInfo", uriInfo)
 								// workaround because I couldn't find how to put class literals in freemarker
-								.set("WikiResource", WikiResource.class)
-										));
-					});
+								.set("WikiResource", WikiResource.class);
+							});
 				});
 	}
 
@@ -134,11 +133,8 @@ public class WikiResource {
 			@FormParam("newPage") String newPage){
 		boolean isNewPage = "yes".equals(newPage);
 		String requiredPermission = isNewPage ? "create" : "update";
-		return user.isAuthorised(requiredPermission)
-				.flatMap(hasPermission -> {
-					if(!hasPermission)
-						return Single.just(Response.status(Status.FORBIDDEN).build());
-
+		return user.checkAuthorised(requiredPermission)
+				.flatMap(ignored -> {
 					String sql = isNewPage ? SQL.SQL_CREATE_PAGE : SQL.SQL_SAVE_PAGE;
 					JsonArray params = new JsonArray();
 					if (isNewPage) {

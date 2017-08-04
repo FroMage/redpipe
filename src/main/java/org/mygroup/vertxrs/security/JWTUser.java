@@ -1,6 +1,5 @@
 package org.mygroup.vertxrs.security;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import rx.Single;
 
@@ -10,6 +9,15 @@ public class JWTUser implements User {
 
 	public JWTUser(JsonObject payload) {
 		this.payload = payload;
+	}
+
+	@Override
+	public Single<Void> checkAuthorised(String permission) {
+		return isAuthorised(permission).map(ok -> {
+			if(!ok)
+				throw new AuthorizationException("Not authorized");
+			return null;
+		});
 	}
 
 	@Override
