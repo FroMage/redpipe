@@ -84,15 +84,6 @@ public class ApiResource {
 	@GET
 	@Path("pages")
 	public Single<Response> apiRoot(@Context Session session){
-		
-		System.err.println("Session: "+session);
-		String val = session.get("Stef:two\"%66");
-		if(val != null)
-			val = val+"1";
-		else
-			val = "1";
-		session.put("Stef:two\"%66", val);
-		
 		return SQL.doInConnection(connection -> connection.rxQuery(SQL.SQL_ALL_PAGES_DATA))
 				.map(res -> {
 					JsonObject response = new JsonObject();
