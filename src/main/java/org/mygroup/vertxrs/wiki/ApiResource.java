@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -15,21 +16,69 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.SubjectContext;
+import org.apache.shiro.subject.support.DefaultSubjectContext;
+import org.apache.shiro.util.ThreadContext;
 import org.mygroup.vertxrs.Async;
 import org.mygroup.vertxrs.Session;
 import org.mygroup.vertxrs.WithErrorMapper;
+import org.mygroup.vertxrs.security.NoAuthFilter;
+import org.mygroup.vertxrs.security.NoAuthRedirect;
+import org.mygroup.vertxrs.security.RequiresPermissions;
+import org.mygroup.vertxrs.security.RequiresUser;
 
 import com.github.rjeschke.txtmark.Processor;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.jwt.JWT;
 import io.vertx.rxjava.core.http.HttpServerRequest;
 import rx.Single;
 
+@NoAuthRedirect
+@RequiresUser
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/wiki/api")
 @WithErrorMapper(ApiExceptionMapper.class)
 public class ApiResource {
+	
+	@NoAuthFilter
+	@Produces("text/plain")
+	@GET
+	@Path("token")
+	public Response token(@HeaderParam("login") String username, 
+			@HeaderParam("password") String password,
+			@Context JWT jwt){
+		SecurityManager securityManager = ThreadContext.getSecurityManager();
+		SubjectContext subjectContext = new DefaultSubjectContext();
+		Subject subject = securityManager.createSubject(subjectContext);
+		AuthenticationToken token = new UsernamePasswordToken(username, password);
+		try {
+			subject.login(token);
+		} catch (AuthenticationException e) {
+			return Response.status(Status.FORBIDDEN).build();
+		}
+		boolean canCreate = subject.isPermitted("create");
+		boolean canUpdate = subject.isPermitted("update");
+		boolean canDelete = subject.isPermitted("delete");
+		
+        String jwtToken = jwt.sign(
+                new JsonObject()
+                  .put("username", username)
+                  .put("permissions", new JsonObject()
+                		  .put("create", canCreate)
+                		  .put("delete", canDelete)
+                		  .put("update", canUpdate)),
+                new JsonObject()
+                  .put("subject", "Wiki API")
+                  .put("issuer", "Vert.x"));
+        return Response.ok(jwtToken).build();
+	}
 	
 	@Async
 	@GET
@@ -87,6 +136,7 @@ public class ApiResource {
 				});
 	}
 
+	@RequiresPermissions("create")
 	@Async
 	@POST
 	@Path("pages")
@@ -98,6 +148,7 @@ public class ApiResource {
 				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build());
 	}
 
+	@RequiresPermissions("update")
 	@Async
 	@PUT
 	@Path("pages/{id}")
@@ -110,6 +161,7 @@ public class ApiResource {
 				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
 	}
 
+	@RequiresPermissions("delete")
 	@Async
 	@DELETE
 	@Path("pages/{id}")

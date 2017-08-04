@@ -23,7 +23,7 @@ public class AuthorizationFilterFeature implements DynamicFeature {
     public void configure(ResourceInfo resourceInfo, FeatureContext context) {
 
         List<Annotation> authzSpecs = new ArrayList<>();
-
+        boolean canRedirect = true;
         for (Class<? extends Annotation> annotationClass : filterAnnotations) {
             // XXX What is the performance of getAnnotation vs getAnnotations?
             Annotation classAuthzSpec = resourceInfo.getResourceClass().getAnnotation(annotationClass);
@@ -31,10 +31,18 @@ public class AuthorizationFilterFeature implements DynamicFeature {
 
             if (classAuthzSpec != null) authzSpecs.add(classAuthzSpec);
             if (methodAuthzSpec != null) authzSpecs.add(methodAuthzSpec);
+            
+            if(resourceInfo.getResourceClass().isAnnotationPresent(NoAuthRedirect.class)
+            		|| resourceInfo.getResourceMethod().isAnnotationPresent(NoAuthRedirect.class))
+            	canRedirect = false;
+            if(resourceInfo.getResourceClass().isAnnotationPresent(NoAuthFilter.class)
+            		|| resourceInfo.getResourceMethod().isAnnotationPresent(NoAuthFilter.class))
+            	return;
         }
 
         if (!authzSpecs.isEmpty()) {
-            context.register(new LoginRedirectFilter(), Priorities.AUTHENTICATION + 1);
+        	if(canRedirect)
+        		context.register(new LoginRedirectFilter(), Priorities.AUTHENTICATION + 1);
             context.register(new AuthorizationFilter(authzSpecs), Priorities.AUTHORIZATION);
         }
     }

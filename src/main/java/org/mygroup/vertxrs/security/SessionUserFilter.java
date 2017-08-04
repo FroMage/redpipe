@@ -21,11 +21,13 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.SubjectContext;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.util.ThreadContext;
+import org.jboss.resteasy.core.Headers;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.mygroup.vertxrs.Config;
 import org.mygroup.vertxrs.Session;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.jwt.JWT;
 import io.vertx.rxjava.core.Vertx;
 
 @Priority(Priorities.AUTHENTICATION)
@@ -61,9 +63,61 @@ public class SessionUserFilter implements ContainerRequestFilter {
 			PrincipalCollection coll = new SimplePrincipalCollection(username, realmName);
 			subjectContext.setPrincipals(coll);
 			subject = securityManager.createSubject(subjectContext);
+			// check that subject still exists?
 			user = new ShiroUser(vertx, subject);
+		}else{
+			String auth = requestContext.getHeaderString("Authorization");
+			if(auth != null){
+				String[] parts = auth.split(" ");
+				if(parts.length == 2) {
+					String scheme = parts[0];
+					String credentials = parts[1];
+
+					if(scheme.equalsIgnoreCase("Bearer")) {
+						user = jwtLogin(credentials, requestContext);
+					}
+				}
+			}
 		}
 		ResteasyProviderFactory.pushContext(User.class, user);
 		ResteasyProviderFactory.pushContext(Subject.class, subject);
+	}
+
+	private User jwtLogin(String credentials, ContainerRequestContext requestContext) {
+		JWT jwt = ResteasyProviderFactory.getContextData(JWT.class);
+
+		final JsonObject payload = jwt.decode(credentials);
+
+		// All dates in JWT are of type NumericDate
+		// a NumericDate is: numeric value representing the number of seconds from 1970-01-01T00:00:00Z UTC until
+		// the specified UTC date/time, ignoring leap seconds
+		final long now = System.currentTimeMillis() / 1000;
+
+		if (payload.containsKey("exp")) {
+			if (now >= payload.getLong("exp")) {
+				requestContext.abortWith(Response.status(Status.UNAUTHORIZED).entity("Expired JWT token: exp <= now").build());
+				return null;
+			}
+		}
+
+		if (payload.containsKey("iat")) {
+			Long iat = payload.getLong("iat");
+			// issue at must be in the past
+			if (iat > now) {
+				requestContext.abortWith(Response.status(Status.UNAUTHORIZED).entity("Invalid JWT token: iat > now").build());
+				return null;
+			}
+		}
+
+		if (payload.containsKey("nbf")) {
+			Long nbf = payload.getLong("nbf");
+			// not before must be after now
+			if (nbf > now) {
+				requestContext.abortWith(Response.status(Status.UNAUTHORIZED).entity("Invalid JWT token: nbf > now").build());
+				return null;
+			}
+		}
+
+		return new JWTUser(payload);
 	}
 }
