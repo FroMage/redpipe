@@ -17,11 +17,11 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.apache.shiro.authz.annotation.RequiresUser;
 import org.mygroup.vertxrs.Async;
 import org.mygroup.vertxrs.MainResource;
 import org.mygroup.vertxrs.Template;
+import org.mygroup.vertxrs.security.RequiresPermissions;
+import org.mygroup.vertxrs.security.RequiresUser;
 import org.mygroup.vertxrs.security.User;
 
 import com.github.rjeschke.txtmark.Processor;

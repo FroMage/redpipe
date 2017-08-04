@@ -1,14 +1,15 @@
 package org.mygroup.vertxrs.security;
 
-import org.apache.shiro.authz.aop.UserAnnotationHandler;
-import org.apache.shiro.subject.Subject;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import java.lang.annotation.Annotation;
 
-public class VertxUserAnnotationHandler extends UserAnnotationHandler {
+public class VertxUserAnnotationHandler extends AuthorizingAnnotationHandler {
 
 	@Override
-	protected Subject getSubject() {
-		return ResteasyProviderFactory.getContextData(Subject.class);
+	public void assertAuthorized(Annotation authzSpec) {
+		if(authzSpec instanceof RequiresUser){
+			User user = getUser();
+			if(user == null)
+				throw new AuthenticationException("User required");
+		}
 	}
-
 }

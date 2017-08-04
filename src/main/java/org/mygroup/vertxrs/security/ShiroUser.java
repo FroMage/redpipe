@@ -19,6 +19,11 @@ public class ShiroUser implements User {
 	public Single<Boolean> isAuthorised(String permission) {
 		return vertx.rxExecuteBlocking(fut -> fut.complete(subject.isPermitted(permission)));
 	}
+	
+	@Override
+	public boolean isAuthorisedBlocking(String permission) {
+		return subject.isPermitted(permission);
+	}
 
 	@Override
 	public String getUsername() {

@@ -9,6 +9,8 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -36,19 +38,19 @@ public class SessionUserFilter implements ContainerRequestFilter {
 	private String realmName;
 
 	public SessionUserFilter() {
-	    PropertiesRealm realm = new PropertiesRealm();
-	    JsonObject config = CDI.current().select(JsonObject.class, new AnnotationLiteral<Config>() {}).get();
-	    realm.setResourcePath(config.getString("security_definitions"));
-	    realm.init();
-	    this.securityManager = new DefaultSecurityManager(realm);
-	    this.realmName = realm.getName();
+		PropertiesRealm realm = new PropertiesRealm();
+		JsonObject config = CDI.current().select(JsonObject.class, new AnnotationLiteral<Config>() {}).get();
+		realm.setResourcePath(config.getString("security_definitions"));
+		realm.init();
+		this.securityManager = new DefaultSecurityManager(realm);
+		this.realmName = realm.getName();
 	}
-	
+
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 		// just always bind it on every thread just in case
 		ThreadContext.bind(securityManager);
-		
+
 		Session session = ResteasyProviderFactory.getContextData(Session.class);
 		Vertx vertx = ResteasyProviderFactory.getContextData(Vertx.class);
 		String username = session.get(USER_KEY);

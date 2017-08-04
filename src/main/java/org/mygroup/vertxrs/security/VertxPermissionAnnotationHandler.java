@@ -1,13 +1,19 @@
 package org.mygroup.vertxrs.security;
 
-import org.apache.shiro.authz.aop.PermissionAnnotationHandler;
-import org.apache.shiro.subject.Subject;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import java.lang.annotation.Annotation;
 
-public class VertxPermissionAnnotationHandler extends PermissionAnnotationHandler {
+public class VertxPermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 
 	@Override
-	protected Subject getSubject() {
-		return ResteasyProviderFactory.getContextData(Subject.class);
+	public void assertAuthorized(Annotation authzSpec) {
+		if(authzSpec instanceof RequiresPermissions){
+			User user = getUser();
+			if(user == null)
+				throw new AuthorizationException("User required");
+			for(String perm : ((RequiresPermissions) authzSpec).value()){
+				if(!user.isAuthorisedBlocking(perm))
+					throw new AuthorizationException("Permission denied");
+			}
+		}
 	}
 }

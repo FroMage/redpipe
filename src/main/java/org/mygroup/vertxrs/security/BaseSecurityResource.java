@@ -52,7 +52,6 @@ public abstract class BaseSecurityResource {
 		try {
 			subject.login(token);
 		} catch (AuthenticationException e) {
-			e.printStackTrace();
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
