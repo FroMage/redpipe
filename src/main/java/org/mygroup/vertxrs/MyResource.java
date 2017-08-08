@@ -14,6 +14,8 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.mygroup.vertxrs.coroutines.Coroutines;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -351,25 +353,27 @@ public class MyResource {
 		});
 	}
 
-//	@Path("6")
-//	@GET
-//	@Async
-//	public Response helloAsync(@Context Vertx vertx){
-//		System.err.println("Creating client");
-//		HttpClientOptions options = new HttpClientOptions();
-//		options.setSsl(true);
-//		options.setTrustAll(true);
-//		options.setVerifyHost(false);
-//		HttpClient client = vertx.createHttpClient(options);
-//		
-//		HttpClientResponse response = client.getNow(443,
-//				"www.google.com", 
-//				"/robots.txt").await();
-//		System.err.println("Got response");
-//		
-//		Buffer body = response.body().await();
-//		System.err.println("Got body");
-//		
-//		return Response.ok(body.toString()).build();
-//	}
+	@Path("coroutines/1")
+	@GET
+	@Async
+	public Single<Response> helloAsync(@Context io.vertx.rxjava.core.Vertx rxVertx){
+		return Coroutines.fiber(() -> {
+			System.err.println("Creating client");
+			WebClientOptions options = new WebClientOptions();
+			options.setSsl(true);
+			options.setTrustAll(true);
+			options.setVerifyHost(false);
+			WebClient client = WebClient.create(rxVertx, options);
+			Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+					"www.google.com", 
+					"/robots.txt").rxSend();
+
+			System.err.println("Got response");
+
+			HttpResponse<io.vertx.rxjava.core.buffer.Buffer> httpResponse = Coroutines.await(responseHandler);
+			System.err.println("Got body");
+			
+			return Response.ok(httpResponse.body().toString()).build();
+		});
+	}
 }
