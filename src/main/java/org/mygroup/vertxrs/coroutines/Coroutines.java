@@ -3,6 +3,7 @@ package org.mygroup.vertxrs.coroutines;
 import java.util.Map;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.mygroup.vertxrs.wiki.SQL;
 
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberAsync;
@@ -13,12 +14,17 @@ import co.paralleluniverse.fibers.Suspendable;
 import co.paralleluniverse.strands.SuspendableCallable;
 import io.vertx.rxjava.core.Context;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.ext.sql.SQLConnection;
 import rx.Single;
 
 public class Coroutines {
 
 	private static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
 
+	public interface SuspendableCallableWithConnection<T>  {
+	    T run(SQLConnection c) throws SuspendExecution, InterruptedException;
+	}
+	
 	@SuppressWarnings({ "serial" })
 	@Suspendable
 	public static <T> T await(Single<T> single) throws SuspendExecution{
@@ -39,6 +45,17 @@ public class Coroutines {
 		}
 	}
 
+	public static <T> Single<T> fiber(SuspendableCallableWithConnection<T> body){
+		return fiber(() -> {
+			SQLConnection connection = await(SQL.getConnection());
+			try{
+				return body.run(connection);
+			}finally{
+				connection.close();
+			}
+		});
+	}
+	
 	public static <T> Single<T> fiber(SuspendableCallable<T> body){
 		final Map<Class<?>, Object> contextDataMap = ResteasyProviderFactory.getContextDataMap();
 		return Single.<T>create(sub -> {

@@ -17,8 +17,12 @@ public class SQL {
 	static final String SQL_ALL_PAGES_DATA = "select Name, Id, Content from Pages";
 	static final String SQL_DELETE_PAGE = "delete from Pages where Id = ?";
 
+	public static Single<SQLConnection> getConnection(){
+		return CDI.current().select(new TypeLiteral<Single<SQLConnection>>(){}).get();
+	}
+	
 	static <T> Single<T> doInConnection(Func1<? super SQLConnection, ? extends Single<T>> func){
-		Single<SQLConnection> connection = CDI.current().select(new TypeLiteral<Single<SQLConnection>>(){}).get();
+		Single<SQLConnection> connection = getConnection();
 		return connection.flatMap(conn -> {
 			return func.call(conn).doAfterTerminate(() -> {
 				conn.close();
