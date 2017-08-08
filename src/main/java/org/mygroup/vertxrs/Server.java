@@ -248,6 +248,7 @@ public class Server {
 	}
 
 	public static void main(String[] args) {
+		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
 		Server test = new Server();
 		test.start();
 	}

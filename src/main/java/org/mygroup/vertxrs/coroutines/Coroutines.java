@@ -1,5 +1,9 @@
 package org.mygroup.vertxrs.coroutines;
 
+import java.util.Map;
+
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberAsync;
 import co.paralleluniverse.fibers.FiberExecutorScheduler;
@@ -15,21 +19,17 @@ public class Coroutines {
 
 	private static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
 
-	private static void rethrow(Throwable t) {
-		if(t instanceof RuntimeException)
-			throw (RuntimeException)t;
-		throw new RuntimeException(t);
-	}
-
-	@SuppressWarnings({ "unchecked", "serial" })
+	@SuppressWarnings({ "serial" })
 	@Suspendable
 	public static <T> T await(Single<T> single) throws SuspendExecution{
+		if(single == null)
+			throw new NullPointerException();
 		try {
 			return new FiberAsync<T, Throwable>(){
 				@Override
 				protected void requestAsync() {
 					single.subscribe(ret -> asyncCompleted(ret),
-							t -> asyncFailed(t));
+							t -> asyncFailed(t));	
 				}
 			}.run();
 		} catch (RuntimeException e) {
@@ -40,9 +40,12 @@ public class Coroutines {
 	}
 
 	public static <T> Single<T> fiber(SuspendableCallable<T> body){
+		final Map<Class<?>, Object> contextDataMap = ResteasyProviderFactory.getContextDataMap();
 		return Single.<T>create(sub -> {
 			Fiber<T> fiber = new Fiber<T>(getContextScheduler(), () -> {
 				try{
+					// start by restoring the RE context in this Fiber's ThreadLocal
+					ResteasyProviderFactory.pushContextDataMap(contextDataMap);
 					T ret = body.run();
 					if(!sub.isUnsubscribed())
 						sub.onSuccess(ret);
