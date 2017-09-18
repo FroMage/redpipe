@@ -5,15 +5,16 @@ import java.util.concurrent.CompletionStage;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.interceptor.Interceptors;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.jboss.resteasy.annotations.Stream;
 import org.mygroup.vertxrs.coroutines.Coroutines;
 
 import io.vertx.core.Vertx;
@@ -25,7 +26,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rx.java.ObservableHandler;
 import io.vertx.rx.java.RxHelper;
-import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import rx.Observable;
@@ -159,10 +159,8 @@ public class MyResource {
 		System.err.println("Created client");
 	}
 
-	// FIXME: Jax-rs 2.1?
 	@Path("7")
 	@GET
-	@Async
 	public CompletionStage<String> hello7(@Context Vertx vertx){
 		io.vertx.rxjava.core.Vertx rxVertx = io.vertx.rxjava.core.Vertx.newInstance(vertx);
 		System.err.println("Creating client");
@@ -187,7 +185,6 @@ public class MyResource {
 
 	@Path("7error")
 	@GET
-	@Async
 	public CompletionStage<String> hello7Error(@Context Vertx vertx){
 		io.vertx.rxjava.core.Vertx rxVertx = io.vertx.rxjava.core.Vertx.newInstance(vertx);
 		System.err.println("Creating client");
@@ -212,7 +209,6 @@ public class MyResource {
 
 	@Path("8")
 	@GET
-	@Async
 	public Single<String> hello8(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
@@ -234,7 +230,6 @@ public class MyResource {
 	@Path("8user")
 	@Produces("text/json")
 	@GET
-	@Async
 	public Single<DataClass> hello8User(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
@@ -255,7 +250,6 @@ public class MyResource {
 
 	@Path("8error")
 	@GET
-	@Async
 	public Single<String> hello8Error(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
@@ -276,7 +270,7 @@ public class MyResource {
 
 	@Path("9")
 	@GET
-	@Async
+	@Produces(MediaType.SERVER_SENT_EVENTS)
 	public Observable<String> hello9(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
@@ -288,8 +282,6 @@ public class MyResource {
 	@Path("9nostream")
 	@Produces("text/json")
 	@GET
-	@Async
-	@CollectUntilComplete
 	public Observable<String> hello9nostream(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
@@ -301,8 +293,7 @@ public class MyResource {
 	@Path("9chunked")
 	@Produces("text/json")
 	@GET
-	@Async
-	@Chunked
+	@Stream
 	public Observable<String> hello9chunked(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
@@ -313,7 +304,6 @@ public class MyResource {
 
 	@Path("9error")
 	@GET
-	@Async
 	public Observable<String> hello9Error(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		int[] i = new int[]{0};
@@ -328,7 +318,6 @@ public class MyResource {
 	@Produces("text/json")
 	@Path("9user")
 	@GET
-	@Async
 	public Observable<DataClass> hello9User(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
@@ -340,22 +329,8 @@ public class MyResource {
 	@VertxInject
 	private String connection;
 	
-	@Path("10")
-	@GET
-	@Async
-	@Interceptors(MyCdiInterceptor.class)
-	@MyCdiIntercept
-	public Single<String> hello10(@Context io.vertx.rxjava.core.Vertx rxVertx){
-		System.err.println("Creating timer: "+connection);
-		return rxVertx.timerStream(1000).toObservable().toSingle().map(r -> {
-			System.err.println("Tick: "+r);
-			return "Timer: "+System.currentTimeMillis();
-		});
-	}
-
 	@Path("coroutines/1")
 	@GET
-	@Async
 	public Single<Response> helloAsync(@Context io.vertx.rxjava.core.Vertx rxVertx){
 		return Coroutines.fiber(() -> {
 			System.err.println("Creating client");

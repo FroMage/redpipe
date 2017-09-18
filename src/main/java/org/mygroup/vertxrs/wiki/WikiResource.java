@@ -21,7 +21,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.mygroup.vertxrs.Async;
 import org.mygroup.vertxrs.MainResource;
 import org.mygroup.vertxrs.Template;
 import org.mygroup.vertxrs.security.AuthorizationException;
@@ -58,7 +57,6 @@ public class WikiResource {
 	@Context
 	private User user;
 
-	@Async
 	@GET
 	public Single<Template> index(){
 		return fiber((con) -> {
@@ -82,7 +80,6 @@ public class WikiResource {
 		});
 	}
 
-	@Async
 	@Path("/wiki/{page}")
 	@GET
 	public Single<Template> renderPage(@PathParam("page") String page){
@@ -122,7 +119,6 @@ public class WikiResource {
 
 	@Path("/save")
 	@POST
-	@Async
 	public Single<Response> save(@FormParam("id") String id,
 			@FormParam("title") String title,
 			@FormParam("markdown") String markdown,
@@ -162,7 +158,6 @@ public class WikiResource {
 	}
 
 	@RequiresPermissions("delete")
-	@Async
 	@Path("/delete")
 	@POST
 	public Single<Response> delete(@FormParam("id") String id){
@@ -175,7 +170,6 @@ public class WikiResource {
 	}
 
 	@RequiresPermissions("create")
-	@Async
 	@Path("/backup")
 	@POST
 	public Single<Object> backup(@Context Vertx vertx){

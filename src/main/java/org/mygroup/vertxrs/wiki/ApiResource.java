@@ -24,7 +24,6 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.SubjectContext;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.util.ThreadContext;
-import org.mygroup.vertxrs.Async;
 import org.mygroup.vertxrs.Session;
 import org.mygroup.vertxrs.WithErrorMapper;
 import org.mygroup.vertxrs.security.NoAuthFilter;
@@ -80,7 +79,6 @@ public class ApiResource {
         return Response.ok(jwtToken).build();
 	}
 	
-	@Async
 	@GET
 	@Path("pages")
 	public Single<Response> apiRoot(@Context Session session){
@@ -100,7 +98,6 @@ public class ApiResource {
 				});
 	}
 
-	@Async
 	@GET
 	@Path("pages/{id}")
 	public Single<Response> apiGetPage(@PathParam("id") String id){
@@ -128,7 +125,6 @@ public class ApiResource {
 	}
 
 	@RequiresPermissions("create")
-	@Async
 	@POST
 	@Path("pages")
 	public Single<Response> apiCreatePage(@ApiUpdateValid({"name", "markdown"}) JsonObject page, 
@@ -140,7 +136,6 @@ public class ApiResource {
 	}
 
 	@RequiresPermissions("update")
-	@Async
 	@PUT
 	@Path("pages/{id}")
 	public Single<Response> apiUpdatePage(@PathParam("id") String id, 
@@ -153,7 +148,6 @@ public class ApiResource {
 	}
 
 	@RequiresPermissions("delete")
-	@Async
 	@DELETE
 	@Path("pages/{id}")
 	public Single<Response> apiDeletePage(@PathParam("id") String id){

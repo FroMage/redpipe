@@ -196,7 +196,6 @@ public class Server {
 	private void setupCDI() {
 		// CDI
 		Weld weld = new Weld();
-		weld.addInterceptor(MyCdiInterceptor.class);
 		weld.addExtension(new VertxExtension());
 		weld.initialize();
 
