@@ -10,7 +10,9 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.mygroup.vertxrs.Session;
+
+import io.vertx.rxjava.ext.auth.User;
+import io.vertx.rxjava.ext.web.Session;
 
 public class LoginRedirectFilter implements ContainerRequestFilter {
 

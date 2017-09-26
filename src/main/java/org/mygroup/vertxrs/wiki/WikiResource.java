@@ -26,7 +26,6 @@ import org.mygroup.vertxrs.Template;
 import org.mygroup.vertxrs.security.AuthorizationException;
 import org.mygroup.vertxrs.security.RequiresPermissions;
 import org.mygroup.vertxrs.security.RequiresUser;
-import org.mygroup.vertxrs.security.User;
 
 import com.github.rjeschke.txtmark.Processor;
 
@@ -35,6 +34,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.codec.BodyCodec;
@@ -66,13 +66,13 @@ public class WikiResource {
 					.map(json -> json.getString(0))
 					.sorted()
 					.collect(Collectors.toList());
-			boolean canCreatePage = await(user.isAuthorised("create"));
+			boolean canCreatePage = await(user.rxIsAuthorised("create"));
 			return new Template("templates/index.ftl")
 					.set("title", "Wiki home")
 					.set("pages", pages)
 					.set("uriInfo", uriInfo)
 					.set("canCreatePage", canCreatePage)
-					.set("username", user.getUsername())
+					.set("username", user.principal().getString("username"))
 					// workaround because I couldn't find how to put class literals in freemarker
 					.set("WikiResource", WikiResource.class)
 					.set("SecurityResource", SecurityResource.class)
@@ -98,10 +98,10 @@ public class WikiResource {
 				id = row.getInteger(0);
 				rawContent = row.getString(1);
 			}
-			if(newPage && !await(user.isAuthorised("create")))
+			if(newPage && !await(user.rxIsAuthorised("create")))
 				throw new AuthorizationException("Not authorized");
-			boolean canUpdate = await(user.isAuthorised("update"));
-			boolean canDelete = await(user.isAuthorised("delete"));
+			boolean canUpdate = await(user.rxIsAuthorised("update"));
+			boolean canDelete = await(user.rxIsAuthorised("delete"));
 			return new Template("templates/page.ftl")
 					.set("title", page)
 					.set("id", id)
@@ -126,7 +126,7 @@ public class WikiResource {
 		return fiber((con) -> {
 			boolean isNewPage = "yes".equals(newPage);
 			String requiredPermission = isNewPage ? "create" : "update";
-			if(!await(user.isAuthorised(requiredPermission)))
+			if(!await(user.rxIsAuthorised(requiredPermission)))
 				throw new AuthorizationException("Not authorized");
 			String sql = isNewPage ? SQL.SQL_CREATE_PAGE : SQL.SQL_SAVE_PAGE;
 			JsonArray params = new JsonArray();

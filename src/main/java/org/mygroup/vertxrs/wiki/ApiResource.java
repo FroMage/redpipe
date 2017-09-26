@@ -1,5 +1,8 @@
 package org.mygroup.vertxrs.wiki;
 
+import static org.mygroup.vertxrs.coroutines.Coroutines.await;
+import static org.mygroup.vertxrs.coroutines.Coroutines.fiber;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,15 +19,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.SubjectContext;
-import org.apache.shiro.subject.support.DefaultSubjectContext;
-import org.apache.shiro.util.ThreadContext;
-import org.mygroup.vertxrs.Session;
 import org.mygroup.vertxrs.WithErrorMapper;
 import org.mygroup.vertxrs.security.NoAuthFilter;
 import org.mygroup.vertxrs.security.NoAuthRedirect;
@@ -33,10 +27,14 @@ import org.mygroup.vertxrs.security.RequiresUser;
 
 import com.github.rjeschke.txtmark.Processor;
 
+import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.jwt.JWT;
+import io.vertx.ext.auth.jwt.JWTOptions;
 import io.vertx.rxjava.core.http.HttpServerRequest;
+import io.vertx.rxjava.ext.auth.AuthProvider;
+import io.vertx.rxjava.ext.auth.User;
+import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import rx.Single;
 
 @NoAuthRedirect
@@ -50,38 +48,42 @@ public class ApiResource {
 	@Produces("text/plain")
 	@GET
 	@Path("token")
-	public Response token(@HeaderParam("login") String username, 
+	public Single<Response> token(@HeaderParam("login") String username, 
 			@HeaderParam("password") String password,
-			@Context JWT jwt){
-		SecurityManager securityManager = ThreadContext.getSecurityManager();
-		SubjectContext subjectContext = new DefaultSubjectContext();
-		Subject subject = securityManager.createSubject(subjectContext);
-		AuthenticationToken token = new UsernamePasswordToken(username, password);
-		try {
-			subject.login(token);
-		} catch (AuthenticationException e) {
-			return Response.status(Status.FORBIDDEN).build();
-		}
-		boolean canCreate = subject.isPermitted("create");
-		boolean canUpdate = subject.isPermitted("update");
-		boolean canDelete = subject.isPermitted("delete");
+			@Context JWTAuth jwt,
+			@Context AuthProvider auth){
 		
-        String jwtToken = jwt.sign(
-                new JsonObject()
-                  .put("username", username)
-                  .put("permissions", new JsonObject()
-                		  .put("create", canCreate)
-                		  .put("delete", canDelete)
-                		  .put("update", canUpdate)),
-                new JsonObject()
-                  .put("subject", "Wiki API")
-                  .put("issuer", "Vert.x"));
-        return Response.ok(jwtToken).build();
+		JsonObject creds = new JsonObject()
+				.put("username", username)
+				.put("password", password);
+		return fiber(() -> {
+			User user;
+			try {
+				user = await(auth.rxAuthenticate(creds));
+			}catch(VertxException x) {
+				return Response.status(Status.FORBIDDEN).build();
+			}
+			
+			boolean canCreate = await(user.rxIsAuthorised("create"));
+			boolean canUpdate = await(user.rxIsAuthorised("update"));
+			boolean canDelete = await(user.rxIsAuthorised("delete"));
+			
+	        String jwtToken = jwt.generateToken(
+	        		new JsonObject()
+	        		.put("username", username)
+	        		.put("canCreate", canCreate)
+	        		.put("canDelete", canDelete)
+	        		.put("canUpdate", canUpdate),
+	                new JWTOptions()
+	                  .setSubject("Wiki API")
+	                  .setIssuer("Vert.x"));
+	        return Response.ok(jwtToken).build();
+		});
 	}
 	
 	@GET
 	@Path("pages")
-	public Single<Response> apiRoot(@Context Session session){
+	public Single<Response> apiRoot(){
 		return SQL.doInConnection(connection -> connection.rxQuery(SQL.SQL_ALL_PAGES_DATA))
 				.map(res -> {
 					JsonObject response = new JsonObject();

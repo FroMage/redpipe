@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.inject.spi.CDI;
+import javax.ws.rs.container.CompletionCallback;
 
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.plugins.server.embedded.SecurityDomain;
@@ -33,11 +34,20 @@ public class CdiRequestDispatcher extends RequestDispatcher {
         cdiContext.associate(contextMap);
         cdiContext.activate();
         try{
+        	// FIXME: associate CDI thread context on thread change, like Resteasy context?
     		super.service(context, req, resp, vertxReq, vertxResp, handleNotFound);
+    		if(vertxReq.getAsyncContext().isSuspended())
+    			vertxReq.getAsyncContext().getAsyncResponse().register((CompletionCallback)(t) -> {
+        			cdiContext.invalidate();
+        			cdiContext.deactivate();
+        			cdiContext.dissociate(contextMap);
+    			});
         }finally{
-        	cdiContext.invalidate();
-        	cdiContext.deactivate();
-        	cdiContext.dissociate(contextMap);
+    		if(!vertxReq.getAsyncContext().isSuspended()) {
+    			cdiContext.invalidate();
+    			cdiContext.deactivate();
+    			cdiContext.dissociate(contextMap);
+    		}
         }
 
 	}

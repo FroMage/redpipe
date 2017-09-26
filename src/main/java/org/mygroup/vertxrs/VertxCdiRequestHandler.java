@@ -22,29 +22,6 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.core.http.HttpServerResponse;
 
-//public class VertxCdiRequestHandler extends VertxRequestHandler {
-//
-//	public VertxCdiRequestHandler(Vertx vertx, ResteasyDeployment deployment, String servletMappingPrefix){
-//		this(vertx, deployment, servletMappingPrefix, null);
-//	}
-//
-//	public VertxCdiRequestHandler(Vertx vertx, ResteasyDeployment deployment){
-//		this(vertx, deployment, "");
-//	}
-//	
-//	public VertxCdiRequestHandler(Vertx vertx, ResteasyDeployment deployment, String servletMappingPrefix, SecurityDomain domain) {
-//		super(vertx, deployment, servletMappingPrefix, domain);
-//		try {
-//			Field field = VertxRequestHandler.class.getDeclaredField("dispatcher");
-//			field.setAccessible(true);
-//			field.set(this, new CdiRequestDispatcher((SynchronousDispatcher) deployment.getDispatcher(), deployment.getProviderFactory(), domain));
-//		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
-//
-//}
 public class VertxCdiRequestHandler implements Handler<HttpServerRequest>
 {
 

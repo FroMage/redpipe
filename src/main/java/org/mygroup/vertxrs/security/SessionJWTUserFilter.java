@@ -9,6 +9,7 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -16,35 +17,35 @@ import org.mygroup.vertxrs.Config;
 import org.mygroup.vertxrs.ResteasyFilterContext;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.shiro.ShiroAuthOptions;
-import io.vertx.ext.auth.shiro.ShiroAuthRealmType;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.auth.AuthProvider;
-import io.vertx.rxjava.ext.auth.shiro.ShiroAuth;
+import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.handler.UserSessionHandler;
+import io.vertx.rxjava.ext.web.handler.JWTAuthHandler;
 
-@Priority(Priorities.AUTHENTICATION)
+@Priority(Priorities.AUTHENTICATION+1)
 @PreMatching
 @Provider
-public class SessionUserFilter implements ContainerRequestFilter {
+public class SessionJWTUserFilter implements ContainerRequestFilter {
 
-	private UserSessionHandler userSessionHandler;
-	private ShiroAuth auth;
+	private JWTAuthHandler jwtAuthHandler;
+	private JWTAuth jwtAuth;
 
-	public SessionUserFilter() {
+	public SessionJWTUserFilter() {
 		Vertx vertx = ResteasyProviderFactory.getContextData(Vertx.class);
 		JsonObject config = CDI.current().select(JsonObject.class, new AnnotationLiteral<Config>() {}).get();
-		auth = ShiroAuth.create(vertx, new ShiroAuthOptions()
-				  .setType(ShiroAuthRealmType.PROPERTIES)
-				  .setConfig(new JsonObject()
-				    .put("properties_path", config.getString("security_definitions"))));
-		userSessionHandler = UserSessionHandler.create(auth);
+		JsonObject keyStoreOptions = new JsonObject().put("keyStore", config.getJsonObject("keystore"));
+
+		// attempt to load a Key file
+		jwtAuth = JWTAuth.create(vertx, keyStoreOptions);
+		jwtAuthHandler = JWTAuthHandler.create(jwtAuth);
 	}
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
-		userSessionHandler.handle(RoutingContext.newInstance(new ResteasyFilterContext(requestContext)));
+		ResteasyProviderFactory.pushContext(JWTAuth.class, jwtAuth);
+		// only filter if we have a header, otherwise it will try to force auth, regardless if whether
+		// we want auth
+		if(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION) != null)
+			jwtAuthHandler.handle(RoutingContext.newInstance(new ResteasyFilterContext(requestContext)));
 	}
 }

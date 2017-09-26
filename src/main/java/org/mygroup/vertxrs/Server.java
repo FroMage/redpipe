@@ -19,6 +19,7 @@ import javax.validation.ValidatorFactory;
 import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.resteasy.cdi.ResteasyCdiExtension;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.weld.bean.builtin.BeanManagerProxy;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.vertx.VertxExtension;
@@ -31,10 +32,13 @@ import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.config.ConfigRetriever;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
+import io.vertx.rxjava.ext.web.Router;
+import io.vertx.rxjava.ext.web.RoutingContext;
 import rx.plugins.RxJavaHooks;
 
 public class Server {
@@ -53,10 +57,13 @@ public class Server {
 		setupCDI();
 		VertxResteasyDeployment deployment = setupResteasy();
 		setupSwagger(deployment);
+		VertxOptions options = new VertxOptions();
+		options.setWarningExceptionTime(Long.MAX_VALUE);
 		if(config == null)
-			vertx = setupVertx(deployment, handler);
-		else
-			vertx = setupVertx(Vertx.vertx(), config, deployment, handler);
+			vertx = setupVertx(options, deployment, handler);
+		else {
+			vertx = setupVertx(Vertx.vertx(options), config, deployment, handler);
+		}
 	}
 	
 	private Vertx setupVertx(Vertx vertx, JsonObject config, VertxResteasyDeployment deployment, Handler<AsyncResult<Void>> handler) {
@@ -90,10 +97,17 @@ public class Server {
 			future.complete();
 		}, res -> {});
 
+		Router router = Router.router(vertx);
+		VertxCdiRequestHandler resteasyHandler = new VertxCdiRequestHandler(vertx, deployment);
+		router.route().handler(routingContext -> {
+			ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
+			resteasyHandler.handle(routingContext.request());
+		});
+		
 		// Start the front end server using the Jax-RS controller
 		vertx.createHttpServer()
 		// CDI
-		.requestHandler(new VertxCdiRequestHandler(vertx, deployment))
+		.requestHandler(router::accept)
 		// Non-CDI
 		//		        .requestHandler(new VertxRequestHandler(vertx, deployment))
 		.listen(config.getInteger("http_port", 9000), ar -> {
@@ -109,8 +123,8 @@ public class Server {
 		return vertx;
 	}
 	
-	private Vertx setupVertx(VertxResteasyDeployment deployment, Handler<AsyncResult<Void>> handler) {
-		Vertx vertx = Vertx.vertx();
+	private Vertx setupVertx(VertxOptions options, VertxResteasyDeployment deployment, Handler<AsyncResult<Void>> handler) {
+		Vertx vertx = Vertx.vertx(options);
 
 		ConfigStoreOptions fileStore = new ConfigStoreOptions()
 				.setType("file")
