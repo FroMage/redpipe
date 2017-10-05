@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.engine;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;

@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.prototyping;
 
 public class DataClass {
 

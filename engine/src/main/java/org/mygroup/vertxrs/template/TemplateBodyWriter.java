@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.template;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

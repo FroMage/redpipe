@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.cdi;
 
 import java.io.IOException;
 

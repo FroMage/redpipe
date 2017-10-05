@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.engine;
 
 import static io.vertx.core.http.HttpHeaders.SET_COOKIE;
 
@@ -22,6 +22,7 @@ import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.mygroup.vertxrs.resteasy.ResteasyFilterContext;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Cookie;

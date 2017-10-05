@@ -21,11 +21,11 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.mygroup.vertxrs.MainResource;
-import org.mygroup.vertxrs.Template;
+import org.mygroup.vertxrs.engine.MainResource;
 import org.mygroup.vertxrs.security.AuthorizationException;
 import org.mygroup.vertxrs.security.RequiresPermissions;
 import org.mygroup.vertxrs.security.RequiresUser;
+import org.mygroup.vertxrs.template.Template;
 
 import com.github.rjeschke.txtmark.Processor;
 

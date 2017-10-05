@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mygroup.vertxrs.Server;
+import org.mygroup.vertxrs.engine.Server;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

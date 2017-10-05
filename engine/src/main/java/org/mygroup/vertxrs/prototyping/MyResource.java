@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.prototyping;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -16,6 +16,8 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
 import org.mygroup.vertxrs.coroutines.Coroutines;
+import org.mygroup.vertxrs.engine.Config;
+import org.mygroup.vertxrs.engine.VertxInject;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;

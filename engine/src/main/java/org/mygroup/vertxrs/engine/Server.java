@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.engine;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -23,6 +23,9 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.weld.bean.builtin.BeanManagerProxy;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.vertx.VertxExtension;
+import org.mygroup.vertxrs.cdi.VertxCdiRequestHandler;
+import org.mygroup.vertxrs.resteasy.RxVertxProvider;
+import org.mygroup.vertxrs.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.DefaultJaxrsConfig;

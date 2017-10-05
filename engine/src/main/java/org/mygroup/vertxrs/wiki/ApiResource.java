@@ -19,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.mygroup.vertxrs.WithErrorMapper;
 import org.mygroup.vertxrs.security.NoAuthFilter;
 import org.mygroup.vertxrs.security.NoAuthRedirect;
 import org.mygroup.vertxrs.security.RequiresPermissions;
@@ -41,7 +40,6 @@ import rx.Single;
 @RequiresUser
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/wiki/api")
-@WithErrorMapper(ApiExceptionMapper.class)
 public class ApiResource {
 	
 	@NoAuthFilter

@@ -13,8 +13,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.mygroup.vertxrs.Config;
-import org.mygroup.vertxrs.ResteasyFilterContext;
+import org.mygroup.vertxrs.engine.Config;
+import org.mygroup.vertxrs.resteasy.ResteasyFilterContext;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;

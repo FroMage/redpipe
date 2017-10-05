@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.resteasy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ import io.vertx.core.http.HttpServerResponse;
 @PreMatching
 public class RxVertxProvider implements ContainerRequestFilter {
 
-	static final ServletContext ServletContext = new ServletContext(){
+	public static final ServletContext ServletContext = new ServletContext(){
 
 		private Map<String, Object> attributes = new HashMap<>();
 

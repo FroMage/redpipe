@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.rxjava;
 
 import javax.ws.rs.ext.Provider;
 

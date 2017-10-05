@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.rxjava;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;

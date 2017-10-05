@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.engine;
 
 import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.*;

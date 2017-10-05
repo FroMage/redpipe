@@ -1,4 +1,4 @@
-package org.mygroup.vertxrs;
+package org.mygroup.vertxrs.resteasy;
 
 import java.util.List;
 import java.util.Map;
