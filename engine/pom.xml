@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<parent>
-		<groupId>org.mygroup</groupId>
+		<groupId>org.vertx-rs</groupId>
 		<artifactId>vertx-rs-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
