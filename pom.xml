@@ -180,5 +180,7 @@
 
 	<modules>
 		<module>engine</module>
+		<module>vertx-rs-prototyping</module>
+		<module>vertx-rs-wiki</module>
 	</modules>
 </project>

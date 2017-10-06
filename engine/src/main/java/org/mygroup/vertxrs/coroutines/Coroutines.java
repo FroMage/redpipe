@@ -3,7 +3,7 @@ package org.mygroup.vertxrs.coroutines;
 import java.util.Map;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.mygroup.vertxrs.wiki.SQL;
+import org.mygroup.vertxrs.db.SQLUtil;
 
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberAsync;
@@ -47,7 +47,7 @@ public class Coroutines {
 
 	public static <T> Single<T> fiber(SuspendableCallableWithConnection<T> body){
 		return fiber(() -> {
-			SQLConnection connection = await(SQL.getConnection());
+			SQLConnection connection = await(SQLUtil.getConnection());
 			try{
 				return body.run(connection);
 			}finally{

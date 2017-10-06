@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.mygroup.vertxrs.db.SQLUtil;
 import org.mygroup.vertxrs.security.NoAuthFilter;
 import org.mygroup.vertxrs.security.NoAuthRedirect;
 import org.mygroup.vertxrs.security.RequiresPermissions;
@@ -65,13 +66,18 @@ public class ApiResource {
 			boolean canCreate = await(user.rxIsAuthorised("create"));
 			boolean canUpdate = await(user.rxIsAuthorised("update"));
 			boolean canDelete = await(user.rxIsAuthorised("delete"));
+			JsonArray permissions = new JsonArray();
+			if(canCreate)
+				permissions.add("create");
+			if(canUpdate)
+				permissions.add("update");
+			if(canDelete)
+				permissions.add("delete");
 			
 	        String jwtToken = jwt.generateToken(
 	        		new JsonObject()
 	        		.put("username", username)
-	        		.put("canCreate", canCreate)
-	        		.put("canDelete", canDelete)
-	        		.put("canUpdate", canUpdate),
+	        		.put("permissions", permissions),
 	                new JWTOptions()
 	                  .setSubject("Wiki API")
 	                  .setIssuer("Vert.x"));
@@ -82,7 +88,7 @@ public class ApiResource {
 	@GET
 	@Path("pages")
 	public Single<Response> apiRoot(){
-		return SQL.doInConnection(connection -> connection.rxQuery(SQL.SQL_ALL_PAGES_DATA))
+		return SQLUtil.doInConnection(connection -> connection.rxQuery(SQL.SQL_ALL_PAGES_DATA))
 				.map(res -> {
 					JsonObject response = new JsonObject();
 					List<JsonObject> pages = res.getResults()
@@ -101,7 +107,7 @@ public class ApiResource {
 	@GET
 	@Path("pages/{id}")
 	public Single<Response> apiGetPage(@PathParam("id") String id){
-		return SQL.doInConnection(connection -> connection.rxQueryWithParams(SQL.SQL_GET_PAGE_BY_ID, new JsonArray().add(id)))
+		return SQLUtil.doInConnection(connection -> connection.rxQueryWithParams(SQL.SQL_GET_PAGE_BY_ID, new JsonArray().add(id)))
 				.map(res -> {
 					JsonObject response = new JsonObject();
 					if (!res.getResults().isEmpty()) {
@@ -131,7 +137,7 @@ public class ApiResource {
 			@Context HttpServerRequest req){
 		JsonArray params = new JsonArray();
 		params.add(page.getString("name")).add(page.getString("markdown"));
-		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
+		return SQLUtil.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
 				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build());
 	}
 
@@ -143,7 +149,7 @@ public class ApiResource {
 			@Context HttpServerRequest req){
 		JsonArray params = new JsonArray();
 		params.add(page.getString("markdown")).add(id);
-		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_SAVE_PAGE, params))
+		return SQLUtil.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_SAVE_PAGE, params))
 				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
 	}
 
@@ -151,7 +157,7 @@ public class ApiResource {
 	@DELETE
 	@Path("pages/{id}")
 	public Single<Response> apiDeletePage(@PathParam("id") String id){
-		return SQL.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_DELETE_PAGE, new JsonArray().add(id)))
+		return SQLUtil.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_DELETE_PAGE, new JsonArray().add(id)))
 				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
 	}
 }
