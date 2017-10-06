@@ -13,22 +13,46 @@
 		<version.resteasy>4.0.0-SNAPSHOT</version.resteasy>
 	</properties>
 
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>com.vlkan</groupId>
+					<artifactId>quasar-maven-plugin</artifactId>
+					<version>0.7.9</version>
+					<configuration>
+						<check>true</check>
+						<debug>true</debug>
+						<verbose>true</verbose>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>instrument</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
 	<dependencyManagement>
 		<dependencies>
-		    <!-- Tests -->
+			<!-- Tests -->
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>4.12</version>
 				<scope>test</scope>
 			</dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-unit</artifactId>
-                <version>${version.vertx}</version>
-                <scope>test</scope>
-            </dependency>
-			
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-unit</artifactId>
+				<version>${version.vertx}</version>
+				<scope>test</scope>
+			</dependency>
+
 			<!-- Vert.x -->
 			<dependency>
 				<groupId>io.vertx</groupId>
@@ -38,78 +62,78 @@
 			<dependency>
 				<groupId>io.vertx</groupId>
 				<artifactId>vertx-config</artifactId>
-                <version>${version.vertx}</version>
+				<version>${version.vertx}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.vertx</groupId>
 				<artifactId>vertx-jdbc-client</artifactId>
-                <version>${version.vertx}</version>
+				<version>${version.vertx}</version>
 			</dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-rx-java</artifactId>
-                <version>${version.vertx}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-client</artifactId>
-                <version>${version.vertx}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-auth-shiro</artifactId>
-                <version>${version.vertx}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-auth-jwt</artifactId>
-                <version>${version.vertx}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-templ-freemarker</artifactId>
-                <version>${version.vertx}</version>
-            </dependency>
-			
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-rx-java</artifactId>
+				<version>${version.vertx}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-web-client</artifactId>
+				<version>${version.vertx}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-auth-shiro</artifactId>
+				<version>${version.vertx}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-auth-jwt</artifactId>
+				<version>${version.vertx}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-web-templ-freemarker</artifactId>
+				<version>${version.vertx}</version>
+			</dependency>
+
 			<!-- CDI -->
 			<dependency>
 				<groupId>org.jboss.weld.vertx</groupId>
 				<artifactId>weld-vertx-core</artifactId>
 				<version>1.0.0.Final</version>
 			</dependency>
-            <dependency>
-                <groupId>org.jboss.weld.se</groupId>
-                <artifactId>weld-se-core</artifactId>
-                <version>2.4.4.Final</version>
-            </dependency>
-			
+			<dependency>
+				<groupId>org.jboss.weld.se</groupId>
+				<artifactId>weld-se-core</artifactId>
+				<version>2.4.4.Final</version>
+			</dependency>
+
 			<!-- Resteasy -->
 			<dependency>
 				<groupId>org.jboss.resteasy</groupId>
 				<artifactId>resteasy-jaxrs</artifactId>
-                <version>${version.resteasy}</version>
+				<version>${version.resteasy}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.resteasy</groupId>
 				<artifactId>resteasy-validator-provider-11</artifactId>
-                <version>${version.resteasy}</version>
+				<version>${version.resteasy}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.resteasy</groupId>
 				<artifactId>resteasy-jackson2-provider</artifactId>
-                <version>${version.resteasy}</version>
+				<version>${version.resteasy}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.resteasy</groupId>
 				<artifactId>resteasy-cdi</artifactId>
-                <version>${version.resteasy}</version>
+				<version>${version.resteasy}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.resteasy</groupId>
 				<artifactId>resteasy-vertx</artifactId>
-                <version>${version.resteasy}</version>
+				<version>${version.resteasy}</version>
 			</dependency>
-			
+
 			<!-- Hangers on? -->
 			<dependency>
 				<groupId>javax.el</groupId>
@@ -142,13 +166,13 @@
 				<version>0.13</version>
 			</dependency>
 
-            <!-- Swagger -->
-            <dependency>
-                <groupId>io.swagger</groupId>
-                <artifactId>swagger-jaxrs</artifactId>
-                <version>1.5.0</version>
-            </dependency>
-			
+			<!-- Swagger -->
+			<dependency>
+				<groupId>io.swagger</groupId>
+				<artifactId>swagger-jaxrs</artifactId>
+				<version>1.5.0</version>
+			</dependency>
+
 			<!-- Quasar -->
 			<dependency>
 				<groupId>co.paralleluniverse</groupId>
@@ -156,7 +180,7 @@
 				<classifier>jdk8</classifier>
 				<version>0.7.9</version>
 			</dependency>
-			
+
 			<!-- RxJava -->
 			<dependency>
 				<groupId>io.reactivex</groupId>
@@ -164,17 +188,17 @@
 				<version>1.2.1</version>
 			</dependency>
 
-            <!-- Hibernate validator -->
-            <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-validator</artifactId>
-                <version>5.4.1.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-validator-cdi</artifactId>
-                <version>5.4.1.Final</version>
-            </dependency>
+			<!-- Hibernate validator -->
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator</artifactId>
+				<version>5.4.1.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator-cdi</artifactId>
+				<version>5.4.1.Final</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
