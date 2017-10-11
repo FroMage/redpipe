@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
 import org.vertxrs.engine.core.VertxInject;
-import org.vertxrs.engine.coroutines.Coroutines;
+import org.vertxrs.fibers.Fibers;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -323,7 +323,7 @@ public class MyResource {
 	@Path("coroutines/1")
 	@GET
 	public Single<Response> helloAsync(@Context io.vertx.rxjava.core.Vertx rxVertx){
-		return Coroutines.fiber(() -> {
+		return Fibers.fiber(() -> {
 			System.err.println("Creating client");
 			WebClientOptions options = new WebClientOptions();
 			options.setSsl(true);
@@ -336,7 +336,7 @@ public class MyResource {
 
 			System.err.println("Got response");
 
-			HttpResponse<io.vertx.rxjava.core.buffer.Buffer> httpResponse = Coroutines.await(responseHandler);
+			HttpResponse<io.vertx.rxjava.core.buffer.Buffer> httpResponse = Fibers.await(responseHandler);
 			System.err.println("Got body");
 			
 			return Response.ok(httpResponse.body().toString()).build();

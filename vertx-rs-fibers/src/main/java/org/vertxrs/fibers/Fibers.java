@@ -1,4 +1,4 @@
-package org.vertxrs.engine.coroutines;
+package org.vertxrs.fibers;
 
 import java.util.Map;
 
@@ -18,7 +18,7 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.sql.SQLConnection;
 import rx.Single;
 
-public class Coroutines {
+public class Fibers {
 
 	private static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
 

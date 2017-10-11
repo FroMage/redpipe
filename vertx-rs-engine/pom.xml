@@ -107,13 +107,6 @@
                 <artifactId>swagger-jaxrs</artifactId>
             </dependency>
             
-            <!-- Quasar -->
-            <dependency>
-                <groupId>co.paralleluniverse</groupId>
-                <artifactId>quasar-core</artifactId>
-                <classifier>jdk8</classifier>
-            </dependency>
-            
             <!-- RxJava -->
             <dependency>
                 <groupId>io.reactivex</groupId>
@@ -126,12 +119,4 @@
                 <artifactId>hibernate-validator</artifactId>
             </dependency>
 	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.vlkan</groupId>
-				<artifactId>quasar-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 </project>

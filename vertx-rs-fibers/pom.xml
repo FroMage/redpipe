@@ -7,14 +7,12 @@
 		<artifactId>vertx-rs-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>vertx-rs-prototyping</artifactId>
-	<name>vertx-rs-prototyping</name>
+	<artifactId>vertx-rs-fibers</artifactId>
+	<name>vertx-rs-fibers</name>
 	<url>http://maven.apache.org</url>
-	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -28,11 +26,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
-        <dependency>
-            <groupId>org.vertx-rs</groupId>
-            <artifactId>vertx-rs-fibers</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<!-- Quasar -->
+		<dependency>
+			<groupId>co.paralleluniverse</groupId>
+			<artifactId>quasar-core</artifactId>
+			<classifier>jdk8</classifier>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

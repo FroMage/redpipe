@@ -24,12 +24,10 @@ public class FCSPlugin extends Plugin {
 			packagesToScan[packagesToScan.length-1] = "org.vertxrs.engine";
 			new FastClasspathScanner(packagesToScan)
 				.matchClassesWithAnnotation(Path.class, klass -> {
-					System.err.println("Found resource "+klass);
 					if(!Modifier.isAbstract(klass.getModifiers()))
 						deployment.getActualResourceClasses().add(klass);
 				})
 				.matchClassesWithAnnotation(Provider.class, klass -> {
-					System.err.println("Found provider "+klass);
 					if(!Modifier.isAbstract(klass.getModifiers()))
 						deployment.getActualProviderClasses().add(klass);
 				})

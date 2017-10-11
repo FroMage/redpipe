@@ -1,7 +1,7 @@
 package org.vertxrs.wiki;
 
-import static org.vertxrs.engine.coroutines.Coroutines.await;
-import static org.vertxrs.engine.coroutines.Coroutines.fiber;
+import static org.vertxrs.fibers.Fibers.await;
+import static org.vertxrs.fibers.Fibers.fiber;
 
 import java.net.URI;
 import java.util.Date;

@@ -210,9 +210,10 @@
 
 	<modules>
 		<module>vertx-rs-engine</module>
-		<module>vertx-rs-prototyping</module>
-		<module>vertx-rs-wiki</module>
 		<module>vertx-rs-cdi</module>
 		<module>vertx-rs-fast-classpath-scanner</module>
+		<module>vertx-rs-fibers</module>
+        <module>vertx-rs-prototyping</module>
+        <module>vertx-rs-wiki</module>
 	</modules>
 </project>
