@@ -171,6 +171,12 @@
 				<groupId>io.swagger</groupId>
 				<artifactId>swagger-jaxrs</artifactId>
 				<version>1.5.0</version>
+				<exclusions>
+				    <exclusion>
+				        <groupId>javax.ws.rs</groupId>
+				        <artifactId>jsr311-api</artifactId>
+				    </exclusion>
+				</exclusions>
 			</dependency>
 
 			<!-- Quasar -->
@@ -206,5 +212,7 @@
 		<module>vertx-rs-engine</module>
 		<module>vertx-rs-prototyping</module>
 		<module>vertx-rs-wiki</module>
+		<module>vertx-rs-cdi</module>
+		<module>vertx-rs-fast-classpath-scanner</module>
 	</modules>
 </project>

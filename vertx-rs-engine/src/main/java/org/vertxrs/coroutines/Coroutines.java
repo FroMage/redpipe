@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.vertxrs.db.SQLUtil;
+import org.vertxrs.engine.AppGlobals;
 
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberAsync;
@@ -58,17 +59,22 @@ public class Coroutines {
 	
 	public static <T> Single<T> fiber(SuspendableCallable<T> body){
 		final Map<Class<?>, Object> contextDataMap = ResteasyProviderFactory.getContextDataMap();
+		AppGlobals globals = AppGlobals.get();
 		return Single.<T>create(sub -> {
 			Fiber<T> fiber = new Fiber<T>(getContextScheduler(), () -> {
 				try{
 					// start by restoring the RE context in this Fiber's ThreadLocal
 					ResteasyProviderFactory.pushContextDataMap(contextDataMap);
+					AppGlobals.set(globals);
 					T ret = body.run();
 					if(!sub.isUnsubscribed())
 						sub.onSuccess(ret);
 				}catch(Throwable x){
 					if(!sub.isUnsubscribed())
 						sub.onError(x);
+				}finally {
+					ResteasyProviderFactory.removeContextDataLevel();
+					AppGlobals.set(null);
 				}
 			});
 			fiber.start();

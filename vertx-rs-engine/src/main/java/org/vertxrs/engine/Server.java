@@ -1,31 +1,21 @@
 package org.vertxrs.engine;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.function.Function;
 
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.CDI;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.naming.spi.InitialContextFactory;
-import javax.naming.spi.InitialContextFactoryBuilder;
-import javax.naming.spi.NamingManager;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.validation.ValidatorFactory;
 
-import org.jboss.resteasy.cdi.CdiInjectorFactory;
-import org.jboss.resteasy.cdi.ResteasyCdiExtension;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.weld.bean.builtin.BeanManagerProxy;
-import org.jboss.weld.environment.se.Weld;
-import org.jboss.weld.vertx.VertxExtension;
-import org.vertxrs.cdi.VertxCdiRequestHandler;
+import org.vertxrs.dispatcher.VertxPluginRequestHandler;
 import org.vertxrs.resteasy.RxVertxProvider;
 import org.vertxrs.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
+import org.vertxrs.spi.Plugin;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.DefaultJaxrsConfig;
@@ -42,35 +32,54 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import rx.Single;
 import rx.plugins.RxJavaHooks;
 
 public class Server {
 	
 	private Vertx vertx;
+	private List<Plugin> plugins;
 
 	public Server(){
 		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
 	}
 	
-	public void start(){
-		start(null, null);
+	public Single<Void> start(){
+		return start(null);
 	}
 	
-	public void start(JsonObject config, Handler<AsyncResult<Void>> handler){
+	public Single<Void> start(JsonObject defaultConfig){
 		setupLogging();
-		setupCDI();
-		VertxResteasyDeployment deployment = setupResteasy();
-		setupSwagger(deployment);
+		
 		VertxOptions options = new VertxOptions();
 		options.setWarningExceptionTime(Long.MAX_VALUE);
-		if(config == null)
-			vertx = setupVertx(options, deployment, handler);
-		else {
-			vertx = setupVertx(Vertx.vertx(options), config, deployment, handler);
-		}
+		vertx = Vertx.vertx(options);
+		AppGlobals.init();
+		AppGlobals.get().setVertx(vertx);
+
+		// Propagate the Resteasy context on RxJava
+		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
+		
+		return loadConfig(defaultConfig)
+				.flatMap(config -> {
+					return setupPlugins()
+							.flatMap(v -> setupResteasy())
+							.flatMap(deployment -> {
+								setupSwagger(deployment);
+								return setupVertx(config, deployment);
+							});
+				});
 	}
 	
-	private Vertx setupVertx(Vertx vertx, JsonObject config, VertxResteasyDeployment deployment, Handler<AsyncResult<Void>> handler) {
+	private Single<Void> setupPlugins() {
+		plugins = new ArrayList<Plugin>();
+		for(Plugin plugin : ServiceLoader.load(Plugin.class))
+			plugins.add(plugin);
+		
+		return doOnPlugins(plugin -> plugin.preInit());
+	}
+
+	private Single<Void> setupVertx(JsonObject config, VertxResteasyDeployment deployment) {
 		// Get a DB
 		JDBCClient dbClient = JDBCClient.createNonShared(vertx, new JsonObject()
 				.put("url", config.getString("db_url", "jdbc:hsqldb:file:db/wiki"))
@@ -86,50 +95,51 @@ public class Server {
 		}
 		
 		// Save our injected globals
-		AppGlobals globals = CDI.current().select(AppGlobals.class).get();
-		globals.init(config, dbClient, mainClass);
+		AppGlobals globals = AppGlobals.get();
+		globals.setDbClient(dbClient);
+		globals.setMainClass(mainClass);
 
-		// Propagate the Resteasy context on RxJava
-		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
-
-		// Setup the Vertx-CDI integration
-		VertxExtension vertxExtension = CDI.current().select(VertxExtension.class).get();
-		BeanManager beanManager = CDI.current().getBeanManager();
-		// has to be done in a blocking thread
-		vertx.executeBlocking(future -> {
-			vertxExtension.registerConsumers(vertx.getDelegate(), BeanManagerProxy.unwrap(beanManager).event());
-			future.complete();
-		}, res -> {});
-
+		return doOnPlugins(plugin -> plugin.init())
+			.flatMap(v -> startVertx(config, deployment));
+	}
+	
+	private Single<Void> doOnPlugins(Function<Plugin, Single<Void>> operation){
+		Single<Void> last = Single.just(null);
+		for(Plugin plugin : plugins) {
+			last = last.flatMap(v -> operation.apply(plugin));
+		}
+		return last;
+	}
+	
+	private Single<Void> startVertx(JsonObject config, VertxResteasyDeployment deployment) {
 		Router router = Router.router(vertx);
-		VertxCdiRequestHandler resteasyHandler = new VertxCdiRequestHandler(vertx, deployment);
+		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
 		router.route().handler(routingContext -> {
 			ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
 			resteasyHandler.handle(routingContext.request());
 		});
 		
-		// Start the front end server using the Jax-RS controller
-		vertx.createHttpServer()
-		// CDI
-		.requestHandler(router::accept)
-		// Non-CDI
-		//		        .requestHandler(new VertxRequestHandler(vertx, deployment))
-		.listen(config.getInteger("http_port", 9000), ar -> {
-			if(handler != null)
-				handler.handle((AsyncResult)ar);
-			if(ar.failed()){
-				ar.cause().printStackTrace();
-			}
-			System.out.println("Server started on port "+ ar.result().actualPort());
-			// rx?
-			vertx.eventBus().send("vertxrs.init", "Init motherfucker!");
+		return Single.<Void>create(sub -> {
+			// Start the front end server using the Jax-RS controller
+			vertx.createHttpServer()
+			.requestHandler(router::accept)
+			.listen(config.getInteger("http_port", 9000), ar -> {
+				if(ar.failed()){
+					ar.cause().printStackTrace();
+					sub.onError(ar.cause());
+				}else {
+					System.out.println("Server started on port "+ ar.result().actualPort());
+					sub.onSuccess(null);
+				}
+			});
 		});
-		return vertx;
 	}
-	
-	private Vertx setupVertx(VertxOptions options, VertxResteasyDeployment deployment, Handler<AsyncResult<Void>> handler) {
-		Vertx vertx = Vertx.vertx(options);
 
+	private Single<JsonObject> loadConfig(JsonObject config) {
+		if(config != null) {
+			AppGlobals.get().setConfig(config);
+			return Single.just(config);
+		}
 		ConfigStoreOptions fileStore = new ConfigStoreOptions()
 				.setType("file")
 				.setConfig(new JsonObject().put("path", "conf/config.json"));
@@ -138,12 +148,10 @@ public class Server {
 				.addStore(fileStore);
 
 		ConfigRetriever retriever = ConfigRetriever.create(vertx, configRetrieverOptions);
-		retriever.rxGetConfig().subscribe(config -> {
-			setupVertx(vertx, config, deployment, handler);
-		}, err -> {
-			throw new RuntimeException(err);
+		return retriever.rxGetConfig().map(loadedConfig -> {
+			AppGlobals.get().setConfig(loadedConfig);
+			return loadedConfig;
 		});
-		return vertx;
 	}
 
 	private void setupSwagger(VertxResteasyDeployment deployment) {
@@ -194,56 +202,25 @@ public class Server {
 		deployment.getProviderFactory().register(SwaggerSerializers.class);
 	}
 
-	private VertxResteasyDeployment setupResteasy() {
+	private Single<VertxResteasyDeployment> setupResteasy() {
 		// Build the Jax-RS hello world deployment
 		VertxResteasyDeployment deployment = new VertxResteasyDeployment();
-		// Non-CDI
-		//	    deployment.getRegistry().addPerInstanceResource(MyResource.class);
-		//	    deployment.getProviderFactory().register(RxVertxProvider.class);
-		//	    deployment.getProviderFactory().register(MyExceptionMapper.class);
-		//	    deployment.setInjectorFactoryClass(CdiInjectorFactory.class.getName());
-		// CDI
-		ResteasyCdiExtension cdiExtension = CDI.current().select(ResteasyCdiExtension.class).get();
-		deployment.setActualResourceClasses(cdiExtension.getResources());
-		deployment.setInjectorFactoryClass(CdiInjectorFactory.class.getName());
-		deployment.getActualProviderClasses().addAll(cdiExtension.getProviders());
-		deployment.start();
-		return deployment;
+		deployment.getDefaultContextObjects().put(Vertx.class, AppGlobals.get().getVertx());
+		deployment.getDefaultContextObjects().put(AppGlobals.class, AppGlobals.get());
+		
+		return doOnPlugins(plugin -> plugin.deployToResteasy(deployment)).map(v -> {
+			try {
+				deployment.start();
+			}catch(ExceptionInInitializerError err) {
+				// rxjava behaves badly on LinkageError
+				rethrow(err.getCause());
+			}
+			return deployment;
+		}).doOnError(t -> t.printStackTrace());
 	}
 
-	private void setupCDI() {
-		// CDI
-		Weld weld = new Weld();
-		weld.addExtension(new VertxExtension());
-		weld.initialize();
-
-		// Set up Resteasy to build BV with CDI
-		try {
-			NamingManager.setInitialContextFactoryBuilder(new InitialContextFactoryBuilder() {
-				@Override
-				public InitialContextFactory createInitialContextFactory(Hashtable<?, ?> environment) throws NamingException {
-					return new InitialContextFactory() {
-
-						@Override
-						public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
-							Context ctx = new InitialContext(){
-								@Override
-								public Object lookup(String name) throws NamingException {
-									if(name.equals("java:comp/ValidatorFactory"))
-										return CDI.current().select(ValidatorFactory.class).get();
-									return null;
-								}
-							};
-							return ctx;
-						}
-					};
-				}
-			});
-		} catch (NamingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+	private <T extends Throwable> void rethrow(Throwable cause) throws T {
+		throw (T)cause;
 	}
 
 	private void setupLogging() {

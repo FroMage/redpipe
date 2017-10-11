@@ -4,7 +4,7 @@
  "db_driver": "org.hsqldb.jdbcDriver",
  "db_max_pool_size": 30,
  "security_definitions": "classpath:wiki-users.properties",
- "session_key": "6df5a5d160b141454d9cf38a2a88ffdd30a7dc80876698f53a4fbf071a2e16c4",
+ "scan": ["org.vertxrs.wiki"],
  "keystore": {
     "path": "keystore.jceks",
     "type": "jceks",

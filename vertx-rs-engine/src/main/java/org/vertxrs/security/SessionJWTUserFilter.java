@@ -3,17 +3,16 @@ package org.vertxrs.security;
 import java.io.IOException;
 
 import javax.annotation.Priority;
-import javax.enterprise.inject.spi.CDI;
-import javax.enterprise.util.AnnotationLiteral;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.vertxrs.engine.Config;
+import org.vertxrs.engine.AppGlobals;
 import org.vertxrs.resteasy.ResteasyFilterContext;
 
 import io.vertx.core.json.JsonObject;
@@ -30,9 +29,8 @@ public class SessionJWTUserFilter implements ContainerRequestFilter {
 	private JWTAuthHandler jwtAuthHandler;
 	private JWTAuth jwtAuth;
 
-	public SessionJWTUserFilter() {
-		Vertx vertx = ResteasyProviderFactory.getContextData(Vertx.class);
-		JsonObject config = CDI.current().select(JsonObject.class, new AnnotationLiteral<Config>() {}).get();
+	public SessionJWTUserFilter(@Context AppGlobals globals, @Context Vertx vertx) {
+		JsonObject config = globals.getConfig();
 		JsonObject keyStoreOptions = new JsonObject().put("keyStore", config.getJsonObject("keystore"));
 
 		// attempt to load a Key file

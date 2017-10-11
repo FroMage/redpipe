@@ -3,16 +3,15 @@ package org.vertxrs.security;
 import java.io.IOException;
 
 import javax.annotation.Priority;
-import javax.enterprise.inject.spi.CDI;
-import javax.enterprise.util.AnnotationLiteral;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.vertxrs.engine.Config;
+import org.vertxrs.engine.AppGlobals;
 import org.vertxrs.resteasy.ResteasyFilterContext;
 
 import io.vertx.core.json.JsonObject;
@@ -32,9 +31,8 @@ public class SessionUserFilter implements ContainerRequestFilter {
 	private UserSessionHandler userSessionHandler;
 	private ShiroAuth auth;
 
-	public SessionUserFilter() {
-		Vertx vertx = ResteasyProviderFactory.getContextData(Vertx.class);
-		JsonObject config = CDI.current().select(JsonObject.class, new AnnotationLiteral<Config>() {}).get();
+	public SessionUserFilter(@Context AppGlobals globals, @Context Vertx vertx) {
+		JsonObject config = globals.getConfig();
 		auth = ShiroAuth.create(vertx, new ShiroAuthOptions()
 				  .setType(ShiroAuthRealmType.PROPERTIES)
 				  .setConfig(new JsonObject()

@@ -19,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.vertxrs.engine.AppGlobals;
 import org.vertxrs.engine.MainResource;
 import org.vertxrs.security.AuthorizationException;
 import org.vertxrs.security.RequiresPermissions;
@@ -60,6 +61,7 @@ public class WikiResource {
 
 	@GET
 	public Single<Template> index(){
+    	System.err.println("index(): "+AppGlobals.get());
 		return fiber((con) -> {
 			ResultSet res = await(con.rxQuery(SQL.SQL_ALL_PAGES));
 			List<String> pages = res.getResults()

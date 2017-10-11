@@ -3,7 +3,6 @@ package org.vertxrs.security;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.inject.Inject;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -13,6 +12,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+
+import org.vertxrs.engine.AppGlobals;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.auth.AuthProvider;
@@ -24,8 +25,6 @@ import rx.Single;
 public abstract class BaseSecurityResource {
 
 	public static final String REDIRECT_KEY = "__login_redirect";
-	@Inject
-	private Class mainClass;
 
 	@GET
 	@Path("/login")
@@ -66,10 +65,10 @@ public abstract class BaseSecurityResource {
 
 	@GET
 	@Path("/logout")
-	public Response logout(@Context UriInfo uriInfo, @Context RoutingContext ctx) {
+	public Response logout(@Context UriInfo uriInfo, @Context RoutingContext ctx, @Context AppGlobals globals) {
 		ctx.clearUser();
 		UriBuilder builder = uriInfo.getBaseUriBuilder();
-		URI rootUri = builder.path(mainClass).build();
+		URI rootUri = builder.path(globals.getMainClass()).build();
 		return Response.status(Status.FOUND).location(rootUri).build();
 	}
 }

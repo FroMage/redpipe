@@ -7,8 +7,8 @@
 		<artifactId>vertx-rs-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>vertx-rs-wiki</artifactId>
-	<name>vertx-rs-wiki</name>
+	<artifactId>vertx-rs-fast-classpath-scanner</artifactId>
+	<name>vertx-rs-fast-classpath-scanner</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -21,11 +21,6 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-unit</artifactId>
-			<scope>test</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.vertx-rs</groupId>
@@ -34,23 +29,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jaxrs</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.vertx-rs</groupId>
-			<artifactId>vertx-rs-fast-classpath-scanner</artifactId>
-			<version>${project.version}</version>
+			<groupId>io.github.lukehutch</groupId>
+			<artifactId>fast-classpath-scanner</artifactId>
+			<version>2.7.4</version>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.vlkan</groupId>
-				<artifactId>quasar-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 </project>

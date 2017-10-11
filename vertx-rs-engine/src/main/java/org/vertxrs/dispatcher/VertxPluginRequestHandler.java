@@ -1,6 +1,7 @@
-package org.vertxrs.cdi;
+package org.vertxrs.dispatcher;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.plugins.server.embedded.SecurityDomain;
@@ -14,6 +15,8 @@ import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
 import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.vertxrs.engine.AppGlobals;
+import org.vertxrs.spi.Plugin;
 
 import io.netty.buffer.ByteBufInputStream;
 import io.vertx.core.Handler;
@@ -22,28 +25,30 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.core.http.HttpServerResponse;
 
-public class VertxCdiRequestHandler implements Handler<HttpServerRequest>
+public class VertxPluginRequestHandler implements Handler<HttpServerRequest>
 {
 
    private final Vertx vertx;
    protected final RequestDispatcher dispatcher;
    private final String servletMappingPrefix;
+   private AppGlobals appGlobals;
 
-   public VertxCdiRequestHandler(Vertx vertx, ResteasyDeployment deployment, String servletMappingPrefix, SecurityDomain domain)
+   public VertxPluginRequestHandler(Vertx vertx, ResteasyDeployment deployment, String servletMappingPrefix, SecurityDomain domain, List<Plugin> plugins)
    {
       this.vertx = vertx;
-      this.dispatcher = new CdiRequestDispatcher((SynchronousDispatcher) deployment.getDispatcher(), deployment.getProviderFactory(), domain);
+      this.dispatcher = new PluginRequestDispatcher((SynchronousDispatcher) deployment.getDispatcher(), deployment.getProviderFactory(), domain, plugins);
       this.servletMappingPrefix = servletMappingPrefix;
+      appGlobals = AppGlobals.get();
    }
 
-   public VertxCdiRequestHandler(Vertx vertx, ResteasyDeployment deployment, String servletMappingPrefix)
+   public VertxPluginRequestHandler(Vertx vertx, ResteasyDeployment deployment, String servletMappingPrefix, List<Plugin> plugins)
    {
-      this(vertx, deployment, servletMappingPrefix, null);
+      this(vertx, deployment, servletMappingPrefix, null, plugins);
    }
 
-   public VertxCdiRequestHandler(Vertx vertx, ResteasyDeployment deployment)
+   public VertxPluginRequestHandler(Vertx vertx, ResteasyDeployment deployment, List<Plugin> plugins)
    {
-      this(vertx, deployment, "");
+      this(vertx, deployment, "", plugins);
    }
 
    @Override
@@ -64,6 +69,7 @@ public class VertxCdiRequestHandler implements Handler<HttpServerRequest>
 
          try
          {
+        	AppGlobals.set(appGlobals);
             dispatcher.service(ctx.getDelegate(), request.getDelegate(), response.getDelegate(), vertxRequest, vertxResponse, true);
          } catch (Failure e1)
          {
@@ -73,7 +79,10 @@ public class VertxCdiRequestHandler implements Handler<HttpServerRequest>
             vertxResponse.setStatus(500);
             LogMessages.LOGGER.error(Messages.MESSAGES.unexpected(), ex);
          }
-
+         finally 
+         {
+        	 AppGlobals.set(null);
+         }
          if (!vertxRequest.getAsyncContext().isSuspended())
          {
             try

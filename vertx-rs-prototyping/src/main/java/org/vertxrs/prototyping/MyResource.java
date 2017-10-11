@@ -3,8 +3,6 @@ package org.vertxrs.prototyping;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -16,7 +14,6 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
 import org.vertxrs.coroutines.Coroutines;
-import org.vertxrs.engine.Config;
 import org.vertxrs.engine.VertxInject;
 
 import io.vertx.core.Vertx;
@@ -24,7 +21,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rx.java.ObservableHandler;
 import io.vertx.rx.java.RxHelper;
@@ -33,19 +29,12 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import rx.Observable;
 import rx.Single;
 
-@RequestScoped
 @Path("/hello")
 public class MyResource {
 	
-	@Inject
-	private InjectedBean bean;
-
-	@Inject @Config
-	private JsonObject config;
-
 	@GET
 	public String hello(){
-		return "hello bean: "+bean+", config: "+config;
+		return "hello bean";
 	}
 
 	@Path("2")

@@ -3,28 +3,21 @@ package org.vertxrs.engine;
 import static io.vertx.core.http.HttpHeaders.SET_COOKIE;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.ext.Provider;
 
-import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.vertxrs.resteasy.ResteasyFilterContext;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Cookie;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -36,12 +29,11 @@ import io.vertx.rxjava.ext.web.sstore.LocalSessionStore;
 @Provider
 public class SessionFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
-	@Inject @Config 
-	private JsonObject config;
 	private SessionHandler sessionHandler;
 	
 	public SessionFilter() {
-		Vertx vertx = ResteasyProviderFactory.getContextData(Vertx.class);
+		Vertx vertx = AppGlobals.get().getVertx();
+		System.err.println("vertx: "+vertx);
 		sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
 	}
 	
