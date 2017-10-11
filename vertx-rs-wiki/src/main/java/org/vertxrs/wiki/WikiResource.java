@@ -1,7 +1,7 @@
 package org.vertxrs.wiki;
 
-import static org.vertxrs.coroutines.Coroutines.await;
-import static org.vertxrs.coroutines.Coroutines.fiber;
+import static org.vertxrs.engine.coroutines.Coroutines.await;
+import static org.vertxrs.engine.coroutines.Coroutines.fiber;
 
 import java.net.URI;
 import java.util.Date;
@@ -19,12 +19,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.vertxrs.engine.AppGlobals;
-import org.vertxrs.engine.MainResource;
-import org.vertxrs.security.AuthorizationException;
-import org.vertxrs.security.RequiresPermissions;
-import org.vertxrs.security.RequiresUser;
-import org.vertxrs.template.Template;
+import org.vertxrs.engine.core.AppGlobals;
+import org.vertxrs.engine.core.MainResource;
+import org.vertxrs.engine.security.AuthorizationException;
+import org.vertxrs.engine.security.RequiresPermissions;
+import org.vertxrs.engine.security.RequiresUser;
+import org.vertxrs.engine.template.Template;
 
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;

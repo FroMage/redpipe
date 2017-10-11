@@ -1,7 +1,7 @@
 package org.vertxrs.wiki;
 
-import static org.vertxrs.coroutines.Coroutines.await;
-import static org.vertxrs.coroutines.Coroutines.fiber;
+import static org.vertxrs.engine.coroutines.Coroutines.await;
+import static org.vertxrs.engine.coroutines.Coroutines.fiber;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,11 +19,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.vertxrs.db.SQLUtil;
-import org.vertxrs.security.NoAuthFilter;
-import org.vertxrs.security.NoAuthRedirect;
-import org.vertxrs.security.RequiresPermissions;
-import org.vertxrs.security.RequiresUser;
+import org.vertxrs.engine.db.SQLUtil;
+import org.vertxrs.engine.security.NoAuthFilter;
+import org.vertxrs.engine.security.NoAuthRedirect;
+import org.vertxrs.engine.security.RequiresPermissions;
+import org.vertxrs.engine.security.RequiresUser;
 
 import com.github.rjeschke.txtmark.Processor;
 

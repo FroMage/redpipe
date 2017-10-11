@@ -1,6 +1,6 @@
 package org.vertxrs.prototyping;
 
-import org.vertxrs.engine.Server;
+import org.vertxrs.engine.core.Server;
 
 public class Main {
 	public static void main(String[] args) {

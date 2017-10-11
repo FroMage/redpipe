@@ -4,8 +4,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.vertxrs.db.SQLUtil;
-import org.vertxrs.engine.Server;
+import org.vertxrs.engine.core.Server;
+import org.vertxrs.engine.db.SQLUtil;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

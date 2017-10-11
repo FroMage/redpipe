@@ -24,9 +24,9 @@ import org.jboss.weld.bean.builtin.BeanManagerProxy;
 import org.jboss.weld.context.bound.BoundRequestContext;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.vertx.VertxExtension;
-import org.vertxrs.engine.AppGlobals;
-import org.vertxrs.spi.Plugin;
-import org.vertxrs.spi.RunnableWithException;
+import org.vertxrs.engine.core.AppGlobals;
+import org.vertxrs.engine.spi.Plugin;
+import org.vertxrs.engine.spi.RunnableWithException;
 
 import io.vertx.rxjava.core.Vertx;
 import rx.Single;

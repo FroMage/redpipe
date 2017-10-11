@@ -13,8 +13,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
-import org.vertxrs.coroutines.Coroutines;
-import org.vertxrs.engine.VertxInject;
+import org.vertxrs.engine.core.VertxInject;
+import org.vertxrs.engine.coroutines.Coroutines;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;

@@ -5,8 +5,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
-import org.vertxrs.security.BaseSecurityResource;
-import org.vertxrs.template.Template;
+import org.vertxrs.engine.security.BaseSecurityResource;
+import org.vertxrs.engine.template.Template;
 
 @Path("/")
 public class SecurityResource extends BaseSecurityResource {

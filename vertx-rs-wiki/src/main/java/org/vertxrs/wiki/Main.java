@@ -1,7 +1,7 @@
 package org.vertxrs.wiki;
 
-import org.vertxrs.db.SQLUtil;
-import org.vertxrs.engine.Server;
+import org.vertxrs.engine.core.Server;
+import org.vertxrs.engine.db.SQLUtil;
 
 public class Main {
 	public static void main(String[] args) {
