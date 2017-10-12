@@ -33,10 +33,9 @@ public class ApiTest {
 						           .put("type", "jceks")
 						           .put("password", "secret"));
 
-		server = new Server();
+		server = new WikiServer();
 		Async async = context.async();
 		server.start(config)
-			.flatMap(v -> SQLUtil.doInConnection(conn -> conn.rxExecute(SQL.SQL_CREATE_PAGES_TABLE)))
 			.subscribe(v -> {
 				webClient = WebClient.create(server.getVertx(),
 						new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000));

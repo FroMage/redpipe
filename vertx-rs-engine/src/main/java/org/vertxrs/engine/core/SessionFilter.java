@@ -33,7 +33,6 @@ public class SessionFilter implements ContainerRequestFilter, ContainerResponseF
 	
 	public SessionFilter() {
 		Vertx vertx = AppGlobals.get().getVertx();
-		System.err.println("vertx: "+vertx);
 		sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
 	}
 	

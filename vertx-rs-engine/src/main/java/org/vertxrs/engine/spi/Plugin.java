@@ -18,4 +18,7 @@ public abstract class Plugin {
 	public void aroundRequest(HttpRequest req, RunnableWithException<IOException> continuation) throws IOException{
 		continuation.run();
 	}
+
+	public Single<Void> preRoute() { return Single.just(null); }
+	public Single<Void> postRoute() { return Single.just(null); }
 }

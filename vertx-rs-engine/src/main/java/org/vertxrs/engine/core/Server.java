@@ -38,7 +38,7 @@ import rx.plugins.RxJavaHooks;
 public class Server {
 	
 	private Vertx vertx;
-	private List<Plugin> plugins;
+	protected List<Plugin> plugins;
 
 	public Server(){
 		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
@@ -72,11 +72,14 @@ public class Server {
 	}
 	
 	private Single<Void> setupPlugins() {
+		loadPlugins();
+		return doOnPlugins(plugin -> plugin.preInit());
+	}
+
+	protected void loadPlugins() {
 		plugins = new ArrayList<Plugin>();
 		for(Plugin plugin : ServiceLoader.load(Plugin.class))
 			plugins.add(plugin);
-		
-		return doOnPlugins(plugin -> plugin.preInit());
 	}
 
 	private Single<Void> setupVertx(JsonObject config, VertxResteasyDeployment deployment) {
@@ -113,26 +116,34 @@ public class Server {
 	
 	private Single<Void> startVertx(JsonObject config, VertxResteasyDeployment deployment) {
 		Router router = Router.router(vertx);
-		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
-		router.route().handler(routingContext -> {
-			ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
-			resteasyHandler.handle(routingContext.request());
-		});
+		AppGlobals.get().setRouter(router);
 		
-		return Single.<Void>create(sub -> {
-			// Start the front end server using the Jax-RS controller
-			vertx.createHttpServer()
-			.requestHandler(router::accept)
-			.listen(config.getInteger("http_port", 9000), ar -> {
-				if(ar.failed()){
-					ar.cause().printStackTrace();
-					sub.onError(ar.cause());
-				}else {
-					System.out.println("Server started on port "+ ar.result().actualPort());
-					sub.onSuccess(null);
-				}
-			});
-		});
+		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
+		
+		return doOnPlugins(plugin -> plugin.preRoute())
+				.map(v -> {
+					router.route().handler(routingContext -> {
+						ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
+						resteasyHandler.handle(routingContext.request());
+					});
+					return null;
+				}).flatMap(v -> doOnPlugins(plugin -> plugin.postRoute()))
+				.flatMap(v -> {
+					return Single.<Void>create(sub -> {
+						// Start the front end server using the Jax-RS controller
+						vertx.createHttpServer()
+						.requestHandler(router::accept)
+						.listen(config.getInteger("http_port", 9000), ar -> {
+							if(ar.failed()){
+								ar.cause().printStackTrace();
+								sub.onError(ar.cause());
+							}else {
+								System.out.println("Server started on port "+ ar.result().actualPort());
+								sub.onSuccess(null);
+							}
+						});
+					});
+				});
 	}
 
 	private Single<JsonObject> loadConfig(JsonObject config) {
@@ -195,6 +206,7 @@ public class Server {
 		// FIXME: port does not come from config
 		swaggerConfig.setHost("localhost:9000");
 		swaggerConfig.setBasePath("/");
+		// FIXME: resource should be detected
 		swaggerConfig.setResourcePackage("org.mygroup.vertxrs");
 		swaggerConfig.setPrettyPrint(true);
 		swaggerConfig.setScan(true);

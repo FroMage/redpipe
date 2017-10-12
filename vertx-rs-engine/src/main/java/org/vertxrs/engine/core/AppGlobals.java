@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
+import io.vertx.rxjava.ext.web.Router;
 import rx.Single;
 
 public class AppGlobals {
@@ -28,6 +29,7 @@ public class AppGlobals {
 	private JDBCClient dbClient;
 	private Class<?> mainClass;
 	private Vertx vertx;
+	private Router router;
 	
 	public JsonObject getConfig() {
 		return config;
@@ -63,5 +65,13 @@ public class AppGlobals {
 
 	public Vertx getVertx() {
 		return vertx;
+	}
+
+	void setRouter(Router router) {
+		this.router = router;
+	}
+	
+	public Router getRouter() {
+		return router;
 	}
 }

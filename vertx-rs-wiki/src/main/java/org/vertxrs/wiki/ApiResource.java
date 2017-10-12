@@ -31,6 +31,7 @@ import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTOptions;
+import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.ext.auth.AuthProvider;
 import io.vertx.rxjava.ext.auth.User;
@@ -146,11 +147,18 @@ public class ApiResource {
 	@Path("pages/{id}")
 	public Single<Response> apiUpdatePage(@PathParam("id") String id, 
 			@ApiUpdateValid("markdown") JsonObject page,
-			@Context HttpServerRequest req){
+			@Context HttpServerRequest req,
+			@Context Vertx vertx){
 		JsonArray params = new JsonArray();
 		params.add(page.getString("markdown")).add(id);
 		return SQLUtil.doInConnection(connection -> connection.rxUpdateWithParams(SQL.SQL_SAVE_PAGE, params))
-				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
+				.map(res -> {
+				    JsonObject event = new JsonObject()
+				    	      .put("id", id)
+				    	      .put("client", page.getString("client"));
+				    vertx.eventBus().publish("page.saved", event);
+					return Response.ok(new JsonObject().put("success", true)).build();
+				});
 	}
 
 	@RequiresPermissions("delete")
