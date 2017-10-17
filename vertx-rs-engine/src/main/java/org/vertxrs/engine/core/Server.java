@@ -16,6 +16,7 @@ import org.vertxrs.engine.dispatcher.VertxPluginRequestHandler;
 import org.vertxrs.engine.resteasy.RxVertxProvider;
 import org.vertxrs.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
 import org.vertxrs.engine.spi.Plugin;
+import org.vertxrs.engine.template.TemplateRenderer;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.DefaultJaxrsConfig;
@@ -63,6 +64,7 @@ public class Server {
 		return loadConfig(defaultConfig)
 				.flatMap(config -> {
 					return setupPlugins()
+							.flatMap(v -> setupTemplateRenderers())
 							.flatMap(v -> setupResteasy())
 							.flatMap(deployment -> {
 								setupSwagger(deployment);
@@ -80,6 +82,14 @@ public class Server {
 		plugins = new ArrayList<Plugin>();
 		for(Plugin plugin : ServiceLoader.load(Plugin.class))
 			plugins.add(plugin);
+	}
+
+	private Single<Void> setupTemplateRenderers() {
+		List<TemplateRenderer> renderers = new ArrayList<>();
+		for(TemplateRenderer renderer : ServiceLoader.load(TemplateRenderer.class))
+			renderers.add(renderer);
+		AppGlobals.get().setTemplateRenderers(renderers);
+		return Single.just(null);
 	}
 
 	private Single<Void> setupVertx(JsonObject config, VertxResteasyDeployment deployment) {

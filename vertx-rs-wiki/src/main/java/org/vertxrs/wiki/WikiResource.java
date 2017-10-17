@@ -18,16 +18,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
-import org.vertxrs.engine.core.AppGlobals;
 import org.vertxrs.engine.core.MainResource;
 import org.vertxrs.engine.security.AuthorizationException;
 import org.vertxrs.engine.security.RequiresPermissions;
 import org.vertxrs.engine.security.RequiresUser;
 import org.vertxrs.engine.template.Template;
-
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import com.github.rjeschke.txtmark.Processor;
 
@@ -61,7 +59,6 @@ public class WikiResource {
 
 	@GET
 	public Single<Template> index(){
-    	System.err.println("index(): "+AppGlobals.get());
 		return fiber((con) -> {
 			ResultSet res = await(con.rxQuery(SQL.SQL_ALL_PAGES));
 			List<String> pages = res.getResults()

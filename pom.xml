@@ -215,5 +215,6 @@
 		<module>vertx-rs-fibers</module>
         <module>vertx-rs-prototyping</module>
         <module>vertx-rs-wiki</module>
+        <module>vertx-rs-templating-freemarker</module>
 	</modules>
 </project>

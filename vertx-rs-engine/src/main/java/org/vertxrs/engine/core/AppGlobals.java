@@ -1,5 +1,9 @@
 package org.vertxrs.engine.core;
 
+import java.util.List;
+
+import org.vertxrs.engine.template.TemplateRenderer;
+
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
@@ -30,6 +34,7 @@ public class AppGlobals {
 	private Class<?> mainClass;
 	private Vertx vertx;
 	private Router router;
+	private List<TemplateRenderer> templateRenderers;
 	
 	public JsonObject getConfig() {
 		return config;
@@ -73,5 +78,17 @@ public class AppGlobals {
 	
 	public Router getRouter() {
 		return router;
+	}
+
+	void setTemplateRenderers(List<TemplateRenderer> renderers) {
+		this.templateRenderers = renderers;
+	}
+	
+	public TemplateRenderer getTemplateRenderer(String name) {
+		for(TemplateRenderer renderer : templateRenderers) {
+			if(renderer.supportsTemplate(name))
+				return renderer;
+		}
+		return null;
 	}
 }

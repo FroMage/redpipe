@@ -3,6 +3,12 @@ package org.vertxrs.engine.template;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.core.Response;
+
+import org.vertxrs.engine.core.AppGlobals;
+
+import rx.Single;
+
 public class Template {
 	private Map<String, Object> variables;
 	private String name;
@@ -27,5 +33,12 @@ public class Template {
 	public Template set(String name, Object value){
 		variables.put(name, value);
 		return this;
+	}
+	
+	public Single<Response> render() {
+		TemplateRenderer renderer = AppGlobals.get().getTemplateRenderer(name);
+		if(renderer == null)
+			throw new RuntimeException("Failed to find template renderer for template "+name);
+		return renderer.render(name, variables);
 	}
 }

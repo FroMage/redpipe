@@ -26,7 +26,7 @@ public class LoginRedirectFilter implements ContainerRequestFilter {
     	if(subject == null){
     		UriBuilder builder = requestContext.getUriInfo().getBaseUriBuilder();
     		Session session = ResteasyProviderFactory.getContextData(Session.class);
-    		session.put(BaseSecurityResource.REDIRECT_KEY, requestContext.getUriInfo().getPath());
+    		session.put(BaseSecurityResource.REDIRECT_KEY, requestContext.getUriInfo().getPath(false));
     		URI loginUri = builder.path(BaseSecurityResource.class).path(BaseSecurityResource.class, "login").build();
     		requestContext.abortWith(Response.status(Status.TEMPORARY_REDIRECT).location(loginUri).build());
     	}

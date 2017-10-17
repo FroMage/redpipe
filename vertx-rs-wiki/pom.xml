@@ -39,6 +39,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.vertx-rs</groupId>
+            <artifactId>vertx-rs-templating-freemarker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 		<dependency>
 			<groupId>org.vertx-rs</groupId>
 			<artifactId>vertx-rs-fast-classpath-scanner</artifactId>
