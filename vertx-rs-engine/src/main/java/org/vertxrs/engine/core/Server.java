@@ -42,7 +42,7 @@ public class Server {
 	protected List<Plugin> plugins;
 
 	public Server(){
-		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
+//		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
 	}
 	
 	public Single<Void> start(){
