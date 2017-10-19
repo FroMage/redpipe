@@ -10,6 +10,7 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.shiro.ShiroException;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.vertxrs.engine.core.AppGlobals;
 import org.vertxrs.engine.resteasy.ResteasyFilterContext;
@@ -33,16 +34,23 @@ public class SessionUserFilter implements ContainerRequestFilter {
 
 	public SessionUserFilter(@Context AppGlobals globals, @Context Vertx vertx) {
 		JsonObject config = globals.getConfig();
-		auth = ShiroAuth.create(vertx, new ShiroAuthOptions()
-				  .setType(ShiroAuthRealmType.PROPERTIES)
-				  .setConfig(new JsonObject()
-				    .put("properties_path", config.getString("security_definitions"))));
-		userSessionHandler = UserSessionHandler.create(auth);
+		try {
+			auth = ShiroAuth.create(vertx, new ShiroAuthOptions()
+					.setType(ShiroAuthRealmType.PROPERTIES)
+					.setConfig(new JsonObject()
+							.put("properties_path", config.getString("security_definitions"))));
+			userSessionHandler = UserSessionHandler.create(auth);
+		}catch(ShiroException x) {
+			System.err.println("Exception loading users: users won't be able to be logged in");
+			x.printStackTrace();
+		}
 	}
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
-		userSessionHandler.handle(RoutingContext.newInstance(new ResteasyFilterContext(requestContext)));
+		if(auth != null) {
+			ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
+			userSessionHandler.handle(RoutingContext.newInstance(new ResteasyFilterContext(requestContext)));
+		}
 	}
 }

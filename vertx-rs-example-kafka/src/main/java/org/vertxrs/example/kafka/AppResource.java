@@ -1,4 +1,4 @@
-package org.vertxrs.wiki;
+package org.vertxrs.example.kafka;
 
 import java.io.IOException;
 
@@ -14,18 +14,12 @@ import org.vertxrs.engine.resteasy.FileResource;
 
 import com.github.rjeschke.txtmark.Processor;
 
-@Path("wiki/")
+@Path("")
 public class AppResource extends FileResource {
-	@Path("app{path:(/.*)?}")
+	@Path("static{path:(/.*)?}")
 	@GET
 	public Response get(@PathParam("path") String path) throws IOException{
+		System.err.println("Get "+path);
 		return super.getFile(path);
-	}
-	
-	@Produces(MediaType.TEXT_HTML)
-	@Path("app/markdown")
-	@POST
-	public Response markdown(String contents){
-		return Response.ok(Processor.process(contents)).build();
 	}
 }

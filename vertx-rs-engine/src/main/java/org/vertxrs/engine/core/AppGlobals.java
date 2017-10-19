@@ -1,6 +1,8 @@
 package org.vertxrs.engine.core;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.vertxrs.engine.template.TemplateRenderer;
 
@@ -35,6 +37,7 @@ public class AppGlobals {
 	private Vertx vertx;
 	private Router router;
 	private List<TemplateRenderer> templateRenderers;
+	private Map<String, Object> globals = new HashMap<>();
 	
 	public JsonObject getConfig() {
 		return config;
@@ -90,5 +93,13 @@ public class AppGlobals {
 				return renderer;
 		}
 		return null;
+	}
+
+	public void setGlobal(String key, Object value) {
+		globals.put(key, value);
+	}
+	
+	public Object getGlobal(String key) {
+		return globals.get(key);
 	}
 }

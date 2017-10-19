@@ -161,18 +161,30 @@ public class Server {
 			AppGlobals.get().setConfig(config);
 			return Single.just(config);
 		}
-		ConfigStoreOptions fileStore = new ConfigStoreOptions()
-				.setType("file")
-				.setConfig(new JsonObject().put("path", "conf/config.json"));
+		
+		String path = "conf/config.json";
+		return vertx.fileSystem().rxExists(path)
+				.flatMap(exists -> {
+					if(exists) {
+						ConfigStoreOptions fileStore = new ConfigStoreOptions()
+								.setType("file")
+								.setConfig(new JsonObject().put("path", path));
 
-		ConfigRetrieverOptions configRetrieverOptions = new ConfigRetrieverOptions()
-				.addStore(fileStore);
+						ConfigRetrieverOptions configRetrieverOptions = new ConfigRetrieverOptions()
+								.addStore(fileStore);
 
-		ConfigRetriever retriever = ConfigRetriever.create(vertx, configRetrieverOptions);
-		return retriever.rxGetConfig().map(loadedConfig -> {
-			AppGlobals.get().setConfig(loadedConfig);
-			return loadedConfig;
-		});
+						ConfigRetriever retriever = ConfigRetriever.create(vertx, configRetrieverOptions);
+						return retriever.rxGetConfig().map(loadedConfig -> {
+							AppGlobals.get().setConfig(loadedConfig);
+							return loadedConfig;
+						});
+					} else {
+						// empty config
+						JsonObject emptyConfig = new JsonObject();
+						AppGlobals.get().setConfig(emptyConfig);
+						return Single.just(emptyConfig);
+					}
+				});
 	}
 
 	private void setupSwagger(VertxResteasyDeployment deployment) {
