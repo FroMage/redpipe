@@ -17,5 +17,4 @@ public class SecurityResource extends BaseSecurityResource {
 				// workaround because I couldn't find how to put class literals in freemarker
 				.set("SecurityResource", BaseSecurityResource.class);
 	}
-
 }

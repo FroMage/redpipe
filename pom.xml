@@ -196,10 +196,10 @@
 				<artifactId>swagger-jaxrs</artifactId>
 				<version>1.5.0</version>
 				<exclusions>
-				    <exclusion>
-				        <groupId>javax.ws.rs</groupId>
-				        <artifactId>jsr311-api</artifactId>
-				    </exclusion>
+					<exclusion>
+						<groupId>javax.ws.rs</groupId>
+						<artifactId>jsr311-api</artifactId>
+					</exclusion>
 				</exclusions>
 			</dependency>
 
@@ -237,9 +237,9 @@
 		<module>vertx-rs-cdi</module>
 		<module>vertx-rs-fast-classpath-scanner</module>
 		<module>vertx-rs-fibers</module>
-        <module>vertx-rs-prototyping</module>
-        <module>vertx-rs-wiki</module>
-        <module>vertx-rs-templating-freemarker</module>
-    <module>vertx-rs-example-kafka</module>
-  </modules>
+		<module>vertx-rs-prototyping</module>
+		<module>vertx-rs-wiki</module>
+		<module>vertx-rs-templating-freemarker</module>
+		<module>vertx-rs-example-kafka</module>
+	</modules>
 </project>
