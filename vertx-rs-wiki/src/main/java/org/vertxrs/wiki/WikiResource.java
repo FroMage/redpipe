@@ -31,6 +31,7 @@ import com.github.rjeschke.txtmark.Processor;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rxjava.core.Vertx;
@@ -72,12 +73,18 @@ public class WikiResource {
 					.set("pages", pages)
 					.set("uriInfo", uriInfo)
 					.set("canCreatePage", canCreatePage)
-					.set("username", user.principal().getString("username"))
+					.set("username", getUserName())
 					// workaround because I couldn't find how to put class literals in freemarker
 					.set("WikiResource", WikiResource.class)
 					.set("SecurityResource", SecurityResource.class)
 					.set("backup_gist_url", flash.get("backup_gist_url"));
 		});
+	}
+
+	private String getUserName() {
+		AccessToken tok = (AccessToken) user.getDelegate();
+		System.err.println(tok.accessToken());
+		return tok.accessToken().getString("preferred_username");
 	}
 
 	@Path("/wiki/{page}")
@@ -103,6 +110,7 @@ public class WikiResource {
 			boolean canUpdate = await(user.rxIsAuthorised("update"));
 			boolean canDelete = await(user.rxIsAuthorised("delete"));
 			return new Template("templates/page.ftl")
+					.set("username", getUserName())
 					.set("title", page)
 					.set("id", id)
 					.set("newPage", newPage ? "yes" : "no")

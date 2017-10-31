@@ -30,9 +30,15 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.config.ConfigRetriever;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.ext.auth.AuthProvider;
+import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import io.vertx.rxjava.ext.web.Session;
+import io.vertx.rxjava.ext.web.handler.CookieHandler;
+import io.vertx.rxjava.ext.web.handler.SessionHandler;
+import io.vertx.rxjava.ext.web.sstore.LocalSessionStore;
 import rx.Single;
 import rx.plugins.RxJavaHooks;
 
@@ -132,6 +138,7 @@ public class Server {
 		
 		return doOnPlugins(plugin -> plugin.preRoute())
 				.map(v -> {
+					setupRoutes(router);
 					router.route().handler(routingContext -> {
 						ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
 						resteasyHandler.handle(routingContext.request());
@@ -154,6 +161,26 @@ public class Server {
 						});
 					});
 				});
+	}
+
+	protected void setupRoutes(Router router) {
+		router.route().handler(CookieHandler.create());
+		
+		SessionHandler sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
+		router.route().handler(sessionHandler);
+
+		AuthProvider auth = setupAuthenticationRoutes();
+		
+		router.route().handler(context -> {
+			ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
+			ResteasyProviderFactory.pushContext(User.class, context.user());
+			ResteasyProviderFactory.pushContext(Session.class, context.session());
+			context.next();
+		});
+	}
+
+	protected AuthProvider setupAuthenticationRoutes() {
+		return null;
 	}
 
 	private Single<JsonObject> loadConfig(JsonObject config) {
