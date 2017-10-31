@@ -10,6 +10,7 @@ import org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContex
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -302,5 +303,15 @@ public class ResteasyFilterContext implements RoutingContext {
 	@Override
 	public Map<String, Object> data() {
 		return delegate.data();
+	}
+
+	@Override
+	public MultiMap queryParams() {
+		return delegate.queryParams();
+	}
+
+	@Override
+	public List<String> queryParam(String query) {
+		return delegate.queryParam(query);
 	}
 }
