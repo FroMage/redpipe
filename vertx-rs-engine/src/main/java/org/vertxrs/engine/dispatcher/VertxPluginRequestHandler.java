@@ -70,6 +70,7 @@ public class VertxPluginRequestHandler implements Handler<HttpServerRequest>
          try
          {
         	AppGlobals.set(appGlobals);
+        	appGlobals.injectGlobals();
             dispatcher.service(ctx.getDelegate(), request.getDelegate(), response.getDelegate(), vertxRequest, vertxResponse, true);
          } catch (Failure e1)
          {

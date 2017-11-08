@@ -3,12 +3,14 @@ package org.vertxrs.engine.core;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.vertxrs.engine.template.TemplateRenderer;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.jdbc.JDBCClient;
+import io.vertx.rxjava.ext.sql.SQLClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
 import io.vertx.rxjava.ext.web.Router;
 import rx.Single;
@@ -32,12 +34,13 @@ public class AppGlobals {
 	}
 
 	private JsonObject config;
-	private JDBCClient dbClient;
+	private SQLClient dbClient;
 	private Class<?> mainClass;
 	private Vertx vertx;
 	private Router router;
 	private List<TemplateRenderer> templateRenderers;
-	private Map<String, Object> globals = new HashMap<>();
+	private Map<String, Object> namedGlobals = new HashMap<>();
+	private Map<Class<?>, Object> typedGlobals = new HashMap<>();
 	
 	public JsonObject getConfig() {
 		return config;
@@ -47,11 +50,11 @@ public class AppGlobals {
 		this.config = config;
 	}
 
-	public JDBCClient getDbClient() {
+	public SQLClient getDbClient() {
 		return dbClient;
 	}
 
-	void setDbClient(JDBCClient dbClient) {
+	void setDbClient(SQLClient dbClient) {
 		this.dbClient = dbClient;
 	}
 
@@ -96,10 +99,25 @@ public class AppGlobals {
 	}
 
 	public void setGlobal(String key, Object value) {
-		globals.put(key, value);
+		namedGlobals.put(key, value);
 	}
 	
 	public Object getGlobal(String key) {
-		return globals.get(key);
+		return namedGlobals.get(key);
+	}
+	
+	public <T> void setGlobal(Class<T> klass, T value){
+		typedGlobals.put(klass, value);
+	}
+
+	public <T> T getGlobal(Class<T> klass){
+		return (T) typedGlobals.get(klass);
+	}
+	
+	public void injectGlobals() {
+		for (Entry<Class<?>, Object> entry : typedGlobals.entrySet()) {
+			System.err.println("Registering class for "+entry.getKey()+" -> "+entry.getValue());
+			ResteasyProviderFactory.pushContext((Class)entry.getKey(), entry.getValue());
+		}
 	}
 }

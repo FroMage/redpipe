@@ -33,6 +33,7 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.AuthProvider;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
+import io.vertx.rxjava.ext.sql.SQLClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.Session;
@@ -100,10 +101,7 @@ public class Server {
 
 	private Single<Void> setupVertx(JsonObject config, VertxResteasyDeployment deployment) {
 		// Get a DB
-		JDBCClient dbClient = JDBCClient.createNonShared(vertx, new JsonObject()
-				.put("url", config.getString("db_url", "jdbc:hsqldb:file:db/wiki"))
-				.put("driver_class", config.getString("db_driver", "org.hsqldb.jdbcDriver"))
-				.put("max_pool_size", config.getInteger("max_pool", 30)));
+		SQLClient dbClient = createDbClient(config);
 
 		Class<?> mainClass = null;
 		for (Class<?> resourceClass : deployment.getActualResourceClasses()) {
@@ -122,6 +120,13 @@ public class Server {
 			.flatMap(v -> startVertx(config, deployment));
 	}
 	
+	protected SQLClient createDbClient(JsonObject config) {
+		return JDBCClient.createNonShared(vertx, new JsonObject()
+				.put("url", config.getString("db_url", "jdbc:hsqldb:file:db/wiki"))
+				.put("driver_class", config.getString("db_driver", "org.hsqldb.jdbcDriver"))
+				.put("max_pool_size", config.getInteger("db_max_pool_size", 30)));
+	}
+
 	private Single<Void> doOnPlugins(Function<Plugin, Single<Void>> operation){
 		Single<Void> last = Single.just(null);
 		for(Plugin plugin : plugins) {

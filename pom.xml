@@ -238,8 +238,9 @@
 		<module>vertx-rs-fast-classpath-scanner</module>
 		<module>vertx-rs-fibers</module>
 		<module>vertx-rs-prototyping</module>
-		<module>vertx-rs-wiki</module>
 		<module>vertx-rs-templating-freemarker</module>
 		<module>vertx-rs-example-kafka</module>
+		<module>vertx-rs-example-wiki-keycloak-jooq</module>
+        <module>vertx-rs-example-wiki-shiro-jdbc</module>
 	</modules>
 </project>
