@@ -1,4 +1,4 @@
-== vertx-rs ==
+## vertx-rs
 
 Vertx-rs is a Web Framework that unites the power and versatility of Eclipse Vert.x, the conciseness of JAX-RS (with Resteasy), 
 and the non-blocking reactive composition of RxJava.
@@ -6,7 +6,7 @@ and the non-blocking reactive composition of RxJava.
 The main idea is that with vertx-rs you write your endpoints in JAX-RS, using RxJava composition if you want, and underneath
 it all, Vert.x is running the show and you can always access it if you need it.
 
-== Set-up ==
+## Set-up
 
 Include the following dependency in your `pom.xml`:
 
@@ -18,7 +18,7 @@ Include the following dependency in your `pom.xml`:
     </dependency>
 {% endhighlight %}
 
-== Quick Examples ==
+## Quick Examples
 
 Create a `Main` class to start your server:
 
@@ -40,7 +40,9 @@ Create a `Main` class to start your server:
     }
 {% endhighlight %}
 
-And create a resource:
+### Creating a resource
+
+Create a resource:
 
 {% highlight java %}
     import javax.ws.rs.GET;
@@ -57,7 +59,7 @@ And create a resource:
 
 Start your `Main` program and if you head over to `http://localhost:9000` you should see `Hello World`.
 
-=== Creating a reactive resource ===
+### Creating a reactive resource
 
 If you want to return a reactive resource, you can simply return a reactive type from your resource,
 such as those provided by RxJava.
