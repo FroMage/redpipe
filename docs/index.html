@@ -10,16 +10,19 @@ it all, Vert.x is running the show and you can always access it if you need it.
 
 Include the following dependency in your `pom.xml`:
 
+{% highlight xml %}
     <dependency>
       <groupId>org.vertx-rs</groupId>
       <artifactId>vertx-rs-engine</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
+{% endhighlight %}
 
 == Quick Examples ==
 
 Create a `Main` class to start your server:
 
+{% highlight java %}
     import org.vertxrs.engine.core.Server;
     
     import io.vertx.core.json.JsonArray;
@@ -35,9 +38,11 @@ Create a `Main` class to start your server:
         			x -> x.printStackTrace());
         }
     }
+{% endhighlight %}
 
 And create a resource:
-              
+
+{% highlight java %}
     import javax.ws.rs.GET;
     import javax.ws.rs.Path;
     
@@ -48,6 +53,7 @@ And create a resource:
 		    return "Hello World";
 	    }
     }
+{% endhighlight %}
 
 Start your `Main` program and if you head over to `http://localhost:9000` you should see `Hello World`.
 
@@ -58,10 +64,13 @@ such as those provided by RxJava.
 
 For a reactive Hello World, simply add this method to your resource:
 
+{% highlight java %}
     @Path("reactive")
     @GET
     public Single<String> helloReactive() {
       return Single.just("Hello Reactive World");
     }
+{% endhighlight %}
 
-Restart your `Main` program and if you head over to `http://localhost:9000/reactive` you should see `Hello Reactive World`.
+Restart your `Main` program and if you head over to `http://localhost:9000/reactive` you should see 
+`Hello Reactive World`.
