@@ -1,4 +1,10 @@
-## vertx-rs
+---
+layout: default
+title: Vertxrs
+---
+
+vertx-rs
+========
 
 Vertx-rs is a Web Framework that unites the power and versatility of Eclipse Vert.x, the conciseness of JAX-RS (with Resteasy), 
 and the non-blocking reactive composition of RxJava.
