@@ -65,7 +65,7 @@ public class HelloResource {
 }
 {% endhighlight %}
 
-Start your `Main` program and if you head over to `http://localhost:9000` you should see `Hello World`.
+Start your `Main` program and if you head over to [http://localhost:9000](http://localhost:9000) you should see `Hello World`.
 
 ### Creating a reactive resource
 
@@ -82,5 +82,69 @@ public Single<String> helloReactive() {
 }
 {% endhighlight %}
 
-Restart your `Main` program and if you head over to `http://localhost:9000/reactive` you should see 
-`Hello Reactive World`.
+Restart your `Main` program and if you head over to [http://localhost:9000/reactive](http://localhost:9000/reactive)
+you should see `Hello Reactive World`.
+
+## RxJava support
+
+Out of the box, we support RxJava's `Single` and `Observable` types.
+
+If your resource returns a `Single<T>`, the `T` will be send to your client asynchronously as if you
+returned it directly. In particular, standard and custom `MessageBodyWriter<T>` apply as soon as the
+`Single` is _resolved_, as do interceptors.
+
+If your resource returns an `Observable<T>`:
+
+- By default, every item will be collected, and once complete, assembled in a `List<T>` and treated
+  as if your method had returned it directly (standard and custom body writers and interceptors apply
+  to it).
+- If you annotate your method with `@Stream` (from `org.jboss.resteasy.annotations`), then every item
+  will be sent to the client as soon as it is produced (again, via standard and custom body writers).
+  This is mostly useful for streaming bytes, buffers, or strings, which can be split up and buffered.
+- If you annotate your method with `@Produces(MediaType.SERVER_SENT_EVENTS)`, then every item will
+  be sent to the client over Server-Sent Events (SSE). As always, standard and custom body writers
+  are called to serialise your entities to events.
+
+## Fibers
+
+## Resource scanning
+
+### Fast-classpath-scanner
+
+### CDI
+
+## Injection
+
+## Templating
+
+Engines, rendering
+
+## Plugins
+
+How to write them
+
+## Swagger
+
+## Examples
+
+- Hello World
+- Wiki (Reactive, DB, Fibers, Auth, Templates, REST, JWT, SocksJS, Angular) 
+ - With Keycloak and Jooq
+ - With Apache Shiro and Jdbc
+- Kafka (SSE)
+
+## How-to
+
+### DB
+
+### Auth
+
+#### Keycloak
+
+#### Apache Shiro
+
+#### JWT
+
+### SocksJS
+
+### Kafka
