@@ -34,17 +34,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class Main {
-    public static void main( String[] args ){
-      JsonObject config = new JsonObject()
-          .put("scan", new JsonArray()
-              .add(Main.class.getPackage().getName()));
-      
-      new Server()
-       .start(config)
-       .subscribe(
-          v -> System.err.println("Server started"),
-          x -> x.printStackTrace());
-    }
+  public static void main( String[] args ){
+    new Server()
+     .start(HelloResource.class)
+     .subscribe(
+        v -> System.err.println("Server started"),
+        x -> x.printStackTrace());
+  }
 }
 {% endhighlight %}
 
@@ -106,6 +102,100 @@ If your resource returns an `Observable<T>`:
   are called to serialise your entities to events.
 
 ## Fibers
+
+The optional module `vertx-rs-fibers` allows you to write your reactive code in _fibers_, which are
+light-weight threads, also known as _coroutines_, while interacting seamlessly with RxJava.
+
+Consider the following traditional RxJava code to forward the result of two web service invocations:
+
+{% highlight java %}
+@Path("composed")
+@GET
+public Single<String> helloComposed(@Context Vertx vertx,
+                                    @Context UriInfo uriInfo) {
+  Single<String> request1 = get(vertx, getUri(uriInfo, null));
+  Single<String> request2 = get(vertx, getUri(uriInfo, "helloReactive"));
+      
+  return request1.zipWith(request2, (hello1, hello2) -> hello1 + "\n" + hello2);
+}
+
+private URI getUri(UriInfo uriInfo, String methodName) {
+  UriBuilder builder = uriInfo.getBaseUriBuilder();
+  if(methodName != null)
+    builder.path(HelloResource.class, methodName);
+  else
+    builder.path(HelloResource.class);
+  return builder.build();
+}
+
+private Single<String> get(Vertx vertx, URI uri){
+  WebClient client = WebClient.create(vertx);
+  Single<HttpResponse<Buffer>> responseHandler = 
+    client.get(uri.getPort(), uri.getHost(), uri.getPath()).rxSend();
+
+  return responseHandler.map(response -> response.body().toString());
+}
+{% endhighlight %}
+
+Rather than composing sequential `Single` values, you can write a _fiber_ that can
+_await_ those values in what now looks like sequential code:
+
+{% highlight java %}
+@Path("fiber")
+@GET
+public Single<String> helloFiber(@Context Vertx vertx,
+                                 @Context UriInfo uriInfo) {
+  return Fibers.fiber(() -> {
+    String hello1 = Fibers.await(get(vertx, getUri(uriInfo, null)));
+    String hello2 = Fibers.await(get(vertx, getUri(uriInfo, "helloReactive")));
+    
+    return hello1 + "\n" + hello2;
+  });
+}
+{% endhighlight %}
+
+A _fiber_, here, is also a `Single` which can be integrated with the rest of your RxJava
+operations, and it can `await` RxJava `Single` values to obtain their resolved value.
+
+You can call `await` from any fiber body, or from any method annotated with `@Suspendable`.
+
+You need to import the following module in order to use fibers:
+
+{% highlight xml %}
+<dependency>
+  <groupId>org.vertx-rs</groupId>
+  <artifactId>vertx-rs-fibers</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+{% endhighlight %}
+
+And also the following Maven build plug-in to set-up your fibers at compile-time:
+
+{% highlight xml %}
+<build>
+  <plugins>
+    <plugin>
+      <groupId>com.vlkan</groupId>
+      <artifactId>quasar-maven-plugin</artifactId>
+      <version>0.7.9</version>
+      <configuration>
+        <check>true</check>
+        <debug>true</debug>
+        <verbose>true</verbose>
+      </configuration>
+      <executions>
+        <execution>
+          <goals>
+            <goal>instrument</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+{% endhighlight %}
+
+See [Quasar's documentation](http://docs.paralleluniverse.co/quasar/) for more information on fibers. 
 
 ## Resource scanning
 
