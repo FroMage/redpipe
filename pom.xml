@@ -242,5 +242,6 @@
 		<module>vertx-rs-example-kafka</module>
 		<module>vertx-rs-example-wiki-keycloak-jooq</module>
         <module>vertx-rs-example-wiki-shiro-jdbc</module>
+        <module>vertx-rs-example-helloworld</module>
 	</modules>
 </project>
