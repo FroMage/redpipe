@@ -5,8 +5,9 @@ title: Vertxrs
 
 # vertx-rs
 
-Vertx-rs is a Web Framework that unites the power and versatility of Eclipse Vert.x, the conciseness of JAX-RS (with Resteasy), 
-and the non-blocking reactive composition of RxJava.
+Vertx-rs is a Web Framework that unites the power and versatility of [Eclipse Vert.x](http://vertx.io), the conciseness of 
+[JAX-RS](https://javaee.github.io/tutorial/jaxrs002.html#GILIK) (with [Resteasy](http://resteasy.jboss.org)), 
+and the non-blocking reactive composition of [RxJava](https://github.com/ReactiveX/RxJava).
 
 The main idea is that with vertx-rs you write your endpoints in JAX-RS, using RxJava composition if you want, and underneath
 it all, Vert.x is running the show and you can always access it if you need it.
@@ -83,11 +84,14 @@ you should see `Hello Reactive World`.
 
 ## RxJava support
 
-Out of the box, we support RxJava's `Single` and `Observable` types.
+Out of the box, we support RxJava's [`Single`](http://reactivex.io/documentation/single.html)
+and [`Observable`](http://reactivex.io/documentation/observable.html) types.
 
 If your resource returns a `Single<T>`, the `T` will be send to your client asynchronously as if you
-returned it directly. In particular, standard and custom `MessageBodyWriter<T>` apply as soon as the
-`Single` is _resolved_, as do interceptors.
+returned it directly. In particular, standard and custom
+[`MessageBodyWriter<T>`](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/ext/MessageBodyWriter.html)
+apply as soon as the `Single` is _resolved_, as do 
+[interceptors](http://docs.jboss.org/resteasy/docs/3.1.4.Final/userguide/html/Interceptors.html).
 
 If your resource returns an `Observable<T>`:
 
@@ -199,9 +203,43 @@ See [Quasar's documentation](http://docs.paralleluniverse.co/quasar/) for more i
 
 ## Resource scanning
 
+You can either declare your JAX-RS resources and providers when instantiating the `Server` (as shown
+above), or you can use two options to scan your packages to discover them.
+
 ### Fast-classpath-scanner
 
+If you include this dependency, fast-classpath-scanner will be used to scan your classpath for resources
+and providers:
+
+{% highlight xml %}
+<dependency>
+  <groupId>org.vertx-rs</groupId>
+  <artifactId>vertx-rs-fast-classpath-scanner</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+{% endhighlight %}
+
+You just need to set the `scan` configuration to an array of package names to scan.
+
 ### CDI
+
+Alternately, you can delegate scanning of resources and providers to [CDI](http://cdi-spec.org):
+
+{% highlight xml %}
+<dependency>
+  <groupId>org.vertx-rs</groupId>
+  <artifactId>vertx-rs-cdi</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+{% endhighlight %}
+
+All your jars containing a `META-INF/beans.xml` file will be scanned by CDI and your resources and providers
+will become CDI beans, with CDI injection supported.
+
+Note that this uses [Weld](http://weld.cdi-spec.org) and the weld-vertx extension which brings a 
+[lot of goodies for CDI and Vert.x](http://docs.jboss.org/weld/weld-vertx/latest/).
+
+## Configuration
 
 ## Injection
 
