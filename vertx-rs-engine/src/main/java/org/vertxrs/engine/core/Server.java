@@ -9,6 +9,8 @@ import java.util.function.Function;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -53,10 +55,14 @@ public class Server {
 	}
 	
 	public Single<Void> start(){
-		return start(null);
+		return start((JsonObject)null);
+	}
+
+	public Single<Void> start(Class<?>... resourceOrProviderClasses){
+		return start(null, resourceOrProviderClasses);
 	}
 	
-	public Single<Void> start(JsonObject defaultConfig){
+	public Single<Void> start(JsonObject defaultConfig, Class<?>... resourceOrProviderClasses){
 		setupLogging();
 		
 		VertxOptions options = new VertxOptions();
@@ -72,7 +78,7 @@ public class Server {
 				.flatMap(config -> {
 					return setupPlugins()
 							.flatMap(v -> setupTemplateRenderers())
-							.flatMap(v -> setupResteasy())
+							.flatMap(v -> setupResteasy(resourceOrProviderClasses))
 							.flatMap(deployment -> {
 								setupSwagger(deployment);
 								return setupVertx(config, deployment);
@@ -268,13 +274,19 @@ public class Server {
 		deployment.getProviderFactory().register(SwaggerSerializers.class);
 	}
 
-	private Single<VertxResteasyDeployment> setupResteasy() {
+	protected Single<VertxResteasyDeployment> setupResteasy(Class<?>... resourceOrProviderClasses) {
 		// Build the Jax-RS hello world deployment
 		VertxResteasyDeployment deployment = new VertxResteasyDeployment();
 		deployment.getDefaultContextObjects().put(Vertx.class, AppGlobals.get().getVertx());
 		deployment.getDefaultContextObjects().put(AppGlobals.class, AppGlobals.get());
 		
 		return doOnPlugins(plugin -> plugin.deployToResteasy(deployment)).map(v -> {
+			for(Class<?> klass : resourceOrProviderClasses) {
+				if(klass.isAnnotationPresent(Path.class))
+					deployment.getActualResourceClasses().add(klass);
+				if(klass.isAnnotationPresent(Provider.class))
+					deployment.getActualProviderClasses().add(klass);
+			}
 			try {
 				deployment.start();
 			}catch(ExceptionInInitializerError err) {
