@@ -1,0 +1,10 @@
+org.vertxrs.engine.resteasy.BufferBodyWriter
+org.vertxrs.engine.resteasy.JsonObjectBodyReader
+org.vertxrs.engine.resteasy.JsonObjectBodyWriter
+org.vertxrs.engine.resteasy.RxVertxProvider
+org.vertxrs.engine.rxjava.ObservableProvider
+org.vertxrs.engine.rxjava.SingleProvider
+org.vertxrs.engine.security.AuthenticationExceptionMapper
+org.vertxrs.engine.security.AuthorizationExceptionMapper
+org.vertxrs.engine.security.AuthorizationFilterFeature
+org.vertxrs.engine.template.TemplateResponseFilter
