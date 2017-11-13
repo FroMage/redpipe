@@ -76,8 +76,8 @@ public class WikiServer extends Server {
 	}
 
 	@Override
-	public Single<Void> start(JsonObject defaultConfig) {
-		return super.start(defaultConfig)
+	public Single<Void> start(JsonObject defaultConfig, Class<?>... resourcesOrProviders) {
+		return super.start(defaultConfig, resourcesOrProviders)
 				.map(v -> {
 					AppGlobals globals = AppGlobals.get();
 					globals.getVertx().eventBus().<String>consumer("app.markdown", msg -> {
