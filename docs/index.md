@@ -624,7 +624,7 @@ Add the following dependency:
 
 For the 
 [Keycloak example]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq/src/main/java/org/vertxrs/example/wiki/keycloakJooq/WikiServer.java#L37),
-we nee this set-up:
+we need this set-up:
 
 {% highlight java %}
 @Override
@@ -673,7 +673,7 @@ Add the following dependency:
 
 For the 
 [Apache Shiro example]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc/src/main/java/org/vertxrs/example/wiki/shiroJdbc/WikiServer.java#L29),
-we nee this set-up:
+we need this set-up:
 
 {% highlight java %}
 @Override
@@ -731,7 +731,7 @@ Add the following dependency:
 
 For the 
 [Apache Shiro example]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc/src/main/java/org/vertxrs/example/wiki/shiroJdbc/WikiServer.java#L29),
-we nee this set-up:
+we need this set-up:
 
 {% highlight java %}
 @Override
