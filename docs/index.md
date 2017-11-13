@@ -96,7 +96,8 @@ To send Hello World as a stream, simply add this method to your resource:
 @Path("stream")
 @GET
 public Observable<String> helloStream() {
-  return Observable.from(new String[] {"Hello", "World"});
+  return Observable.from(
+           new String[] {"Hello", "World"});
 }
 {% endhighlight %}
 
@@ -136,15 +137,20 @@ Consider the following traditional RxJava code to forward the result of two web 
 {% highlight java %}
 @Path("composed")
 @GET
-public Single<String> helloComposed(@Context Vertx vertx,
-                                    @Context UriInfo uriInfo) {
-  Single<String> request1 = get(vertx, getUri(uriInfo, null));
-  Single<String> request2 = get(vertx, getUri(uriInfo, "helloReactive"));
+public Single<String> helloComposed(
+    @Context Vertx vertx,
+    @Context UriInfo uriInfo) {
+  Single<String> request1 = 
+    get(vertx, getUri(uriInfo, null));
+  Single<String> request2 = 
+    get(vertx, getUri(uriInfo, "helloReactive"));
       
-  return request1.zipWith(request2, (hello1, hello2) -> hello1 + "\n" + hello2);
+  return request1.zipWith(request2, 
+    (hello1, hello2) -> hello1 + "\n" + hello2);
 }
 
-private URI getUri(UriInfo uriInfo, String methodName) {
+private URI getUri(UriInfo uriInfo, 
+                   String methodName) {
   UriBuilder builder = uriInfo.getBaseUriBuilder();
   if(methodName != null)
     builder.path(HelloResource.class, methodName);
@@ -156,9 +162,11 @@ private URI getUri(UriInfo uriInfo, String methodName) {
 private Single<String> get(Vertx vertx, URI uri){
   WebClient client = WebClient.create(vertx);
   Single<HttpResponse<Buffer>> responseHandler = 
-    client.get(uri.getPort(), uri.getHost(), uri.getPath()).rxSend();
+    client.get(uri.getPort(), uri.getHost(), 
+               uri.getPath()).rxSend();
 
-  return responseHandler.map(response -> response.body().toString());
+  return responseHandler.map(
+    response -> response.body().toString());
 }
 {% endhighlight %}
 
@@ -168,11 +176,17 @@ _await_ those values in what now looks like sequential code:
 {% highlight java %}
 @Path("fiber")
 @GET
-public Single<String> helloFiber(@Context Vertx vertx,
-                                 @Context UriInfo uriInfo) {
+public Single<String> helloFiber(
+    @Context Vertx vertx,
+    @Context UriInfo uriInfo) {
   return Fibers.fiber(() -> {
-    String hello1 = Fibers.await(get(vertx, getUri(uriInfo, null)));
-    String hello2 = Fibers.await(get(vertx, getUri(uriInfo, "helloReactive")));
+    String hello1 = 
+      Fibers.await(get(vertx, 
+                       getUri(uriInfo, null)));
+    String hello2 = 
+      Fibers.await(get(vertx, 
+                       getUri(uriInfo, 
+                              "helloReactive")));
     
     return hello1 + "\n" + hello2;
   });
@@ -430,9 +444,12 @@ For example, this is the FreeMarker renderer, which simply wraps the [Vert.x Web
 freemarker](https://github.com/vert-x3/vertx-web/tree/master/vertx-template-engines/vertx-web-templ-freemarker):
 
 {% highlight java %}
-public class FreeMarkerTemplateRenderer implements TemplateRenderer {
+public class FreeMarkerTemplateRenderer 
+    implements TemplateRenderer {
 
-  private final FreeMarkerTemplateEngine templateEngine = FreeMarkerTemplateEngine.create();
+  private final 
+   FreeMarkerTemplateEngine templateEngine = 
+    FreeMarkerTemplateEngine.create();
 
   @Override
   public boolean supportsTemplate(String name) {
@@ -440,13 +457,16 @@ public class FreeMarkerTemplateRenderer implements TemplateRenderer {
   }
 
   @Override
-  public Single<Response> render(String name, Map<String, Object> variables) {
-    RoutingContext context = ResteasyProviderFactory.getContextData(RoutingContext.class);
+  public Single<Response> render(String name, 
+      Map<String, Object> variables) {
+    RoutingContext context = 
+      ResteasyProviderFactory.getContextData(RoutingContext.class);
     for (Entry<String, Object> entry : variables.entrySet()) {
       context.put(entry.getKey(), entry.getValue());
     }
     return templateEngine.rxRender(context, name)
-            .map(buffer -> Response.ok(buffer, MediaType.TEXT_HTML).build());
+            .map(buffer -> Response.ok(buffer, 
+                             MediaType.TEXT_HTML).build());
   }
 }
 {% endhighlight %}
@@ -462,7 +482,8 @@ following resource:
 public class AppResource extends FileResource {
   @Path("webroot{path:(/.*)?}")
   @GET
-  public Response get(@PathParam("path") String path) throws IOException{
+  public Response get(@PathParam("path") String path) 
+      throws IOException{
     return super.getFile(path);
   }
 }
@@ -504,14 +525,17 @@ You can get a `Single<SQLConnection>` with `SQLUtil.getConnection()`. Alternatel
 {% highlight java %}
 @POST
 @Path("pages")
-public Single<Response> apiCreatePage(JsonObject page, 
-                                      @Context HttpServerRequest req){
+public Single<Response> apiCreatePage(
+    JsonObject page, 
+    @Context HttpServerRequest req){
   JsonArray params = new JsonArray();
   params.add(page.getString("name"))
         .add(page.getString("markdown"));
   return SQLUtil.doInConnection(connection 
-            -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
-          .map(res -> Response.status(Status.CREATED).build());
+            -> connection.rxUpdateWithParams(
+                 SQL.SQL_CREATE_PAGE, params))
+          .map(res -> Response.status(Status.CREATED)
+                              .build());
 }
 {% endhighlight %}
 
@@ -527,20 +551,28 @@ example:
 protected SQLClient createDbClient(JsonObject config) {
   JsonObject myConfig = new JsonObject();
   if(config.containsKey("db_host"))
-      myConfig.put("host", config.getString("db_host"));
+      myConfig.put("host", 
+                   config.getString("db_host"));
   if(config.containsKey("db_port"))
-      myConfig.put("port", config.getInteger("db_port"));
+      myConfig.put("port", 
+                   config.getInteger("db_port"));
   if(config.containsKey("db_user"))
-      myConfig.put("username", config.getString("db_user"));
+      myConfig.put("username", 
+                   config.getString("db_user"));
   if(config.containsKey("db_pass"))
-      myConfig.put("password", config.getString("db_pass"));
+      myConfig.put("password", 
+                   config.getString("db_pass"));
   if(config.containsKey("db_name"))
-      myConfig.put("database", config.getString("db_name"));
-  myConfig.put("max_pool_size", config.getInteger("db_max_pool_size", 30));
+      myConfig.put("database", 
+                   config.getString("db_name"));
+  myConfig.put("max_pool_size", 
+               config.getInteger("db_max_pool_size", 30));
   
   Vertx vertx = AppGlobals.get().getVertx();
-  AsyncSQLClient dbClient = PostgreSQLClient.createNonShared(vertx, myConfig);
-  AsyncJooqSQLClient client = AsyncJooqSQLClient.create(vertx, dbClient);
+  AsyncSQLClient dbClient = 
+    PostgreSQLClient.createNonShared(vertx, myConfig);
+  AsyncJooqSQLClient client = 
+    AsyncJooqSQLClient.create(vertx, dbClient);
 
   Configuration configuration = new DefaultConfiguration();
   configuration.set(SQLDialect.POSTGRES);
@@ -592,20 +624,33 @@ we nee this set-up:
 {% highlight java %}
 @Override
 protected AuthProvider setupAuthenticationRoutes() {
-  JsonObject keycloackConfig = AppGlobals.get().getConfig().getJsonObject("keycloack");
-  OAuth2Auth authWeb = KeycloakAuth.create(AppGlobals.get().getVertx(), keycloackConfig);
-  OAuth2Auth authApi = KeycloakAuth.create(AppGlobals.get().getVertx(), OAuth2FlowType.PASSWORD, keycloackConfig);
+  JsonObject keycloackConfig = 
+    AppGlobals.get()
+     .getConfig()
+     .getJsonObject("keycloack");
+  OAuth2Auth authWeb = 
+    KeycloakAuth.create(AppGlobals.get().getVertx(), 
+                        keycloackConfig);
+  OAuth2Auth authApi = 
+    KeycloakAuth.create(AppGlobals.get().getVertx(), 
+                        OAuth2FlowType.PASSWORD, 
+                        keycloackConfig);
   
-  OAuth2AuthHandler authHandler = OAuth2AuthHandler.create((OAuth2Auth) authWeb, "http://localhost:9000/callback");
+  OAuth2AuthHandler authHandler = 
+    OAuth2AuthHandler.create((OAuth2Auth) authWeb, 
+      "http://localhost:9000/callback");
   Router router = AppGlobals.get().getRouter();
-  AuthProvider authProvider = AuthProvider.newInstance(authWeb.getDelegate());
-  router.route().handler(UserSessionHandler.create(authProvider));
+  AuthProvider authProvider = 
+    AuthProvider.newInstance(authWeb.getDelegate());
+  router.route().handler(
+    UserSessionHandler.create(authProvider));
 
   authHandler.setupCallback(router.get("/callback"));
   
   router.route().handler(authHandler);
   
-  return AuthProvider.newInstance(authApi.getDelegate());
+  return AuthProvider.newInstance(
+    authApi.getDelegate());
 }
 {% endhighlight %}
 
@@ -628,10 +673,15 @@ we nee this set-up:
 @Override
 protected AuthProvider setupAuthenticationRoutes() {
   AppGlobals globals = AppGlobals.get();
-  AuthProvider auth = ShiroAuth.create(globals.getVertx(), new ShiroAuthOptions()
-          .setType(ShiroAuthRealmType.PROPERTIES)
-          .setConfig(new JsonObject()
-                  .put("properties_path", globals.getConfig().getString("security_definitions"))));
+  AuthProvider auth = 
+    ShiroAuth.create(globals.getVertx(), 
+      new ShiroAuthOptions()
+        .setType(ShiroAuthRealmType.PROPERTIES)
+        .setConfig(new JsonObject()
+          .put("properties_path", 
+            globals
+              .getConfig()
+              .getString("security_definitions"))));
   
   globals.getRouter().route().handler(UserSessionHandler.create(auth));
   
@@ -643,13 +693,15 @@ Now you can write your handler for the log-in form:
 
 {% highlight java %}
 @Path("/")
-public class SecurityResource extends BaseSecurityResource {
+public class SecurityResource 
+    extends BaseSecurityResource {
   @Override
   public Template login(@Context UriInfo uriInfo){
     return new Template("templates/login.ftl")
             .set("title", "Login")
             .set("uriInfo", uriInfo)
-            .set("SecurityResource", BaseSecurityResource.class);
+            .set("SecurityResource", 
+                 BaseSecurityResource.class);
   }
 }
 {% endhighlight %}
@@ -680,14 +732,19 @@ protected AuthProvider setupAuthenticationRoutes() {
   AuthProvider authProvider = ...; // Your regular authentication
 
   // attempt to load a Key file
-  JWTAuth jwtAuth = JWTAuth.create(globals.getVertx(), new JWTAuthOptions(keyStoreOptions));
-  JWTAuthHandler jwtAuthHandler = JWTAuthHandler.create(jwtAuth);
+  JWTAuth jwtAuth = 
+    JWTAuth.create(globals.getVertx(), 
+      new JWTAuthOptions(keyStoreOptions));
+  JWTAuthHandler jwtAuthHandler = 
+    JWTAuthHandler.create(jwtAuth);
 
   globals.setGlobal(JWTAuth.class, jwtAuth);
   globals.getRouter().route().handler(context -> {
-    // only filter if we have a header, otherwise it will try to force auth, regardless if whether
+    // only filter if we have a header, otherwise 
+    // it will try to force auth, regardless whether
     // we want auth
-    if(context.request().getHeader(HttpHeaders.AUTHORIZATION) != null)
+    if(context.request()
+       .getHeader(HttpHeaders.AUTHORIZATION) != null)
       jwtAuthHandler.handle(context);
     else
       context.next();
@@ -704,10 +761,11 @@ authorization checks):
 @Produces("text/plain")
 @GET
 @Path("token")
-public Single<Response> token(@HeaderParam("login") String username, 
-                              @HeaderParam("password") String password,
-                              @Context JWTAuth jwt,
-                              @Context AuthProvider auth){
+public Single<Response> token(
+  @HeaderParam("login") String username, 
+  @HeaderParam("password") String password,
+  @Context JWTAuth jwt,
+  @Context AuthProvider auth){
   
   JsonObject creds = new JsonObject()
           .put("username", username)
@@ -720,9 +778,12 @@ public Single<Response> token(@HeaderParam("login") String username,
       return Response.status(Status.FORBIDDEN).build();
     }
     
-    boolean canCreate = await(user.rxIsAuthorised("create"));
-    boolean canUpdate = await(user.rxIsAuthorised("update"));
-    boolean canDelete = await(user.rxIsAuthorised("delete"));
+    boolean canCreate = 
+      await(user.rxIsAuthorised("create"));
+    boolean canUpdate = 
+      await(user.rxIsAuthorised("update"));
+    boolean canDelete = 
+      await(user.rxIsAuthorised("delete"));
     JsonArray permissions = new JsonArray();
     if(canCreate)
         permissions.add("create");
