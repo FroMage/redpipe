@@ -208,8 +208,8 @@ above), or you can use two options to scan your packages to discover them.
 
 ### Fast-classpath-scanner
 
-If you include this dependency, fast-classpath-scanner will be used to scan your classpath for resources
-and providers:
+If you include this dependency, [fast-classpath-scanner](https://github.com/lukehutch/fast-classpath-scanner)
+will be used to scan your classpath for resources and providers:
 
 {% highlight xml %}
 <dependency>
@@ -241,15 +241,221 @@ Note that this uses [Weld](http://weld.cdi-spec.org) and the weld-vertx extensio
 
 ## Configuration
 
+Unless you call `Server.start()` with a `JsonObject` configuration to override it, 
+the `conf/config.json` file will be loaded and used for configuration. Here are the configuration options
+available:
+
+<table>
+ <caption>General options</caption>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+  <th>Description</th>
+  <th>Default</th>
+ </tr>
+ <tr>
+  <td>db_url</td>
+  <td>String</td>
+  <td>Jdbc Url to use for connections to the database.</td>
+  <td>jdbc:hsqldb:file:db/wiki</td>
+ </tr>
+ <tr>
+  <td>db_driver</td>
+  <td>String</td>
+  <td>Jdbc driver class.</td>
+  <td>org.hsqldb.jdbcDriver</td>
+ </tr>
+ <tr>
+  <td>db_max_pool_size</td>
+  <td>Integer</td>
+  <td>Maximum pool size for database connections.</td>
+  <td>30</td>
+ </tr>
+ <tr>
+  <td>http_port</td>
+  <td>Integer</td>
+  <td>Http port to bind to.</td>
+  <td>9000</td>
+ </tr>
+</table> 
+
+<table>
+ <caption>For the `vertx-rs-fast-classpath-scanner` module</caption>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+  <th>Description</th>
+  <th>Default</th>
+ </tr>
+ <tr>
+  <td>scan</td>
+  <td>String[]</td>
+  <td>List of packages to scan for JAX-RS resources and providers.</td>
+  <td></td>
+ </tr>
+</table> 
+
+You can access the current configuration in your application via the `AppGlobals.getConfig()` method.
+
 ## Injection
+
+On top of optional CDI support, JAX-RS supports injection of certain resources via the `@Context` annotation
+on method parameters and members. Besides the regular JAX-RS resources, the following resources can be
+injected:
+
+<table>
+ <caption>Injectable global resources</caption>
+ <tr>
+  <th>Type</th>
+  <th>Description</th>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.core.Vertx</td>
+  <td>The Vert.x instance.</td>
+ </tr>
+ <tr>
+  <td>org.vertxrs.engine.core.AppGlobals</td>
+  <td>A global context object.</td>
+ </tr>
+</table> 
+
+<table>
+ <caption>Injectable per-request resources</caption>
+ <tr>
+  <th>Type</th>
+  <th>Description</th>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.web.RoutingContext</td>
+  <td>The Vert.x Web `RoutingContext`.</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.core.http.HttpServerRequest</td>
+  <td>The Vert.x request.</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.core.http.HttpServerResponse</td>
+  <td>The Vert.x response.</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.auth.AuthProvider</td>
+  <td>The Vert.x `AuthProvider` instance, if any (defaults to `null`).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.auth.User</td>
+  <td>The Vert.x `User`, if any (defaults to `null`).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.web.Session</td>
+  <td>The Vert.x Web `Session` instance, if any (defaults to `null`).</td>
+ </tr>
+</table> 
 
 ## Templating
 
-Engines, rendering
+We support the following plugable template engines, which you just have to add a dependency on:
+
+<tale>
+ <caption>Plugable template engine modules</caption>
+ <tr>
+  <th>Name</th>
+  <th>Dependency</th>
+ </tr>
+ <tr>
+  <td>[FreeMarker](http://freemarker.apache.org)</td>
+  <td>
+{% highlight xml %}
+<dependency>
+  <groupId>org.vertx-rs</groupId>
+  <artifactId>vertx-rs-templating-freemarker</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+{% endhighlight %}
+  </td>
+ </tr>
+</table>
+
+In order to declare templates, simply place them in the `src/main/resources/templates` folder. For
+example, here's our `src/main/resources/templates/index.ftl` template:
+
+{% highlight html %}
+<html>
+ <head>
+  <title>${context.title}</title>
+ </head>
+ <body>${context.message}</body>
+</html>
+{% endhighlight %}
+
+In order to return a rendered template, just return them from your resource, directly or as a `Single`:
+
+{% highlight java %}
+@GET
+@Path("template")
+public Template template(){
+  return new Template("templates/index.ftl")
+          .set("title", "My page")
+          .set("message", "Hello");
+}
+{% endhighlight %}
+
+### Writing your own template renderer
+
+You can write your own template renderer by declaring a `META-INF/services/org.vertxrs.engine.template.TemplateRenderer` file in your
+`src/main/resources` folder, containing the name of the class that extends the 
+`org.vertxrs.engine.template.TemplateRenderer` interface.
+
+For example, this is the FreeMarker renderer, which simply wraps the [Vert.x Web support for 
+freemarker](https://github.com/vert-x3/vertx-web/tree/master/vertx-template-engines/vertx-web-templ-freemarker):
+
+{% highlight java %}
+public class FreeMarkerTemplateRenderer implements TemplateRenderer {
+
+  private final FreeMarkerTemplateEngine templateEngine = FreeMarkerTemplateEngine.create();
+
+  @Override
+  public boolean supportsTemplate(String name) {
+    return name.toLowerCase().endsWith(".ftl");
+  }
+
+  @Override
+  public Single<Response> render(String name, Map<String, Object> variables) {
+    RoutingContext context = ResteasyProviderFactory.getContextData(RoutingContext.class);
+    for (Entry<String, Object> entry : variables.entrySet()) {
+      context.put(entry.getKey(), entry.getValue());
+    }
+    return templateEngine.rxRender(context, name)
+            .map(buffer -> Response.ok(buffer, MediaType.TEXT_HTML).build());
+  }
+}
+{% endhighlight %}
+
+
+## Serving static files
+
+If you want to serve static files you can place them in `src/main/resources/webroot` and declare the
+following resource:
+
+{% highlight java %}
+@Path("")
+public class AppResource extends FileResource {
+  @Path("webroot{path:(/.*)?}")
+  @GET
+  public Response get(@PathParam("path") String path) throws IOException{
+    return super.getFile(path);
+  }
+}
+{% endhighlight %}
+
+Your files will then be accessible from the `/webroot/` path prefix.
 
 ## Plugins
 
-How to write them
+You can write plugins by declaring a `META-INF/services/org.vertxrs.engine.spi.Plugin` file in your
+`src/main/resources` folder, containing the name of the class that extends the 
+`org.vertxrs.engine.spi.Plugin` class.
+
+From there you can hook into various parts of the application (start-up, requests…).
 
 ## Swagger
 
