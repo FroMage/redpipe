@@ -9,6 +9,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.vertxrs.engine.template.Template;
 import org.vertxrs.fibers.Fibers;
 
 import co.paralleluniverse.fibers.Suspendable;
@@ -68,5 +69,13 @@ public class HelloResource {
 				client.get(uri.getPort(), uri.getHost(), uri.getPath()).rxSend();
 
 		return responseHandler.map(response -> response.body().toString());
+	}
+	
+	@GET
+	@Path("template")
+	public Template template(){
+		return new Template("templates/index.ftl")
+				.set("title", "My page")
+				.set("message", "Hello");
 	}
 }
