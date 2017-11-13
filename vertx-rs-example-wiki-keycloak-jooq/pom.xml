@@ -8,7 +8,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>vertx-rs-example-wiki-keycloak-jooq</artifactId>
-    <name>vertx-rs-example-wiki-keycloak-jooq</name>
+	<name>vertx-rs-example-wiki-keycloak-jooq</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -69,6 +69,15 @@
 			<version>${version.vertx}</version>
 		</dependency>
 
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-auth-jwt</artifactId>
+        </dependency>
+
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-auth-oauth2</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>io.github.jklingsporn</groupId>
@@ -93,9 +102,7 @@
 				<executions>
 					<execution>
 						<goals>
-<!-- 
-                            <goal>generate</goal>
--->
+							<!-- <goal>generate</goal> -->
 						</goals>
 					</execution>
 				</executions>

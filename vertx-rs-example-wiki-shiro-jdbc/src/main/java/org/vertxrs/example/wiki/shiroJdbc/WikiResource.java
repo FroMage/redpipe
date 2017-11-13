@@ -21,7 +21,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.vertxrs.engine.core.AppGlobals;
 import org.vertxrs.engine.core.MainResource;
 import org.vertxrs.engine.security.AuthorizationException;
 import org.vertxrs.engine.security.RequiresPermissions;
@@ -32,7 +31,6 @@ import com.github.rjeschke.txtmark.Processor;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rxjava.core.Vertx;
