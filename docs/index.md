@@ -362,7 +362,7 @@ injected:
  </tr>
  <tr>
   <td>io.vertx.rxjava.ext.web.RoutingContext</td>
-  <td>The Vert.x Web `RoutingContext`.</td>
+  <td>The Vert.x Web <code>RoutingContext</code>.</td>
  </tr>
  <tr>
   <td>io.vertx.rxjava.core.http.HttpServerRequest</td>
@@ -374,15 +374,15 @@ injected:
  </tr>
  <tr>
   <td>io.vertx.rxjava.ext.auth.AuthProvider</td>
-  <td>The Vert.x `AuthProvider` instance, if any (defaults to `null`).</td>
+  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>).</td>
  </tr>
  <tr>
   <td>io.vertx.rxjava.ext.auth.User</td>
-  <td>The Vert.x `User`, if any (defaults to `null`).</td>
+  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>).</td>
  </tr>
  <tr>
   <td>io.vertx.rxjava.ext.web.Session</td>
-  <td>The Vert.x Web `Session` instance, if any (defaults to `null`).</td>
+  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>).</td>
  </tr>
 </table> 
 
@@ -397,7 +397,7 @@ We support the following plugable template engines, which you just have to add a
   <th>Dependency</th>
  </tr>
  <tr>
-  <td>[FreeMarker](http://freemarker.apache.org)</td>
+  <td><a href="http://freemarker.apache.org">FreeMarker</a></td>
   <td>
 {% highlight xml %}
 <dependency>
@@ -460,13 +460,15 @@ public class FreeMarkerTemplateRenderer
   public Single<Response> render(String name, 
       Map<String, Object> variables) {
     RoutingContext context = 
-      ResteasyProviderFactory.getContextData(RoutingContext.class);
+      ResteasyProviderFactory
+        .getContextData(RoutingContext.class);
     for (Entry<String, Object> entry : variables.entrySet()) {
       context.put(entry.getKey(), entry.getValue());
     }
     return templateEngine.rxRender(context, name)
             .map(buffer -> Response.ok(buffer, 
-                             MediaType.TEXT_HTML).build());
+                             MediaType.TEXT_HTML)
+                              .build());
   }
 }
 {% endhighlight %}
@@ -482,8 +484,9 @@ following resource:
 public class AppResource extends FileResource {
   @Path("webroot{path:(/.*)?}")
   @GET
-  public Response get(@PathParam("path") String path) 
-      throws IOException{
+  public Response get(
+      @PathParam("path") String path) 
+      throws IOException {
     return super.getFile(path);
   }
 }
@@ -566,15 +569,17 @@ protected SQLClient createDbClient(JsonObject config) {
       myConfig.put("database", 
                    config.getString("db_name"));
   myConfig.put("max_pool_size", 
-               config.getInteger("db_max_pool_size", 30));
+    config.getInteger("db_max_pool_size", 30));
   
   Vertx vertx = AppGlobals.get().getVertx();
   AsyncSQLClient dbClient = 
-    PostgreSQLClient.createNonShared(vertx, myConfig);
+    PostgreSQLClient.createNonShared(vertx, 
+                                     myConfig);
   AsyncJooqSQLClient client = 
     AsyncJooqSQLClient.create(vertx, dbClient);
 
-  Configuration configuration = new DefaultConfiguration();
+  Configuration configuration = 
+    new DefaultConfiguration();
   configuration.set(SQLDialect.POSTGRES);
 
   PagesDao dao = new PagesDao(configuration);
@@ -645,7 +650,8 @@ protected AuthProvider setupAuthenticationRoutes() {
   router.route().handler(
     UserSessionHandler.create(authProvider));
 
-  authHandler.setupCallback(router.get("/callback"));
+  authHandler.setupCallback(
+    router.get("/callback"));
   
   router.route().handler(authHandler);
   
@@ -683,7 +689,10 @@ protected AuthProvider setupAuthenticationRoutes() {
               .getConfig()
               .getString("security_definitions"))));
   
-  globals.getRouter().route().handler(UserSessionHandler.create(auth));
+  globals
+    .getRouter()
+    .route()
+    .handler(UserSessionHandler.create(auth));
   
   return null;
 }
@@ -729,7 +738,8 @@ we nee this set-up:
 protected AuthProvider setupAuthenticationRoutes() {
   AppGlobals globals = AppGlobals.get();
   
-  AuthProvider authProvider = ...; // Your regular authentication
+  // Your regular authentication
+  AuthProvider authProvider = ...;
 
   // attempt to load a Key file
   JWTAuth jwtAuth = 
@@ -744,7 +754,7 @@ protected AuthProvider setupAuthenticationRoutes() {
     // it will try to force auth, regardless whether
     // we want auth
     if(context.request()
-       .getHeader(HttpHeaders.AUTHORIZATION) != null)
+      .getHeader(HttpHeaders.AUTHORIZATION) != null)
       jwtAuthHandler.handle(context);
     else
       context.next();
@@ -775,7 +785,9 @@ public Single<Response> token(
     try {
       user = await(auth.rxAuthenticate(creds));
     }catch(VertxException x) {
-      return Response.status(Status.FORBIDDEN).build();
+      return Response
+        .status(Status.FORBIDDEN)
+        .build();
     }
     
     boolean canCreate = 
