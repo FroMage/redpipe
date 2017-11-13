@@ -13,7 +13,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
-import org.vertxrs.engine.core.VertxInject;
 import org.vertxrs.fibers.Fibers;
 
 import io.vertx.core.Vertx;
@@ -317,9 +316,6 @@ public class MyResource {
 		});
 	}
 
-	@VertxInject
-	private String connection;
-	
 	@Path("coroutines/1")
 	@GET
 	public Single<Response> helloAsync(@Context io.vertx.rxjava.core.Vertx rxVertx){
