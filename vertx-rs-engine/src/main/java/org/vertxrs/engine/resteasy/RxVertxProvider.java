@@ -42,6 +42,10 @@ public class RxVertxProvider implements ContainerRequestFilter {
 	public static final ServletContext ServletContext = new ServletContext(){
 
 		private Map<String, Object> attributes = new HashMap<>();
+		private Map<String, String> initParameters = new HashMap<>();
+		{
+			initParameters.put("scan.all.resources", "true");
+		}
 
 		@Override
 		public Dynamic addFilter(String arg0, String arg1) {
@@ -64,19 +68,16 @@ public class RxVertxProvider implements ContainerRequestFilter {
 		@Override
 		public void addListener(String arg0) {
 			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public <T extends EventListener> void addListener(T arg0) {
 			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public void addListener(Class<? extends EventListener> arg0) {
 			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
@@ -118,7 +119,6 @@ public class RxVertxProvider implements ContainerRequestFilter {
 		@Override
 		public void declareRoles(String... arg0) {
 			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
@@ -187,14 +187,12 @@ public class RxVertxProvider implements ContainerRequestFilter {
 
 		@Override
 		public String getInitParameter(String arg0) {
-			// TODO Auto-generated method stub
-			return null;
+			return initParameters.get(arg0);
 		}
 
 		@Override
 		public Enumeration<String> getInitParameterNames() {
-			// TODO Auto-generated method stub
-			return null;
+			return Collections.enumeration(initParameters.keySet());
 		}
 
 		@Override
@@ -341,7 +339,7 @@ public class RxVertxProvider implements ContainerRequestFilter {
 
 		@Override
 		public boolean setInitParameter(String arg0, String arg1) {
-			// TODO Auto-generated method stub
+			initParameters.put(arg0, arg1);
 			return false;
 		}
 

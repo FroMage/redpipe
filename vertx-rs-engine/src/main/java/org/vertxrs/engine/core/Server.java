@@ -2,8 +2,10 @@ package org.vertxrs.engine.core;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
@@ -22,6 +24,7 @@ import org.vertxrs.engine.template.TemplateRenderer;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.DefaultJaxrsConfig;
+import io.swagger.jaxrs.config.ReaderConfigUtils;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import io.vertx.config.ConfigRetrieverOptions;
@@ -231,8 +234,7 @@ public class Server {
 
 			@Override
 			public String getServletName() {
-				// TODO Auto-generated method stub
-				return null;
+				return "pretend-servlet";
 			}
 
 			@Override
@@ -242,34 +244,31 @@ public class Server {
 
 			@Override
 			public String getInitParameter(String name) {
-				if("scan.all.resources".equals(name))
-					return "true";
-				return null;
+				return getServletContext().getInitParameter(name);
 			}
 
 			@Override
 			public Enumeration<String> getInitParameterNames() {
-				// TODO Auto-generated method stub
-				return null;
+				return getServletContext().getInitParameterNames();
 			}
 		};
-		DefaultJaxrsConfig swaggerServlet = new DefaultJaxrsConfig();
-		try {
-			swaggerServlet.init(servletConfig);
-		} catch (ServletException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		AppGlobals.get().setGlobal(ServletConfig.class, servletConfig);
+
+		ReaderConfigUtils.initReaderConfig(servletConfig);
+
 		BeanConfig swaggerConfig = new BeanConfig();
 		swaggerConfig.setVersion("1.0");
 		swaggerConfig.setSchemes(new String[]{"http"});
-		// FIXME: port does not come from config
-		swaggerConfig.setHost("localhost:9000");
+		swaggerConfig.setHost("localhost:"+AppGlobals.get().getConfig().getInteger("http_port", 9000));
 		swaggerConfig.setBasePath("/");
-		// FIXME: resource should be detected
-		swaggerConfig.setResourcePackage("org.mygroup.vertxrs");
+		Set<String> resourcePackages = new HashSet<>();
+		for (Class<?> klass : deployment.getActualResourceClasses()) {
+			resourcePackages.add(klass.getPackage().getName());
+		}
+		swaggerConfig.setResourcePackage(String.join(",", resourcePackages));
 		swaggerConfig.setPrettyPrint(true);
 		swaggerConfig.setScan(true);
+		
 		deployment.getRegistry().addPerInstanceResource(ApiListingResource.class);
 		deployment.getProviderFactory().register(SwaggerSerializers.class);
 	}

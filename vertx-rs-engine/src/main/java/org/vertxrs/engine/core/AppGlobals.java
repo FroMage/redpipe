@@ -116,7 +116,6 @@ public class AppGlobals {
 	
 	public void injectGlobals() {
 		for (Entry<Class<?>, Object> entry : typedGlobals.entrySet()) {
-			System.err.println("Registering class for "+entry.getKey()+" -> "+entry.getValue());
 			ResteasyProviderFactory.pushContext((Class)entry.getKey(), entry.getValue());
 		}
 	}
