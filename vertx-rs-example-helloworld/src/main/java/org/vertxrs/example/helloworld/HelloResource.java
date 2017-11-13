@@ -4,19 +4,19 @@ import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.annotations.Stream;
 import org.vertxrs.engine.template.Template;
 import org.vertxrs.fibers.Fibers;
 
-import co.paralleluniverse.fibers.Suspendable;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
+import rx.Observable;
 import rx.Single;
 
 @Path("/")
@@ -30,6 +30,13 @@ public class HelloResource {
 	@GET
 	public Single<String> helloReactive() {
 		return Single.just("Hello Reactive World");
+	}
+
+	@Stream
+	@Path("stream")
+	@GET
+	public Observable<String> helloStream() {
+		return Observable.from(new String[] {"Hello", "World"});
 	}
 
 	@Path("composed")

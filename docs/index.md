@@ -1,6 +1,9 @@
 ---
 layout: default
 title: Vertxrs
+github_url: https://github.com/FroMage/vertx-rs
+github_source_url: https://github.com/FroMage/vertx-rs/tree/master
+version: 0.0.1-SNAPSHOT
 ---
 
 # vertx-rs
@@ -20,7 +23,7 @@ Include the following dependency in your `pom.xml`:
 <dependency>
   <groupId>org.vertx-rs</groupId>
   <artifactId>vertx-rs-engine</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -81,6 +84,24 @@ public Single<String> helloReactive() {
 
 Restart your `Main` program and if you head over to [http://localhost:9000/reactive](http://localhost:9000/reactive)
 you should see `Hello Reactive World`.
+
+### Streams
+
+If you want to return a stream, you have three options for how to serialise them (see below).
+
+To send Hello World as a stream, simply add this method to your resource:
+
+{% highlight java %}
+@Stream
+@Path("stream")
+@GET
+public Observable<String> helloStream() {
+  return Observable.from(new String[] {"Hello", "World"});
+}
+{% endhighlight %}
+
+Restart your `Main` program and if you head over to [http://localhost:9000/stream](http://localhost:9000/stream)
+you should see `HelloWorld`.
 
 ## RxJava support
 
@@ -169,7 +190,7 @@ You need to import the following module in order to use fibers:
 <dependency>
   <groupId>org.vertx-rs</groupId>
   <artifactId>vertx-rs-fibers</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -215,7 +236,7 @@ will be used to scan your classpath for resources and providers:
 <dependency>
   <groupId>org.vertx-rs</groupId>
   <artifactId>vertx-rs-fast-classpath-scanner</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -229,7 +250,7 @@ Alternately, you can delegate scanning of resources and providers to [CDI](http:
 <dependency>
   <groupId>org.vertx-rs</groupId>
   <artifactId>vertx-rs-cdi</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -355,7 +376,7 @@ injected:
 
 We support the following plugable template engines, which you just have to add a dependency on:
 
-<tale>
+<table>
  <caption>Plugable template engine modules</caption>
  <tr>
   <th>Name</th>
@@ -368,7 +389,7 @@ We support the following plugable template engines, which you just have to add a
 <dependency>
   <groupId>org.vertx-rs</groupId>
   <artifactId>vertx-rs-templating-freemarker</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
   </td>
@@ -459,26 +480,266 @@ From there you can hook into various parts of the application (start-up, request
 
 ## Swagger
 
+By default, your application includes [Swagger](https://swagger.io) OpenAPI Specification (OAS) generation, 
+located at [/swagger.json](http://localhost:9000/swagger.json)
+and [/swagger.yaml](http://localhost:9000/swagger.json).
+
 ## Examples
 
-- Hello World
+Check out the following examples for best-practices and real-world usage:
+
+- [Hello World]({{page.github_source_url}}/vertx-rs-example-helloworld) (Reactive, Fibers, Templates)
 - Wiki (Reactive, DB, Fibers, Auth, Templates, REST, JWT, SocksJS, Angular) 
- - With Keycloak and Jooq
- - With Apache Shiro and Jdbc
-- Kafka (SSE)
+ - [With Keycloak and Jooq]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq)
+ - [With Apache Shiro and Jdbc]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc)
+- [Kafka]({{page.github_source_url}}/vertx-rs-example-kafka) (SSE)
 
 ## How-to
 
 ### DB
 
-### Auth
+You can get a `Single<SQLConnection>` with `SQLUtil.getConnection()`. Alternately, you can call
+`SQLUtil.doInConnection` as such:
 
+{% highlight java %}
+@POST
+@Path("pages")
+public Single<Response> apiCreatePage(JsonObject page, 
+                                      @Context HttpServerRequest req){
+  JsonArray params = new JsonArray();
+  params.add(page.getString("name"))
+        .add(page.getString("markdown"));
+  return SQLUtil.doInConnection(connection 
+            -> connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params))
+          .map(res -> Response.status(Status.CREATED).build());
+}
+{% endhighlight %}
+
+#### Custom data-base set-up
+
+You can either set-up your database using the config options `db_url`, `db_driver`, and `db_max_pool_size`,
+or you can override the `createDb` method in `Server`, as in the 
+[Jooq]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq/src/main/java/org/vertxrs/example/wiki/keycloakJooq/WikiServer.java#L89)
+example:
+
+{% highlight java %}
+@Override
+protected SQLClient createDbClient(JsonObject config) {
+  JsonObject myConfig = new JsonObject();
+  if(config.containsKey("db_host"))
+      myConfig.put("host", config.getString("db_host"));
+  if(config.containsKey("db_port"))
+      myConfig.put("port", config.getInteger("db_port"));
+  if(config.containsKey("db_user"))
+      myConfig.put("username", config.getString("db_user"));
+  if(config.containsKey("db_pass"))
+      myConfig.put("password", config.getString("db_pass"));
+  if(config.containsKey("db_name"))
+      myConfig.put("database", config.getString("db_name"));
+  myConfig.put("max_pool_size", config.getInteger("db_max_pool_size", 30));
+  
+  Vertx vertx = AppGlobals.get().getVertx();
+  AsyncSQLClient dbClient = PostgreSQLClient.createNonShared(vertx, myConfig);
+  AsyncJooqSQLClient client = AsyncJooqSQLClient.create(vertx, dbClient);
+
+  Configuration configuration = new DefaultConfiguration();
+  configuration.set(SQLDialect.POSTGRES);
+
+  PagesDao dao = new PagesDao(configuration);
+  dao.setClient(client);
+  
+  AppGlobals.get().setGlobal("dao", dao);
+  
+  return dbClient;
+}
+{% endhighlight %}
+
+### Authentication
+
+By default, no authentication is set up, so if you want to set up authentication you can override
+the `Server.setupAuthenticationRoutes` method, as in the following two examples.
+
+If you do set up authentication, your `AuthProvider` will be injectable in your resources, as will the
+`User` and `Session`.
+
+#### Authorization
+
+You can use the following annotations on your resource methods/classes to enable resource-level authorization 
+checks:
+
+- `@RequiresPermissions({ "perm1", "perm2"})`: requires that the current user exists and has both permissions,
+- `@RequiresUser`: requires that the current user exists,
+- `@NoAuthFilter`: disables authorization checks,
+- `@NoAuthRedirect`: return an HTTP FORBIDDEN (403) instead of a redirect to the login page, if authorization fails.
+ 
 #### Keycloak
+
+Install [Keycloak](http://www.keycloak.org), start and configure it.
+
+Add the following dependency:
+
+{% highlight xml %}
+<dependency>
+  <groupId>io.vertx</groupId>
+  <artifactId>vertx-auth-oauth2</artifactId>
+</dependency>
+{% endhighlight %}
+
+For the 
+[Keycloak example]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq/src/main/java/org/vertxrs/example/wiki/keycloakJooq/WikiServer.java#L37),
+we nee this set-up:
+
+{% highlight java %}
+@Override
+protected AuthProvider setupAuthenticationRoutes() {
+  JsonObject keycloackConfig = AppGlobals.get().getConfig().getJsonObject("keycloack");
+  OAuth2Auth authWeb = KeycloakAuth.create(AppGlobals.get().getVertx(), keycloackConfig);
+  OAuth2Auth authApi = KeycloakAuth.create(AppGlobals.get().getVertx(), OAuth2FlowType.PASSWORD, keycloackConfig);
+  
+  OAuth2AuthHandler authHandler = OAuth2AuthHandler.create((OAuth2Auth) authWeb, "http://localhost:9000/callback");
+  Router router = AppGlobals.get().getRouter();
+  AuthProvider authProvider = AuthProvider.newInstance(authWeb.getDelegate());
+  router.route().handler(UserSessionHandler.create(authProvider));
+
+  authHandler.setupCallback(router.get("/callback"));
+  
+  router.route().handler(authHandler);
+  
+  return AuthProvider.newInstance(authApi.getDelegate());
+}
+{% endhighlight %}
 
 #### Apache Shiro
 
+Add the following dependency:
+
+{% highlight xml %}
+<dependency>
+  <groupId>io.vertx</groupId>
+  <artifactId>vertx-auth-shiro</artifactId>
+</dependency>
+{% endhighlight %}
+
+For the 
+[Apache Shiro example]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc/src/main/java/org/vertxrs/example/wiki/shiroJdbc/WikiServer.java#L29),
+we nee this set-up:
+
+{% highlight java %}
+@Override
+protected AuthProvider setupAuthenticationRoutes() {
+  AppGlobals globals = AppGlobals.get();
+  AuthProvider auth = ShiroAuth.create(globals.getVertx(), new ShiroAuthOptions()
+          .setType(ShiroAuthRealmType.PROPERTIES)
+          .setConfig(new JsonObject()
+                  .put("properties_path", globals.getConfig().getString("security_definitions"))));
+  
+  globals.getRouter().route().handler(UserSessionHandler.create(auth));
+  
+  return null;
+}
+{% endhighlight %}
+
+Now you can write your handler for the log-in form:
+
+{% highlight java %}
+@Path("/")
+public class SecurityResource extends BaseSecurityResource {
+  @Override
+  public Template login(@Context UriInfo uriInfo){
+    return new Template("templates/login.ftl")
+            .set("title", "Login")
+            .set("uriInfo", uriInfo)
+            .set("SecurityResource", BaseSecurityResource.class);
+  }
+}
+{% endhighlight %}
+
+Note that the log-in and log-out handlers are set-up in the `BaseSecurityResource` class,
+but you can override them if you need to. 
+
 #### JWT
 
-### SocksJS
+Add the following dependency:
 
-### Kafka
+{% highlight xml %}
+<dependency>
+  <groupId>io.vertx</groupId>
+  <artifactId>vertx-auth-shiro</artifactId>
+</dependency>
+{% endhighlight %}
+
+For the 
+[Apache Shiro example]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc/src/main/java/org/vertxrs/example/wiki/shiroJdbc/WikiServer.java#L29),
+we nee this set-up:
+
+{% highlight java %}
+@Override
+protected AuthProvider setupAuthenticationRoutes() {
+  AppGlobals globals = AppGlobals.get();
+  
+  AuthProvider authProvider = ...; // Your regular authentication
+
+  // attempt to load a Key file
+  JWTAuth jwtAuth = JWTAuth.create(globals.getVertx(), new JWTAuthOptions(keyStoreOptions));
+  JWTAuthHandler jwtAuthHandler = JWTAuthHandler.create(jwtAuth);
+
+  globals.setGlobal(JWTAuth.class, jwtAuth);
+  globals.getRouter().route().handler(context -> {
+    // only filter if we have a header, otherwise it will try to force auth, regardless if whether
+    // we want auth
+    if(context.request().getHeader(HttpHeaders.AUTHORIZATION) != null)
+      jwtAuthHandler.handle(context);
+    else
+      context.next();
+  });
+  
+  return authProvider;
+}
+{% endhighlight %}
+
+Then you can set create a resource that will serve your token (in a resource with no
+authorization checks):
+
+{% highlight java %}
+@Produces("text/plain")
+@GET
+@Path("token")
+public Single<Response> token(@HeaderParam("login") String username, 
+                              @HeaderParam("password") String password,
+                              @Context JWTAuth jwt,
+                              @Context AuthProvider auth){
+  
+  JsonObject creds = new JsonObject()
+          .put("username", username)
+          .put("password", password);
+  return fiber(() -> {
+    User user;
+    try {
+      user = await(auth.rxAuthenticate(creds));
+    }catch(VertxException x) {
+      return Response.status(Status.FORBIDDEN).build();
+    }
+    
+    boolean canCreate = await(user.rxIsAuthorised("create"));
+    boolean canUpdate = await(user.rxIsAuthorised("update"));
+    boolean canDelete = await(user.rxIsAuthorised("delete"));
+    JsonArray permissions = new JsonArray();
+    if(canCreate)
+        permissions.add("create");
+    if(canUpdate)
+        permissions.add("update");
+    if(canDelete)
+        permissions.add("delete");
+    
+    String jwtToken = jwt.generateToken(
+            new JsonObject()
+            .put("username", username)
+            .put("permissions", permissions),
+            new JWTOptions()
+              .setSubject("Wiki API")
+              .setIssuer("Vert.x"));
+    return Response.ok(jwtToken).build();
+  });
+}
+{% endhighlight %}
+
