@@ -6,7 +6,7 @@ github_source_url: https://github.com/FroMage/vertx-rs/tree/master
 version: 0.0.1-SNAPSHOT
 ---
 
-![Logo]({{ "/images/redpipe-600.png" }})
+![Logo]({{ "images/redpipe-600.png" }})
 
 Vertx-rs is a Web Framework that unites the power and versatility of [Eclipse Vert.x](http://vertx.io), the conciseness of 
 [JAX-RS](https://javaee.github.io/tutorial/jaxrs002.html#GILIK) (with [Resteasy](http://resteasy.jboss.org)), 
