@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Redpipe
-github_url: https://github.com/FroMage/vertx-rs
-github_source_url: https://github.com/FroMage/vertx-rs/tree/master
+github_url: https://github.com/FroMage/redpipe
+github_source_url: https://github.com/FroMage/redpipe/tree/master
 version: 0.0.1-SNAPSHOT
 ---
 
@@ -22,7 +22,7 @@ Include the following dependency in your `pom.xml`:
 {% highlight xml %}
 <dependency>
   <groupId>net.redpipe</groupId>
-  <artifactId>vertx-rs-engine</artifactId>
+  <artifactId>redpipe-engine</artifactId>
   <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
@@ -128,7 +128,7 @@ If your resource returns an `Observable<T>`:
 
 ## Fibers
 
-The optional module `vertx-rs-fibers` allows you to write your reactive code in _fibers_, which are
+The optional module `redpipe-fibers` allows you to write your reactive code in _fibers_, which are
 light-weight threads, also known as _coroutines_, while interacting seamlessly with RxJava.
 
 Consider the following traditional RxJava code to forward the result of two web service invocations:
@@ -191,7 +191,7 @@ You need to import the following module in order to use fibers:
 {% highlight xml %}
 <dependency>
   <groupId>net.redpipe</groupId>
-  <artifactId>vertx-rs-fibers</artifactId>
+  <artifactId>redpipe-fibers</artifactId>
   <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
@@ -237,7 +237,7 @@ will be used to scan your classpath for resources and providers:
 {% highlight xml %}
 <dependency>
   <groupId>net.redpipe</groupId>
-  <artifactId>vertx-rs-fast-classpath-scanner</artifactId>
+  <artifactId>redpipe-fast-classpath-scanner</artifactId>
   <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
@@ -251,7 +251,7 @@ Alternately, you can delegate scanning of resources and providers to [CDI](http:
 {% highlight xml %}
 <dependency>
   <groupId>net.redpipe</groupId>
-  <artifactId>vertx-rs-cdi</artifactId>
+  <artifactId>redpipe-cdi</artifactId>
   <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
@@ -303,7 +303,7 @@ available:
 </table> 
 
 <table>
- <caption>For the `vertx-rs-fast-classpath-scanner` module</caption>
+ <caption>For the `redpipe-fast-classpath-scanner` module</caption>
  <tr>
   <th>Name</th>
   <th>Type</th>

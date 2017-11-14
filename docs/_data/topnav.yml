@@ -4,7 +4,7 @@ topnav:
 - title: Topnav
   items:
     - title: GitHub
-      external_url: https://fromage.github.io/vertx-rs/
+      external_url: https://fromage.github.io/redpipe/
 
 #Topnav dropdowns
 topnav_dropdowns:
