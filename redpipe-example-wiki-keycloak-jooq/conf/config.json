@@ -6,8 +6,8 @@
 	"db_max_pool_size": 30,
 	"security_definitions": "classpath:wiki-users.properties",
 	"scan": [
-		"org.vertxrs.engine",
-		"org.vertxrs.example.wiki"
+		"net.redpipe.engine",
+		"net.redpipe.example.wiki"
 	],
 	"keystore": {
 		"path": "keystore.jceks",

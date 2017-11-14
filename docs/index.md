@@ -32,7 +32,7 @@ Include the following dependency in your `pom.xml`:
 Create a `Main` class to start your server:
 
 {% highlight java %}
-import org.vertxrs.engine.core.Server;
+import net.redpipe.engine.core.Server;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -337,7 +337,7 @@ injected:
   <td>The Vert.x instance.</td>
  </tr>
  <tr>
-  <td>org.vertxrs.engine.core.AppGlobals</td>
+  <td>net.redpipe.engine.core.AppGlobals</td>
   <td>A global context object.</td>
  </tr>
 </table> 
@@ -424,9 +424,9 @@ public Template template(){
 
 ### Writing your own template renderer
 
-You can write your own template renderer by declaring a `META-INF/services/org.vertxrs.engine.template.TemplateRenderer` file in your
+You can write your own template renderer by declaring a `META-INF/services/net.redpipe.engine.template.TemplateRenderer` file in your
 `src/main/resources` folder, containing the name of the class that extends the 
-`org.vertxrs.engine.template.TemplateRenderer` interface.
+`net.redpipe.engine.template.TemplateRenderer` interface.
 
 For example, this is the FreeMarker renderer, which simply wraps the [Vert.x Web support for 
 freemarker](https://github.com/vert-x3/vertx-web/tree/master/vertx-template-engines/vertx-web-templ-freemarker):
@@ -477,9 +477,9 @@ Your files will then be accessible from the `/webroot/` path prefix.
 
 ## Plugins
 
-You can write plugins by declaring a `META-INF/services/org.vertxrs.engine.spi.Plugin` file in your
+You can write plugins by declaring a `META-INF/services/net.redpipe.engine.spi.Plugin` file in your
 `src/main/resources` folder, containing the name of the class that extends the 
-`org.vertxrs.engine.spi.Plugin` class.
+`net.redpipe.engine.spi.Plugin` class.
 
 From there you can hook into various parts of the application (start-up, requests…).
 

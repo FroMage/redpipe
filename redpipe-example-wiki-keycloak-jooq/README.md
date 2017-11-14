@@ -4,7 +4,7 @@ programming with Eclipse Vert.x for Java developers](http://vertx.io/docs/guide-
 It is using Keycloak for authentication, with the setup described below,
 and Jooq for database connection, using a Postgres database with the setup described below.
 
-You can run the example by executing the `org.vertxrs.example.wiki.keycloakJooq.Main` class and
+You can run the example by executing the `net.redpipe.example.wiki.keycloakJooq.Main` class and
 visiting the [Wiki page](http://localhost:9000/wiki), which should redirect you to a login page
 where you can try any of the user names described below (try `root`/`w00t` for admin access).
 

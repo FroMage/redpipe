@@ -140,7 +140,7 @@
 						</database>
 						<target>
 							<!-- This is where jOOQ will put your files -->
-							<packageName>org.vertxrs.wiki.jooq</packageName>
+							<packageName>net.redpipe.wiki.jooq</packageName>
 							<directory>src/main/java</directory>
 						</target>
 						<generate>
