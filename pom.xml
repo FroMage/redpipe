@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.vertx-rs</groupId>
-	<artifactId>vertx-rs-parent</artifactId>
+	<groupId>net.redpipe</groupId>
+	<artifactId>redpipe-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
@@ -243,15 +243,15 @@
 	</dependencyManagement>
 
 	<modules>
-		<module>vertx-rs-engine</module>
-		<module>vertx-rs-cdi</module>
-		<module>vertx-rs-fast-classpath-scanner</module>
-		<module>vertx-rs-fibers</module>
-		<module>vertx-rs-prototyping</module>
-		<module>vertx-rs-templating-freemarker</module>
-		<module>vertx-rs-example-kafka</module>
-		<module>vertx-rs-example-wiki-keycloak-jooq</module>
-        <module>vertx-rs-example-wiki-shiro-jdbc</module>
-        <module>vertx-rs-example-helloworld</module>
+		<module>redpipe-engine</module>
+		<module>redpipe-cdi</module>
+		<module>redpipe-fast-classpath-scanner</module>
+		<module>redpipe-fibers</module>
+		<module>redpipe-prototyping</module>
+		<module>redpipe-templating-freemarker</module>
+		<module>redpipe-example-kafka</module>
+		<module>redpipe-example-wiki-keycloak-jooq</module>
+        <module>redpipe-example-wiki-shiro-jdbc</module>
+        <module>redpipe-example-helloworld</module>
 	</modules>
 </project>
