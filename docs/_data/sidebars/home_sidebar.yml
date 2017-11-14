@@ -1,0 +1,92 @@
+# This is your sidebar TOC. The sidebar code loops through sections here and provides the appropriate formatting.
+
+entries:
+- title: Sidebar
+  levels: one
+  folders:
+
+  - title: Quick Start
+    output: web
+    folderitems:
+    - title: Set-up
+      url: /#set-up
+      output: web
+    - title: Quick Examples
+      url: /#quick-examples
+      output: web
+    - title: Creating a resource
+      url: /#creating-a-resource
+      output: web
+    - title: Creating a reactive resource
+      url: /#creating-a-reactive-resource
+      output: web
+    - title: Streams
+      url: /#streams
+      output: web
+  - title: RxJava support
+    url: /#rxjava-support
+    output: web
+  - title: Fibers
+    url: /#fibers
+    output: web
+  - title: Resource scanning
+    output: web
+    folderitems:
+    - title: Fast-classpath-scanner
+      url: /#fast-classpath-scanner
+      output: web
+    - title: CDI
+      url: /#cdi
+      output: web
+  - title: Configuration
+    url: /#configuration
+    output: web
+  - title: Injection
+    url: /#injection
+    output: web
+  - title: Templating
+    output: web
+    folderitems:
+    - title: Basics
+      url: /#templating
+      output: web
+    - title: Writing your own template renderer
+      url: /#writing-your-own-template-renderer
+      output: web
+  - title: Serving static files
+    url: /#serving-static-files
+    output: web
+  - title: Plugins
+    url: /#plugins
+    output: web
+  - title: Swagger
+    url: /#swagger
+    output: web
+  - title: Examples
+    url: /#examples
+    output: web
+  - title: How-to
+    output: web
+    folderitems:
+    - title: DB
+      url: /#db
+      output: web
+    - title: Authentication
+      url: /#authentication
+      output: web
+      subfolders:
+      - title: Basics
+        url: /#authentication
+        output: web
+      - title: Authorization
+        url: /#authorization
+        output: web
+      - title: KeyCloak
+        url: /#keycloak
+        output: web
+      - title: Apache Shiro
+        url: /#apache-shiro
+        output: web
+      - title: JWT
+        url: /#jwt
+        output: web
