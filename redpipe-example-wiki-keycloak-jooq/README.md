@@ -78,14 +78,14 @@ You're all set for Keycloak!
 1. Install Postgres
 1. Log in as the `postgres` user
     $ sudo su - postgres
-1. Create a `vertxrswiki` user (with `vertxrswiki` as password):
-    postgres $ createuser -PSRD vertxrswiki
-1. Create a `vertxrswiki` database:
-    postgres $ createdb -O vertxrswiki -E utf8 vertxrswiki
+1. Create a `redpipewiki` user (with `redpipewiki` as password):
+    postgres $ createuser -PSRD redpipewiki
+1. Create a `redpipewiki` database:
+    postgres $ createdb -O redpipewiki -E utf8 redpipewiki
 1. Log out of the `postgres` user:
     postgres $ exit
 1. Load the database schema:
-    $ psql -h localhost -U vertxrswiki vertxrswiki
-    vertxrswiki=> \i vertx-rs-wiki/db.sql 
+    $ psql -h localhost -U redpipewiki redpipewiki
+    redpipewiki=> \i vertx-rs-wiki/db.sql 
 
 You're all set for Postgres!    

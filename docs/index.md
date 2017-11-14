@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Vertxrs
+title: Redpipe
 github_url: https://github.com/FroMage/vertx-rs
 github_source_url: https://github.com/FroMage/vertx-rs/tree/master
 version: 0.0.1-SNAPSHOT
@@ -8,11 +8,11 @@ version: 0.0.1-SNAPSHOT
 
 ![Logo]({{ "images/redpipe-600.png" }})
 
-Vertx-rs is a Web Framework that unites the power and versatility of [Eclipse Vert.x](http://vertx.io), the conciseness of 
+Redpipe is a Web Framework that unites the power and versatility of [Eclipse Vert.x](http://vertx.io), the conciseness of 
 [JAX-RS](https://javaee.github.io/tutorial/jaxrs002.html#GILIK) (with [Resteasy](http://resteasy.jboss.org)), 
 and the non-blocking reactive composition of [RxJava](https://github.com/ReactiveX/RxJava).
 
-The main idea is that with vertx-rs you write your endpoints in JAX-RS, using RxJava composition if you want, and underneath
+The main idea is that with Redpipe you write your endpoints in JAX-RS, using RxJava composition if you want, and underneath
 it all, Vert.x is running the show and you can always access it if you need it.
 
 ## Set-up
@@ -21,7 +21,7 @@ Include the following dependency in your `pom.xml`:
 
 {% highlight xml %}
 <dependency>
-  <groupId>org.vertx-rs</groupId>
+  <groupId>net.redpipe</groupId>
   <artifactId>vertx-rs-engine</artifactId>
   <version>{{version}}</version>
 </dependency>
@@ -190,7 +190,7 @@ You need to import the following module in order to use fibers:
 
 {% highlight xml %}
 <dependency>
-  <groupId>org.vertx-rs</groupId>
+  <groupId>net.redpipe</groupId>
   <artifactId>vertx-rs-fibers</artifactId>
   <version>{{version}}</version>
 </dependency>
@@ -236,7 +236,7 @@ will be used to scan your classpath for resources and providers:
 
 {% highlight xml %}
 <dependency>
-  <groupId>org.vertx-rs</groupId>
+  <groupId>net.redpipe</groupId>
   <artifactId>vertx-rs-fast-classpath-scanner</artifactId>
   <version>{{version}}</version>
 </dependency>
@@ -250,7 +250,7 @@ Alternately, you can delegate scanning of resources and providers to [CDI](http:
 
 {% highlight xml %}
 <dependency>
-  <groupId>org.vertx-rs</groupId>
+  <groupId>net.redpipe</groupId>
   <artifactId>vertx-rs-cdi</artifactId>
   <version>{{version}}</version>
 </dependency>
@@ -389,8 +389,8 @@ We support the following plugable template engines, which you just have to add a
   <td>
 {% highlight xml %}
 <dependency>
-  <groupId>org.vertx-rs</groupId>
-  <artifactId>vertx-rs-templating-freemarker</artifactId>
+  <groupId>net.redpipe</groupId>
+  <artifactId>redpipe-templating-freemarker</artifactId>
   <version>{{version}}</version>
 </dependency>
 {% endhighlight %}
@@ -493,11 +493,11 @@ and [/swagger.yaml](http://localhost:9000/swagger.json).
 
 Check out the following examples for best-practices and real-world usage:
 
-- [Hello World]({{page.github_source_url}}/vertx-rs-example-helloworld) (Reactive, Fibers, Templates)
+- [Hello World]({{page.github_source_url}}/redpipe-example-helloworld) (Reactive, Fibers, Templates)
 - Wiki (Reactive, DB, Fibers, Auth, Templates, REST, JWT, SocksJS, Angular) 
- - [With Keycloak and Jooq]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq)
- - [With Apache Shiro and Jdbc]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc)
-- [Kafka]({{page.github_source_url}}/vertx-rs-example-kafka) (SSE)
+ - [With Keycloak and Jooq]({{page.github_source_url}}/redpipe-example-wiki-keycloak-jooq)
+ - [With Apache Shiro and Jdbc]({{page.github_source_url}}/redpipe-example-wiki-shiro-jdbc)
+- [Kafka]({{page.github_source_url}}/redpipe-example-kafka) (SSE)
 
 ## How-to
 
@@ -524,7 +524,7 @@ public Single<Response> apiCreatePage(JsonObject page,
 
 You can either set-up your database using the config options `db_url`, `db_driver`, and `db_max_pool_size`,
 or you can override the `createDb` method in `Server`, as in the 
-[Jooq]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq/src/main/java/org/vertxrs/example/wiki/keycloakJooq/WikiServer.java#L89)
+[Jooq]({{page.github_source_url}}/redpipe-example-wiki-keycloak-jooq/src/main/java/net/redpipe/example/wiki/keycloakJooq/WikiServer.java#L89)
 example:
 
 {% highlight java %}
@@ -591,7 +591,7 @@ Add the following dependency:
 {% endhighlight %}
 
 For the 
-[Keycloak example]({{page.github_source_url}}/vertx-rs-example-wiki-keycloak-jooq/src/main/java/org/vertxrs/example/wiki/keycloakJooq/WikiServer.java#L37),
+[Keycloak example]({{page.github_source_url}}/redpipe-example-wiki-keycloak-jooq/src/main/java/net/redpipe/example/wiki/keycloakJooq/WikiServer.java#L37),
 we need this set-up:
 
 {% highlight java %}
@@ -630,7 +630,7 @@ Add the following dependency:
 {% endhighlight %}
 
 For the 
-[Apache Shiro example]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc/src/main/java/org/vertxrs/example/wiki/shiroJdbc/WikiServer.java#L29),
+[Apache Shiro example]({{page.github_source_url}}/redpipe-example-wiki-shiro-jdbc/src/main/java/redpipe/redpipe/example/wiki/shiroJdbc/WikiServer.java#L29),
 we need this set-up:
 
 {% highlight java %}
@@ -682,7 +682,7 @@ Add the following dependency:
 {% endhighlight %}
 
 For the 
-[JWT example]({{page.github_source_url}}/vertx-rs-example-wiki-shiro-jdbc/src/main/java/org/vertxrs/example/wiki/shiroJdbc/WikiServer.java#L29),
+[JWT example]({{page.github_source_url}}/redpipe-example-wiki-shiro-jdbc/src/main/java/net/redpipe/example/wiki/shiroJdbc/WikiServer.java#L29),
 we need this set-up:
 
 {% highlight java %}

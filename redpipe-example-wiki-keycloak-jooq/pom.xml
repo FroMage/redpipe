@@ -125,9 +125,9 @@
 					<!-- JDBC connection parameters -->
 					<jdbc>
 						<driver>org.postgresql.Driver</driver>
-						<url>jdbc:postgresql:vertxrswiki</url>
-						<user>vertxrswiki</user>
-						<password>vertxrswiki</password>
+						<url>jdbc:postgresql:redpipewiki</url>
+						<user>redpipewiki</user>
+						<password>redpipewiki</password>
 					</jdbc>
 
 					<!-- Generator parameters -->

@@ -1,8 +1,8 @@
 {
 	"http_port": 9000,
-	"db_name": "vertxrswiki",
-    "db_user": "vertxrswiki",
-    "db_pass": "vertxrswiki",
+	"db_name": "redpipewiki",
+    "db_user": "redpipewiki",
+    "db_pass": "redpipewiki",
 	"db_max_pool_size": 30,
 	"security_definitions": "classpath:wiki-users.properties",
 	"scan": [
