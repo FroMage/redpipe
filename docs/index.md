@@ -3,7 +3,7 @@ layout: default
 title: Redpipe
 github_url: https://github.com/FroMage/redpipe
 github_source_url: https://github.com/FroMage/redpipe/tree/master
-version: 0.0.1-SNAPSHOT
+version: 0.0.1
 ---
 
 ![Logo]({{ "images/redpipe-600.png" }})
