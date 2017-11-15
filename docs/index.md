@@ -15,6 +15,18 @@ and the non-blocking reactive composition of [RxJava](https://github.com/Reactiv
 The main idea is that with Redpipe you write your endpoints in JAX-RS, using RxJava composition if you want, and underneath
 it all, Vert.x is running the show and you can always access it if you need it.
 
+Redpipe is opinionated, favors convention over configuration, and lets you combine the following technologies easily to
+write reactive web applications:
+
+- [Eclipse Vert.x](http://vertx.io) and [Netty](https://netty.io), for all the low-level plumbing,
+- [JAX-RS](https://javaee.github.io/tutorial/jaxrs002.html#GILIK) ([Resteasy](http://resteasy.jboss.org)), for all your web endpoints,
+- [RxJava](https://github.com/ReactiveX/RxJava) for your reactive code,
+- [Vert.x Web](http://vertx.io/docs/vertx-web/java/) for all existing filters, templating support,
+- [Swagger](https://swagger.io) to describe your web endpoints,
+- [CDI](http://cdi-spec.org) ([Weld](http://weld.cdi-spec.org)) for JAX-RS discovery and injection (optional),
+- [Bean Validation](http://beanvalidation.org) ([Hibernate Validator](http://hibernate.org/validator/)) to validate your web endpoints' input (optional),
+- Coroutines ([Quasar](http://docs.paralleluniverse.co/quasar/)) to write synchronous-looking reactive code (optional).
+
 ## Set-up
 
 Include the following dependency in your `pom.xml`:
