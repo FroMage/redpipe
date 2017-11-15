@@ -5,6 +5,9 @@ entries:
   levels: one
   folders:
 
+  - title: Source, license, issue tracker
+    url: /#source-code--license--issue-tracker
+    output: web
   - title: Quick Start
     output: web
     folderitems:

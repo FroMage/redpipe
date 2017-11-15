@@ -27,6 +27,14 @@ write reactive web applications:
 - [Bean Validation](http://beanvalidation.org) ([Hibernate Validator](http://hibernate.org/validator/)) to validate your web endpoints' input (optional),
 - Coroutines ([Quasar](http://docs.paralleluniverse.co/quasar/)) to write synchronous-looking reactive code (optional).
 
+## Source code / license / issue tracker
+
+Redpipe is [open-source software](https://github.com/FroMage/redpipe/) licensed under the 
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+You can file issues at [our GitHub issues tracker](https://github.com/FroMage/redpipe/issues),
+or better yet: send us pull requests. 
+
 ## Set-up
 
 Include the following dependency in your `pom.xml`:
