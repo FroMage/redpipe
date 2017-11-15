@@ -24,17 +24,17 @@
 			<scope>test</scope>
 		</dependency>
 
-        <dependency>
-            <groupId>net.redpipe</groupId>
-            <artifactId>redpipe-engine</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>net.redpipe</groupId>
+			<artifactId>redpipe-engine</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>net.redpipe</groupId>
-            <artifactId>redpipe-fast-classpath-scanner</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>net.redpipe</groupId>
+			<artifactId>redpipe-fast-classpath-scanner</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>io.vertx</groupId>
@@ -47,7 +47,7 @@
 			<artifactId>debezium-core</artifactId>
 			<version>${debezium.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.debezium</groupId>
 			<artifactId>debezium-core</artifactId>
@@ -61,4 +61,16 @@
 			<version>${kafka.version}</version>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
