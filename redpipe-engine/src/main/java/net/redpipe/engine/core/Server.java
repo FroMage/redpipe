@@ -124,6 +124,7 @@ public class Server {
 		AppGlobals globals = AppGlobals.get();
 		globals.setDbClient(dbClient);
 		globals.setMainClass(mainClass);
+		globals.setDeployment(deployment);
 
 		return doOnPlugins(plugin -> plugin.init())
 			.flatMap(v -> startVertx(config, deployment));

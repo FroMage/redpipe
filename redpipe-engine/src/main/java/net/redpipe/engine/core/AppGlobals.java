@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import net.redpipe.engine.template.TemplateRenderer;
 
@@ -41,6 +42,7 @@ public class AppGlobals {
 	private List<TemplateRenderer> templateRenderers;
 	private Map<String, Object> namedGlobals = new HashMap<>();
 	private Map<Class<?>, Object> typedGlobals = new HashMap<>();
+	private VertxResteasyDeployment deployment;
 	
 	public JsonObject getConfig() {
 		return config;
@@ -118,5 +120,13 @@ public class AppGlobals {
 		for (Entry<Class<?>, Object> entry : typedGlobals.entrySet()) {
 			ResteasyProviderFactory.pushContext((Class)entry.getKey(), entry.getValue());
 		}
+	}
+
+	public void setDeployment(VertxResteasyDeployment deployment) {
+		this.deployment = deployment;
+	}
+	
+	public VertxResteasyDeployment getDeployment() {
+		return deployment;
 	}
 }
