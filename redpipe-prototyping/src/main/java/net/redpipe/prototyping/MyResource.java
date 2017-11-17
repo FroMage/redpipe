@@ -13,7 +13,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
-import net.redpipe.fibers.Fibers;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -25,6 +24,7 @@ import io.vertx.rx.java.ObservableHandler;
 import io.vertx.rx.java.RxHelper;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
+import net.redpipe.fibers.Fibers;
 import rx.Observable;
 import rx.Single;
 
