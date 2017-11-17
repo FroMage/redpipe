@@ -5,7 +5,7 @@
   <div class="col-md-12 mt-1">
   <#if context.canCreatePage>
     <div class="float-xs-right">
-      <form class="form-inline" action="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'create').build()}" method="post">
+      <form class="form-inline" action="${context.route('WikiResource.create')}" method="post">
         <div class="form-group">
           <input type="text" class="form-control" id="name" name="name" placeholder="New page name">
         </div>
@@ -15,7 +15,7 @@
   </#if>
     <h1 class="display-4">${context.title}</h1>
     <div class="float-xs-right">
-      <a class="btn btn-outline-danger" href="${context.uriInfo.getBaseUriBuilder().path(context.SecurityResource).path(context.SecurityResource, 'logout').build()}" role="button" aria-pressed="true">Logout (${context.username})</a>
+      <a class="btn btn-outline-danger" href="${context.route('SecurityResource.logout')}" role="button" aria-pressed="true">Logout (${context.username})</a>
     </div>
   </div>
 
@@ -24,7 +24,7 @@
     <h2>Pages:</h2>
     <ul>
       <#items as page>
-        <li><a href="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'renderPage').build(page)}">${page}</a></li>
+        <li><a href="${context.route('WikiResource.renderPage', page)}">${page}</a></li>
       </#items>
     </ul>
   <#else>
@@ -38,7 +38,7 @@
     </div>
   <#else>
     <p>
-      <form action="${context.uriInfo.getBaseUriBuilder().path(context.WikiResource).path(context.WikiResource, 'backup').build()}" method="post">
+      <form action="${context.route('WikiResource.backup')}" method="post">
         <button type="submit" class="btn btn-outline-secondary btn-sm">Backup</button>
       </form>
     </p>

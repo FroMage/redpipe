@@ -18,14 +18,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
-import net.redpipe.engine.core.MainResource;
-import net.redpipe.engine.security.AuthorizationException;
-import net.redpipe.engine.security.RequiresPermissions;
-import net.redpipe.engine.security.RequiresUser;
-import net.redpipe.engine.template.Template;
+import org.redpipe.router.Router;
 
 import com.github.rjeschke.txtmark.Processor;
 
@@ -38,6 +32,11 @@ import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.codec.BodyCodec;
+import net.redpipe.engine.core.MainResource;
+import net.redpipe.engine.security.AuthorizationException;
+import net.redpipe.engine.security.RequiresPermissions;
+import net.redpipe.engine.security.RequiresUser;
+import net.redpipe.engine.template.Template;
 import rx.Single;
 
 @RequiresUser
@@ -52,8 +51,6 @@ public class WikiResource {
 					"\n" +
 					"Feel-free to write in Markdown!\n";
 
-	@Context
-	private UriInfo uriInfo;
 	@Context
 	private User user;
 
@@ -70,12 +67,8 @@ public class WikiResource {
 			return new Template("templates/index.ftl")
 					.set("title", "Wiki home")
 					.set("pages", pages)
-					.set("uriInfo", uriInfo)
 					.set("canCreatePage", canCreatePage)
 					.set("username", getUserName())
-					// workaround because I couldn't find how to put class literals in freemarker
-					.set("WikiResource", WikiResource.class)
-					.set("SecurityResource", SecurityResource.class)
 					.set("backup_gist_url", flash.get("backup_gist_url"));
 		});
 	}
@@ -115,10 +108,7 @@ public class WikiResource {
 					.set("canUpdatePage", canUpdate)
 					.set("canDeletePage", canDelete)
 					.set("content", Processor.process(rawContent))
-					.set("timestamp", new Date().toString())
-					.set("uriInfo", uriInfo)
-					// workaround because I couldn't find how to put class literals in freemarker
-					.set("WikiResource", WikiResource.class);
+					.set("timestamp", new Date().toString());
 		});
 	}
 
@@ -142,8 +132,7 @@ public class WikiResource {
 				params.add(markdown).add(id);
 			}
 			await(con.rxUpdateWithParams(sql, params));
-			UriBuilder builder = uriInfo.getBaseUriBuilder();
-			URI location = builder.path(WikiResource.class).path(WikiResource.class, "renderPage").build(title);
+			URI location = Router.getURI(WikiResource::renderPage, title);
 			return Response.seeOther(location).build();
 		});
 	}
@@ -152,13 +141,11 @@ public class WikiResource {
 	@Path("/create")
 	@POST
 	public Response create(@FormParam("name") String name){
-		UriBuilder builder = uriInfo.getBaseUriBuilder();
 		URI location;
 		if (name == null || name.isEmpty()) {
-			// tricky: if I specify "index" it bitches that it has no @Path...
-			location = builder.path(WikiResource.class).build();
+			location = Router.getURI(WikiResource::index);
 		}else{
-			location = builder.path(WikiResource.class).path(WikiResource.class, "renderPage").build(name);
+			location = Router.getURI(WikiResource::renderPage, name);
 		}
 		return Response.seeOther(location).build();
 	}
@@ -169,8 +156,7 @@ public class WikiResource {
 	public Single<Response> delete(@FormParam("id") String id){
 		return fiber((con) -> {
 			await(con.rxUpdateWithParams(SQL.SQL_DELETE_PAGE, new JsonArray().add(id)));
-			UriBuilder builder = uriInfo.getBaseUriBuilder();
-			URI location = builder.path(WikiResource.class).build();
+			URI location = Router.getURI(WikiResource::index);
 			return Response.seeOther(location).build();
 		});
 	}

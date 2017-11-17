@@ -3,7 +3,7 @@
 <div class="row">
 
   <div class="col-md-12 mt-1">
-    <form action="${context.uriInfo.getBaseUriBuilder().path(context.SecurityResource).path(context.SecurityResource, 'loginAuth').build()}" method="POST">
+    <form action="${context.route('SecurityResource.loginAuth')}" method="POST">
       <div class="form-group">
         <input type="text" name="username" placeholder="login">
         <input type="password" name="password" placeholder="password">
