@@ -32,6 +32,9 @@ entries:
   - title: Fibers
     url: /#fibers
     output: web
+  - title: Reverse-routing
+    url: /#reverse-routing
+    output: web
   - title: Resource scanning
     output: web
     folderitems:

@@ -156,22 +156,11 @@ Consider the following traditional RxJava code to forward the result of two web 
 {% highlight java %}
 @Path("composed")
 @GET
-public Single<String> helloComposed(@Context Vertx vertx,
-                                    @Context UriInfo uriInfo) {
-  Single<String> request1 = get(vertx, getUri(uriInfo, null));
-  Single<String> request2 = get(vertx, getUri(uriInfo, "helloReactive"));
+public Single<String> helloComposed(@Context Vertx vertx) {
+  Single<String> request1 = get(vertx, getURI(HelloResource::hello));
+  Single<String> request2 = get(vertx, getURI(HelloResource::helloReactive));
       
   return request1.zipWith(request2, (hello1, hello2) -> hello1 + "\n" + hello2);
-}
-
-private URI getUri(UriInfo uriInfo, 
-                   String methodName) {
-  UriBuilder builder = uriInfo.getBaseUriBuilder();
-  if(methodName != null)
-    builder.path(HelloResource.class, methodName);
-  else
-    builder.path(HelloResource.class);
-  return builder.build();
 }
 
 private Single<String> get(Vertx vertx, URI uri){
@@ -190,11 +179,10 @@ _await_ those values in what now looks like sequential code:
 {% highlight java %}
 @Path("fiber")
 @GET
-public Single<String> helloFiber(@Context Vertx vertx,
-                                 @Context UriInfo uriInfo) {
+public Single<String> helloFiber(@Context Vertx vertx) {
   return Fibers.fiber(() -> {
-    String hello1 = Fibers.await(get(vertx, getUri(uriInfo, null)));
-    String hello2 = Fibers.await(get(vertx, getUri(uriInfo, "helloReactive")));
+    String hello1 = Fibers.await(get(vertx, getURI(HelloResource::hello)));
+    String hello2 = Fibers.await(get(vertx, getURI(HelloResource::helloReactive)));
     
     return hello1 + "\n" + hello2;
   });
@@ -243,6 +231,34 @@ And also the following Maven build plug-in to set-up your fibers at compile-time
 {% endhighlight %}
 
 See [Quasar's documentation](http://docs.paralleluniverse.co/quasar/) for more information on fibers. 
+
+## Reverse-routing
+
+In order to get URIs that map to resource methods, you can use the redpipe routing module:
+
+{% highlight xml %}
+<dependency>
+  <groupId>net.redpipe</groupId>
+  <artifactId>redpipe-router</artifactId>
+  <version>{{version}}</version>
+</dependency>
+{% endhighlight %}
+
+With this module, you can simply get a `URI` for a resource method `HelloResource.hello` by calling
+the `Router.getURI()` method and passing it a reference to your resource method and any required
+parameters: 
+
+{% highlight java %}
+URI uri1 = Router.getURI(HelloResource::hello);
+URI uri2 = Router.getURI(HelloResource::helloWithParameters, "param1", 42);
+{% endhighlight %}
+
+Within templates you can use the `context.route` method which takes a string literal pointing to your
+resource method, and any required parameters:
+
+{% highlight html %}
+<a href="${context.route('WikiResource.renderPage', page)}">${page}</a>
+{% endhighlight %}
 
 ## Resource scanning
 
