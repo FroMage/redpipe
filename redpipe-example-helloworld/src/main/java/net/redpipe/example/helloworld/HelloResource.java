@@ -1,21 +1,22 @@
 package net.redpipe.example.helloworld;
 
+import static net.redpipe.router.Router.getURI;
+
 import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.jboss.resteasy.annotations.Stream;
-import net.redpipe.engine.template.Template;
-import net.redpipe.fibers.Fibers;
 
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
+import net.redpipe.engine.template.Template;
+import net.redpipe.fibers.Fibers;
 import rx.Observable;
 import rx.Single;
 
@@ -41,10 +42,9 @@ public class HelloResource {
 
 	@Path("composed")
 	@GET
-	public Single<String> helloComposed(@Context Vertx vertx,
-			@Context UriInfo uriInfo) {
-		Single<String> request1 = get(vertx, getUri(uriInfo, null));
-		Single<String> request2 = get(vertx, getUri(uriInfo, "helloReactive"));
+	public Single<String> helloComposed(@Context Vertx vertx) {
+		Single<String> request1 = get(vertx, getURI(HelloResource::hello));
+		Single<String> request2 = get(vertx, getURI(HelloResource::helloReactive));
 			
 		return request1.zipWith(request2, (hello1, hello2) -> hello1 + "\n" + hello2);
 	}
@@ -54,22 +54,13 @@ public class HelloResource {
 	public Single<String> helloFiber(@Context Vertx vertx,
 			@Context UriInfo uriInfo) {
 		return Fibers.fiber(() -> {
-			String hello1 = Fibers.await(get(vertx, getUri(uriInfo, null)));
-			String hello2 = Fibers.await(get(vertx, getUri(uriInfo, "helloReactive")));
+			String hello1 = Fibers.await(get(vertx, getURI(HelloResource::hello)));
+			String hello2 = Fibers.await(get(vertx, getURI(HelloResource::helloReactive)));
 			
 			return hello1 + "\n" + hello2;
 		});
 	}
 
-	private URI getUri(UriInfo uriInfo, String methodName) {
-		UriBuilder builder = uriInfo.getBaseUriBuilder();
-		if(methodName != null)
-			builder.path(HelloResource.class, methodName);
-		else
-			builder.path(HelloResource.class);
-		return builder.build();
-	}
-	
 	private Single<String> get(Vertx vertx, URI uri){
 		WebClient client = WebClient.create(vertx);
 		Single<HttpResponse<Buffer>> responseHandler = 

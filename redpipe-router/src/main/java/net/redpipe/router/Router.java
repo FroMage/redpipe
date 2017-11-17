@@ -1,4 +1,4 @@
-package org.redpipe.router;
+package net.redpipe.router;
 
 import java.lang.reflect.Method;
 import java.net.URI;

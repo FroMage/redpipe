@@ -20,7 +20,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.jooq.impl.DSL;
-import org.redpipe.router.Router;
 
 import com.github.rjeschke.txtmark.Processor;
 
@@ -41,6 +40,7 @@ import net.redpipe.engine.template.Template;
 import net.redpipe.example.wiki.keycloakJooq.jooq.Tables;
 import net.redpipe.example.wiki.keycloakJooq.jooq.tables.daos.PagesDao;
 import net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages;
+import net.redpipe.router.Router;
 import rx.Single;
 
 @RequiresUser

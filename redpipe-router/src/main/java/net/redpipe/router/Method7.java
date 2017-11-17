@@ -1,4 +1,4 @@
-package org.redpipe.router;
+package net.redpipe.router;
 
 @FunctionalInterface
 public interface Method7<Target, P1, P2, P3, P4, P5, P6, P7> extends MethodFinder {

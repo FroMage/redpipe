@@ -1,4 +1,4 @@
-package org.redpipe.router;
+package net.redpipe.router;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

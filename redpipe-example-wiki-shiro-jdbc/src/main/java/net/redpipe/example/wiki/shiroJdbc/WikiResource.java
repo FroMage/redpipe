@@ -19,8 +19,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.redpipe.router.Router;
-
 import com.github.rjeschke.txtmark.Processor;
 
 import io.vertx.core.json.JsonArray;
@@ -37,6 +35,7 @@ import net.redpipe.engine.security.AuthorizationException;
 import net.redpipe.engine.security.RequiresPermissions;
 import net.redpipe.engine.security.RequiresUser;
 import net.redpipe.engine.template.Template;
+import net.redpipe.router.Router;
 import rx.Single;
 
 @RequiresUser

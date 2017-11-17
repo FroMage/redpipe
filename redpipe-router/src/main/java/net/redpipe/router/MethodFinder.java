@@ -1,4 +1,4 @@
-package org.redpipe.router;
+package net.redpipe.router;
 
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
