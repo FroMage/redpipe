@@ -28,6 +28,7 @@ public class FreeMarkerTemplateRenderer implements TemplateRenderer {
 		for (Entry<String, Object> entry : variables.entrySet()) {
 			context.put(entry.getKey(), entry.getValue());
 		}
+		context.put("route", new RouterFunction());
 		return templateEngine.rxRender(context, name)
 				// FIXME: other media types perhaps?
 				.map(buffer -> Response.ok(buffer, MediaType.TEXT_HTML).build());
