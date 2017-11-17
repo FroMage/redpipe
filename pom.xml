@@ -354,6 +354,7 @@
 		<module>redpipe-fibers</module>
 		<module>redpipe-prototyping</module>
 		<module>redpipe-templating-freemarker</module>
+		<module>redpipe-router</module>
 		<module>redpipe-example-kafka</module>
 		<module>redpipe-example-wiki-keycloak-jooq</module>
 		<module>redpipe-example-wiki-shiro-jdbc</module>
@@ -369,6 +370,7 @@
 				<module>redpipe-fast-classpath-scanner</module>
 				<module>redpipe-fibers</module>
 				<module>redpipe-templating-freemarker</module>
+				<module>redpipe-router</module>
 			</modules>
 		</profile>
 	</profiles>
