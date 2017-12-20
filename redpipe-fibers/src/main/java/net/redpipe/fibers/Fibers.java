@@ -5,7 +5,7 @@ import java.util.Map;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.db.SQLUtil;
-
+import co.paralleluniverse.fibers.DefaultFiberScheduler;
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberAsync;
 import co.paralleluniverse.fibers.FiberExecutorScheduler;
@@ -81,9 +81,30 @@ public class Fibers {
 		});
 	}
 
+	public static <T> Fiber<T> rawFiber(SuspendableCallable<T> body){
+		final Map<Class<?>, Object> contextDataMap = ResteasyProviderFactory.getContextDataMap();
+		AppGlobals globals = AppGlobals.get();
+		return new Fiber<T>(getContextScheduler(), () -> {
+			try{
+				// start by restoring the RE context in this Fiber's ThreadLocal
+				ResteasyProviderFactory.pushContextDataMap(contextDataMap);
+				AppGlobals.set(globals);
+				return body.run();
+			}finally {
+				ResteasyProviderFactory.removeContextDataLevel();
+				AppGlobals.set(null);
+			}
+		});
+	}
+
 	public static FiberScheduler getContextScheduler() {
 		Context context = Vertx.currentContext();
 		if (context == null) {
+//	        final Fiber parent = Fiber.currentFiber();
+//	        if (parent == null)
+//	            return DefaultFiberScheduler.getInstance();
+//	        else
+//	            return parent.getScheduler();
 			throw new IllegalStateException("Not in context");
 		}
 		if (!context.isEventLoopContext()) {
