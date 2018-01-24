@@ -19,3 +19,10 @@ following technologies easily to write reactive web applications:
 - Coroutines (Quasar) to write synchronous-looking reactive code (optional).
 
 More info at http://redpipe.net
+
+## Serving docs locally
+
+```
+$ cd docs
+$ bundle exec jekyll serve
+```

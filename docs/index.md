@@ -793,3 +793,145 @@ public Single<Response> token(@HeaderParam("login") String username,
 }
 {% endhighlight %}
 
+### OpenShift
+
+Redpipe projects are very easy to deploy to [OpenShift V3](https://www.openshift.com), using the 
+[Source-to-Image builders](https://docs.openshift.com/online/using_images/s2i_images/java.html)
+and fat jars.
+
+You can [see a sample Hello World application for yourself](https://github.com/FroMage/redpipe-openshift-helloworld),
+ but the main idea is to set up
+your main class so that it runs on the `8080` port:
+
+{% highlight java %}
+public class Main {
+    public static void main( String[] args ){
+        new Server()
+        .start(new JsonObject().put("http_port", 8080), HelloResource.class)
+        .subscribe(
+                v -> System.err.println("Server started"),
+                x -> x.printStackTrace());
+    }
+}
+{% endhighlight %}
+
+And then configure your `pom.xml` so that it creates a fat-jar with the proper merging of
+`META-INF/services` files, and pointing to your `Main` class:
+
+{% highlight xml %}
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>fr.epardaud</groupId>
+    <artifactId>redpipe-openshift-helloworld</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>redpipe-openshift-helloworld</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-engine</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>fat-jar</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <finalName>redpipe-helloworld</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <transformers>
+                                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                    </transformers>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>fr.epardaud.redpipe_openshift_helloworld.Main</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>flat-classpath-jar</id>
+            <build>
+                <finalName>redpipe-helloworld</finalName>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                    <useRepositoryLayout>true</useRepositoryLayout>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>build-classpath</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>build-classpath</goal>
+                                </goals>
+                                <configuration>
+                                    <outputFile>${project.build.directory}/lib/classpath</outputFile>
+                                    <localRepoProperty>lib</localRepoProperty>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
+{% endhighlight %}
+
+Then, just follow the [official guidelines](https://docs.openshift.com/online/using_images/s2i_images/java.html) by
+pushing your code to GitHub and starting an image with it. You can even try our sample app at 
+`https://github.com/FroMage/redpipe-openshift-helloworld.git` (no context dir).

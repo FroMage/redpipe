@@ -96,3 +96,7 @@ entries:
       - title: JWT
         url: /#jwt
         output: web
+    - title: OpenShift
+      url: /#openshift
+      output: web
+        
