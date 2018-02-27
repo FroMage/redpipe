@@ -27,6 +27,28 @@ write reactive web applications:
 - [Bean Validation](http://beanvalidation.org) ([Hibernate Validator](http://hibernate.org/validator/)) to validate your web endpoints' input (optional),
 - Coroutines ([Quasar](http://docs.paralleluniverse.co/quasar/)) to write synchronous-looking reactive code (optional).
 
+## Reactive / Asynchronous super quick introduction
+
+Redpipe is a [reactive asynchronous](http://reactivex.io/intro.html) web framework. 
+This mostly means that you should [not make blocking](http://vertx.io/docs/vertx-core/java/#_don_t_call_us_we_ll_call_you)
+calls when Redpipe calls your methods, because that would 
+[block the Vert.x event loop](http://vertx.io/docs/vertx-core/java/#golden_rule) and would prevent
+you from the performance benefits of asynchronous reactive programming.
+
+Typically, instead of making a blocking call, asynchronous APIs will let you register a callback to invoke when
+the action is done. But callbacks are [error-prone](http://callbackhell.com/) and do not compose well. 
+The [Promise model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) was introduced to
+abstract over callbacks and asynchronous computations, where a Promise represents a producer of a value that
+you can listen for, and be notified when the value is produced (we call that _resolving_ a Promise).
+
+RxJava is an implementation of the Promise model with support for single-value Promises 
+([`Single`](http://reactivex.io/documentation/single.html)) and
+multiple-value Promise streams ([`Observable`](http://reactivex.io/documentation/observable.html)).
+
+The idea of Redpipe is that you can either return normal values from your methods (if your code does not
+need to block), or RxJava promises (if it does), which Redpipe will register on, and be notified when the
+promises resolve and forward the resolved values to the client.
+
 ## Source code / license / issue tracker
 
 Redpipe is [open-source software](https://github.com/FroMage/redpipe/) licensed under the 
@@ -143,7 +165,9 @@ If your resource returns an `Observable<T>`:
   will be sent to the client as soon as it is produced (again, via standard and custom body writers).
   This is mostly useful for streaming bytes, buffers, or strings, which can be split up and buffered.
 - If you annotate your method with `@Produces(MediaType.SERVER_SENT_EVENTS)`, then every item will
-  be sent to the client over Server-Sent Events (SSE). As always, standard and custom body writers
+  be sent to the client over 
+  [Server-Sent Events](https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events)
+  (SSE). As always, standard and custom body writers
   are called to serialise your entities to events.
 
 ## Fibers
@@ -278,7 +302,7 @@ will be used to scan your classpath for resources and providers:
 </dependency>
 {% endhighlight %}
 
-You just need to set the `scan` configuration to an array of package names to scan.
+You just need to set the [`scan` configuration](#configuration) to an array of package names to scan.
 
 ### CDI
 
