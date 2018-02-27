@@ -1198,3 +1198,9 @@ h4.panel-title {
         display:block !important;
     }
 }
+
+/* Red Hat footer */
+#companyfooter {
+ margin-top: 2em;
+ margin-bottom: 2em;
+}
