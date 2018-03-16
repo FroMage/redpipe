@@ -1,3 +1,4 @@
+net.redpipe.engine.resteasy.DefaultExceptionHandler
 net.redpipe.engine.resteasy.BufferBodyWriter
 net.redpipe.engine.resteasy.JsonObjectBodyReader
 net.redpipe.engine.resteasy.JsonObjectBodyWriter
