@@ -20,6 +20,12 @@
 			<scope>test</scope>
 		</dependency>
 
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-unit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
 		<dependency>
 			<groupId>net.redpipe</groupId>
 			<artifactId>redpipe-engine</artifactId>
