@@ -16,10 +16,11 @@ import rx.Single;
 @ApplicationScoped
 @Path("test")
 public class CdiResource {
+	
     @GET
     public Single<Response> test(@Context Vertx vertx) {
         return vertx.eventBus()
-            .rxSend("echo.address", "mymessage")
+            .rxSend("echo.address", "hello")
             .map(msg -> {
                 System.err.println("Got reply: "+msg.body());
                 return Response.ok(msg.body()).build();
@@ -28,6 +29,6 @@ public class CdiResource {
 
     void echoConsumer(@Observes @VertxConsumer("echo.address") VertxEvent event) {
         System.err.println("Got event: "+event.getMessageBody());
-        event.setReply(event.getMessageBody());
+        event.setReply(event.getMessageBody()+" response from event bus");
     }
 }

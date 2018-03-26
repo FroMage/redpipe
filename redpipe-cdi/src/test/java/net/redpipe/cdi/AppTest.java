@@ -66,7 +66,7 @@ public class AppTest {
         .rxSend()
         .subscribe(body -> {
             context.assertEquals(200, body.statusCode());
-            context.assertEquals("hello", body.body());
+            context.assertEquals("hello response from event bus", body.body());
             async.complete();
         }, x -> { 
             x.printStackTrace();
