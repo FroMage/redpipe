@@ -21,7 +21,7 @@ import net.redpipe.engine.resteasy.RxVertxProvider;
 import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
 import net.redpipe.engine.spi.Plugin;
 import net.redpipe.engine.template.TemplateRenderer;
-
+import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.DefaultJaxrsConfig;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
@@ -39,6 +39,7 @@ import io.vertx.rxjava.ext.auth.AuthProvider;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLClient;
+import io.vertx.rxjava.ext.web.Cookie;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.Session;
@@ -181,12 +182,46 @@ public class Server {
 	protected void setupRoutes(Router router) {
 		router.route().handler(CookieHandler.create());
 		
+		// Workaround for https://github.com/vert-x3/vertx-web/pull/880
+		router.route().handler(context -> {
+			context.addHeadersEndHandler(v -> {
+			      Session session = context.session();
+			      if (!session.isDestroyed()) {
+			        final int currentStatusCode = context.response().getStatusCode();
+			        // Store the session (only and only if there was no error)
+			        if (currentStatusCode < 200 || currentStatusCode >= 400) {
+			        	String previousValue = context.get("__REDPIPE_SAVED_COOKIE");
+			        	if(previousValue != null) {
+			        		io.netty.handler.codec.http.cookie.Cookie nettyCookie = ClientCookieDecoder.LAX.decode(previousValue);
+			        		Cookie newCookie = Cookie.newInstance(io.vertx.ext.web.Cookie.cookie(nettyCookie));
+			        		context.addCookie(newCookie);
+			        	}
+			        }
+			      }
+			});
+			
+			context.next();
+		});
 		SessionHandler sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
 		router.route().handler(sessionHandler);
 
 		AuthProvider auth = setupAuthenticationRoutes();
 		
 		router.route().handler(context -> {
+			
+			// Workaround for https://github.com/vert-x3/vertx-web/pull/880
+			context.addHeadersEndHandler(v -> {
+			      Session session = context.session();
+			      if (!session.isDestroyed()) {
+			        final int currentStatusCode = context.response().getStatusCode();
+			        // Store the session (only and only if there was no error)
+			        if (currentStatusCode < 200 || currentStatusCode >= 400) {
+			        	Cookie cookie = context.getCookie(io.vertx.ext.web.handler.SessionHandler.DEFAULT_SESSION_COOKIE_NAME);
+			        	context.put("__REDPIPE_SAVED_COOKIE", cookie.encode());
+			        }
+			      }
+			});
+			
 			ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
 			ResteasyProviderFactory.pushContext(User.class, context.user());
 			ResteasyProviderFactory.pushContext(Session.class, context.session());
