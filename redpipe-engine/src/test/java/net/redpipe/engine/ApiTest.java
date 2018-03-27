@@ -85,4 +85,22 @@ public class ApiTest {
 		});
 	}
 
+	@Test
+	public void checkErrorCodeRespected(TestContext context) {
+		Async async = context.async();
+
+		webClient
+			.get("/does-not-exist")
+			.as(BodyCodec.string())
+			.rxSend()
+			.map(r -> {
+				context.assertEquals(404, r.statusCode(), "status code is 404");
+				return r.body();
+			})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
 }
