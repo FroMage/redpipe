@@ -1,11 +1,8 @@
 package net.redpipe.engine.core;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
@@ -14,6 +11,12 @@ import javax.servlet.ServletException;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import io.vertx.core.Future;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.rx.java.ObservableFuture;
+import io.vertx.rx.java.RxHelper;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
@@ -53,6 +56,7 @@ public class Server {
 	
 	private Vertx vertx;
 	protected List<Plugin> plugins;
+    private static final Logger log = LoggerFactory.getLogger(Server.class);
 
 	public Server(){
 //		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
@@ -77,18 +81,53 @@ public class Server {
 
 		// Propagate the Resteasy context on RxJava
 		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
-		
-		return loadConfig(defaultConfig)
-				.flatMap(config -> {
-					return setupPlugins()
-							.flatMap(v -> setupTemplateRenderers())
-							.flatMap(v -> setupResteasy(resourceOrProviderClasses))
-							.flatMap(deployment -> {
-								setupSwagger(deployment);
-								return setupVertx(config, deployment);
-							});
-				});
+
+        return init()
+                .flatMap(none -> loadFileConfig(defaultConfig))
+                .flatMap(config -> initVertx(config))
+                .flatMap(vertx -> {
+                    this.vertx = vertx;
+                    AppGlobals.get().setVertx(this.vertx);
+                    return setupPlugins();
+                })
+                .flatMap(v -> setupTemplateRenderers())
+                .flatMap(v -> setupResteasy(resourceOrProviderClasses))
+                .flatMap(deployment -> {
+                    setupSwagger(deployment);
+                    return setupVertx(deployment);
+                });
 	}
+
+    private Single<Void> init()
+    {
+        AppGlobals.init();
+        return Single.just(null);
+    }
+
+    private Single<Vertx> initVertx(JsonObject config)
+    {
+        ObservableFuture<Vertx> resultHandler = RxHelper.observableFuture();
+        VertxOptions options;
+        if (config != null)
+        {
+            options = new VertxOptions(config);
+        }
+        else
+        {
+            options = new VertxOptions();
+        }
+        options.setWarningExceptionTime(Long.MAX_VALUE);
+        if (options.isClustered())
+        {
+            Vertx.clusteredVertx(options, resultHandler.toHandler());
+        }
+        else
+        {
+            vertx = Vertx.vertx(options);
+            resultHandler.toHandler().handle(Future.succeededFuture(vertx));
+        }
+        return resultHandler.single().toSingle();
+    }
 	
 	private Single<Void> setupPlugins() {
 		loadPlugins();
@@ -109,9 +148,9 @@ public class Server {
 		return Single.just(null);
 	}
 
-	private Single<Void> setupVertx(JsonObject config, VertxResteasyDeployment deployment) {
+    private Single<Void> setupVertx(VertxResteasyDeployment deployment) {
 		// Get a DB
-		SQLClient dbClient = createDbClient(config);
+        SQLClient dbClient = createDbClient(AppGlobals.get().getConfig());
 
 		Class<?> mainClass = null;
 		for (Class<?> resourceClass : deployment.getActualResourceClasses()) {
@@ -128,7 +167,7 @@ public class Server {
 		globals.setDeployment(deployment);
 
 		return doOnPlugins(plugin -> plugin.init())
-			.flatMap(v -> startVertx(config, deployment));
+			.flatMap(v -> startVertx(deployment));
 	}
 	
 	protected SQLClient createDbClient(JsonObject config) {
@@ -145,39 +184,43 @@ public class Server {
 		}
 		return last;
 	}
-	
-	private Single<Void> startVertx(JsonObject config, VertxResteasyDeployment deployment) {
-		Router router = Router.router(vertx);
-		AppGlobals.get().setRouter(router);
-		
-		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
-		
-		return doOnPlugins(plugin -> plugin.preRoute())
-				.map(v -> {
-					setupRoutes(router);
-					router.route().handler(routingContext -> {
-						ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
-						resteasyHandler.handle(routingContext.request());
-					});
-					return null;
-				}).flatMap(v -> doOnPlugins(plugin -> plugin.postRoute()))
-				.flatMap(v -> {
-					return Single.<Void>create(sub -> {
-						// Start the front end server using the Jax-RS controller
-						vertx.createHttpServer()
-						.requestHandler(router::accept)
-						.listen(config.getInteger("http_port", 9000), ar -> {
-							if(ar.failed()){
-								ar.cause().printStackTrace();
-								sub.onError(ar.cause());
-							}else {
-								System.out.println("Server started on port "+ ar.result().actualPort());
-								sub.onSuccess(null);
-							}
-						});
-					});
-				});
-	}
+
+    private Single<Void> startVertx(VertxResteasyDeployment deployment)
+    {
+        Router router = Router.router(vertx);
+        AppGlobals.get().setRouter(router);
+
+        VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
+
+        return doOnPlugins(plugin -> plugin.preRoute())
+                .map(v -> {
+                    setupRoutes(router);
+                    router.route().handler(routingContext -> {
+                        ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
+                        resteasyHandler.handle(routingContext.request());
+                    });
+                    return null;
+                }).flatMap(v -> doOnPlugins(plugin -> plugin.postRoute()))
+                .flatMap(v -> {
+                    return Single.<Void>create(sub -> {
+                        // Start the front end server using the Jax-RS controller
+                        vertx.createHttpServer()
+                                .requestHandler(router::accept)
+                                .listen(AppGlobals.get().getConfig().getInteger("http_port", 9000), ar -> {
+                                    if (ar.failed())
+                                    {
+                                        ar.cause().printStackTrace();
+                                        sub.onError(ar.cause());
+                                    }
+                                    else
+                                    {
+                                        System.out.println("Server started on port " + ar.result().actualPort());
+                                        sub.onSuccess(null);
+                                    }
+                                });
+                    });
+                });
+    }
 
 	protected void setupRoutes(Router router) {
 		router.route().handler(CookieHandler.create());
@@ -232,6 +275,52 @@ public class Server {
 	protected AuthProvider setupAuthenticationRoutes() {
 		return null;
 	}
+
+    private Single<JsonObject> loadFileConfig(JsonObject config)
+    {
+        if (config != null)
+        {
+            return save(config);
+        }
+        try
+        {
+            File current = new File(".").getCanonicalFile();
+            // We need to use the canonical file. Without the file name is .
+            System.setProperty("vertx.cwd", current.getAbsolutePath());
+        }
+        catch (Exception e)
+        {
+            // Ignore it.
+        }
+
+        String confArg = "conf/config.json";
+        File file = new File(confArg);
+        System.out.println(file.getAbsolutePath());
+        try (Scanner scanner = new Scanner(new File(confArg)).useDelimiter("\\A"))
+        {
+            String sconf = scanner.next();
+            try
+            {
+                return save(new JsonObject(sconf));
+            }
+            catch (DecodeException e)
+            {
+                log.error("Configuration file " + sconf + " does not contain a valid JSON object");
+                // empty config
+                return save(new JsonObject());
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            return save(new JsonObject());
+        }
+    }
+
+    private Single<JsonObject> save(JsonObject jsonObject)
+    {
+        AppGlobals.get().setConfig(jsonObject);
+        return Single.just(jsonObject);
+    }
 
 	private Single<JsonObject> loadConfig(JsonObject config) {
 		if(config != null) {

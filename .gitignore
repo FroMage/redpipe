@@ -5,3 +5,5 @@
 /*/db
 /*/target
 .testcontainers-tmp*
+**/*.iml
+.idea
