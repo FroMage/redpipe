@@ -57,6 +57,7 @@ public class Server {
 	private Vertx vertx;
 	protected List<Plugin> plugins;
     private static final Logger log = LoggerFactory.getLogger(Server.class);
+    protected String config_file = "conf/config.json";
 
 	public Server(){
 //		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
@@ -101,6 +102,12 @@ public class Server {
     private Single<Void> init()
     {
         AppGlobals.init();
+        return Single.just(null);
+    }
+
+    private Single<Void> configFile(String config_file)
+    {
+        this.config_file=config_file;
         return Single.just(null);
     }
 
@@ -293,7 +300,7 @@ public class Server {
             // Ignore it.
         }
 
-        String confArg = "conf/config.json";
+        String confArg = this.config_file;
         File file = new File(confArg);
         System.out.println(file.getAbsolutePath());
         try (Scanner scanner = new Scanner(new File(confArg)).useDelimiter("\\A"))
