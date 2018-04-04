@@ -172,6 +172,12 @@
 				<version>${version.vertx}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>io.vertx</groupId>
+				<artifactId>vertx-hazelcast</artifactId>
+				<version>${version.vertx}</version>
+			</dependency>
+
 			<!-- CDI -->
 			<dependency>
 				<groupId>org.jboss.weld.vertx</groupId>

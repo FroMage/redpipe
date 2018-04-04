@@ -1,29 +1,26 @@
 package net.redpipe.engine.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
-import net.redpipe.engine.resteasy.RxVertxProvider;
-import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
-import net.redpipe.engine.spi.Plugin;
-import net.redpipe.engine.template.TemplateRenderer;
+
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.config.DefaultJaxrsConfig;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -32,7 +29,10 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.config.ConfigRetriever;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.AuthProvider;
@@ -46,6 +46,11 @@ import io.vertx.rxjava.ext.web.Session;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.SessionHandler;
 import io.vertx.rxjava.ext.web.sstore.LocalSessionStore;
+import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
+import net.redpipe.engine.resteasy.RxVertxProvider;
+import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
+import net.redpipe.engine.spi.Plugin;
+import net.redpipe.engine.template.TemplateRenderer;
 import rx.Single;
 import rx.plugins.RxJavaHooks;
 
@@ -53,6 +58,8 @@ public class Server {
 	
 	private Vertx vertx;
 	protected List<Plugin> plugins;
+    private static final Logger log = LoggerFactory.getLogger(Server.class);
+    protected String configFile = "conf/config.json";
 
 	public Server(){
 //		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
@@ -77,18 +84,46 @@ public class Server {
 
 		// Propagate the Resteasy context on RxJava
 		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
-		
-		return loadConfig(defaultConfig)
-				.flatMap(config -> {
-					return setupPlugins()
-							.flatMap(v -> setupTemplateRenderers())
-							.flatMap(v -> setupResteasy(resourceOrProviderClasses))
-							.flatMap(deployment -> {
-								setupSwagger(deployment);
-								return setupVertx(config, deployment);
-							});
-				});
+
+		JsonObject config = loadFileConfig(defaultConfig);
+        AppGlobals.get().setConfig(config);
+
+        return initVertx(config)
+                .flatMap(vertx -> {
+                    this.vertx = vertx;
+                    AppGlobals.get().setVertx(this.vertx);
+                    return setupPlugins();
+                })
+                .flatMap(v -> setupTemplateRenderers())
+                .flatMap(v -> setupResteasy(resourceOrProviderClasses))
+                .flatMap(deployment -> {
+                    setupSwagger(deployment);
+                    return setupVertx(deployment);
+                });
 	}
+
+    private Single<Vertx> initVertx(JsonObject config)
+    {
+        VertxOptions options;
+        if (config != null)
+        {
+            options = new VertxOptions(config);
+        }
+        else
+        {
+            options = new VertxOptions();
+        }
+        options.setWarningExceptionTime(Long.MAX_VALUE);
+        if (options.isClustered())
+        {
+            return Vertx.rxClusteredVertx(options);
+        }
+        else
+        {
+            vertx = Vertx.vertx(options);
+            return Single.just(vertx);
+        }
+    }
 	
 	private Single<Void> setupPlugins() {
 		loadPlugins();
@@ -109,9 +144,9 @@ public class Server {
 		return Single.just(null);
 	}
 
-	private Single<Void> setupVertx(JsonObject config, VertxResteasyDeployment deployment) {
+    private Single<Void> setupVertx(VertxResteasyDeployment deployment) {
 		// Get a DB
-		SQLClient dbClient = createDbClient(config);
+        SQLClient dbClient = createDbClient(AppGlobals.get().getConfig());
 
 		Class<?> mainClass = null;
 		for (Class<?> resourceClass : deployment.getActualResourceClasses()) {
@@ -128,7 +163,7 @@ public class Server {
 		globals.setDeployment(deployment);
 
 		return doOnPlugins(plugin -> plugin.init())
-			.flatMap(v -> startVertx(config, deployment));
+			.flatMap(v -> startVertx(deployment));
 	}
 	
 	protected SQLClient createDbClient(JsonObject config) {
@@ -145,39 +180,43 @@ public class Server {
 		}
 		return last;
 	}
-	
-	private Single<Void> startVertx(JsonObject config, VertxResteasyDeployment deployment) {
-		Router router = Router.router(vertx);
-		AppGlobals.get().setRouter(router);
-		
-		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
-		
-		return doOnPlugins(plugin -> plugin.preRoute())
-				.map(v -> {
-					setupRoutes(router);
-					router.route().handler(routingContext -> {
-						ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
-						resteasyHandler.handle(routingContext.request());
-					});
-					return null;
-				}).flatMap(v -> doOnPlugins(plugin -> plugin.postRoute()))
-				.flatMap(v -> {
-					return Single.<Void>create(sub -> {
-						// Start the front end server using the Jax-RS controller
-						vertx.createHttpServer()
-						.requestHandler(router::accept)
-						.listen(config.getInteger("http_port", 9000), ar -> {
-							if(ar.failed()){
-								ar.cause().printStackTrace();
-								sub.onError(ar.cause());
-							}else {
-								System.out.println("Server started on port "+ ar.result().actualPort());
-								sub.onSuccess(null);
-							}
-						});
-					});
-				});
-	}
+
+    private Single<Void> startVertx(VertxResteasyDeployment deployment)
+    {
+        Router router = Router.router(vertx);
+        AppGlobals.get().setRouter(router);
+
+        VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
+
+        return doOnPlugins(plugin -> plugin.preRoute())
+                .map(v -> {
+                    setupRoutes(router);
+                    router.route().handler(routingContext -> {
+                        ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
+                        resteasyHandler.handle(routingContext.request());
+                    });
+                    return null;
+                }).flatMap(v -> doOnPlugins(plugin -> plugin.postRoute()))
+                .flatMap(v -> {
+                    return Single.<Void>create(sub -> {
+                        // Start the front end server using the Jax-RS controller
+                        vertx.createHttpServer()
+                                .requestHandler(router::accept)
+                                .listen(AppGlobals.get().getConfig().getInteger("http_port", 9000), ar -> {
+                                    if (ar.failed())
+                                    {
+                                        ar.cause().printStackTrace();
+                                        sub.onError(ar.cause());
+                                    }
+                                    else
+                                    {
+                                        System.out.println("Server started on port " + ar.result().actualPort());
+                                        sub.onSuccess(null);
+                                    }
+                                });
+                    });
+                });
+    }
 
 	protected void setupRoutes(Router router) {
 		router.route().handler(CookieHandler.create());
@@ -232,6 +271,46 @@ public class Server {
 	protected AuthProvider setupAuthenticationRoutes() {
 		return null;
 	}
+
+    private JsonObject loadFileConfig(JsonObject config)
+    {
+        if (config != null)
+        {
+            return config;
+        }
+        try
+        {
+            File current = new File(".").getCanonicalFile();
+            // We need to use the canonical file. Without the file name is .
+            System.setProperty("vertx.cwd", current.getAbsolutePath());
+        }
+        catch (Exception e)
+        {
+            // Ignore it.
+        }
+
+        String confArg = this.configFile;
+        File file = new File(confArg);
+        System.out.println(file.getAbsolutePath());
+        try (Scanner scanner = new Scanner(new File(confArg)).useDelimiter("\\A"))
+        {
+            String sconf = scanner.next();
+            try
+            {
+                return new JsonObject(sconf);
+            }
+            catch (DecodeException e)
+            {
+                log.error("Configuration file " + sconf + " does not contain a valid JSON object");
+                // empty config
+                return new JsonObject();
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            return new JsonObject();
+        }
+    }
 
 	private Single<JsonObject> loadConfig(JsonObject config) {
 		if(config != null) {
