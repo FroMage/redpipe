@@ -78,9 +78,7 @@ public class Server {
 		
 		VertxOptions options = new VertxOptions();
 		options.setWarningExceptionTime(Long.MAX_VALUE);
-		vertx = Vertx.vertx(options);
 		AppGlobals.init();
-		AppGlobals.get().setVertx(vertx);
 
 		// Propagate the Resteasy context on RxJava
 		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
