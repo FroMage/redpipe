@@ -141,7 +141,9 @@ public class MyResource {
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
-		responseHandler.subscribe(body -> {
+		responseHandler
+			.doAfterTerminate(() -> client.close())
+			.subscribe(body -> {
 			System.err.println("Got body");
 			asyncResponse.resume(Response.ok(body.body().toString()).build());
 		});
@@ -164,7 +166,9 @@ public class MyResource {
 				"/robots.txt").rxSend();
 
 		CompletableFuture<String> ret = new CompletableFuture<>();
-		responseHandler.subscribe(body -> {
+		responseHandler
+			.doAfterTerminate(() -> client.close())
+			.subscribe(body -> {
 			System.err.println("Got body");
 			ret.complete(body.body().toString());
 		});
@@ -188,7 +192,9 @@ public class MyResource {
 				"/robots.txt").rxSend();
 
 		CompletableFuture<String> ret = new CompletableFuture<>();
-		responseHandler.subscribe(body -> {
+		responseHandler
+			.doAfterTerminate(() -> client.close())
+			.subscribe(body -> {
 			System.err.println("Got body");
 			
 			ret.completeExceptionally(new MyException());
@@ -214,7 +220,7 @@ public class MyResource {
 		return responseHandler.map(body -> {
 			System.err.println("Got body");
 			return body.body().toString();
-		});
+		}).doAfterTerminate(() -> client.close());
 	}
 
 	@Path("8user")
@@ -235,7 +241,7 @@ public class MyResource {
 		return responseHandler.map(body -> {
 			System.err.println("Got body");
 			return new DataClass(body.body().toString());
-		});
+		}).doAfterTerminate(() -> client.close());
 	}
 
 	@Path("8error")
@@ -252,7 +258,9 @@ public class MyResource {
 				"/robots.txt").rxSend();
 
 		System.err.println("Created client");
-		return responseHandler.map(body -> {
+		return responseHandler
+				.doAfterTerminate(() -> client.close())
+				.map(body -> {
 			System.err.println("Got body");
 			throw new MyException();
 		});
@@ -334,6 +342,7 @@ public class MyResource {
 
 			HttpResponse<io.vertx.rxjava.core.buffer.Buffer> httpResponse = Fibers.await(responseHandler);
 			System.err.println("Got body");
+			client.close();
 			
 			return Response.ok(httpResponse.body().toString()).build();
 		});

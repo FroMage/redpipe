@@ -43,6 +43,7 @@ public class AppTest {
     @After
     public void after(TestContext context) {
         Async async = context.async();
+        webClient.close();
         server.close(result -> {
             if(result.failed())
                 context.fail(result.cause());

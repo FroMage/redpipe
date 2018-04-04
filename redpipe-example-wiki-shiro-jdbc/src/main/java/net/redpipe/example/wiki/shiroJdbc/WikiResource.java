@@ -188,6 +188,7 @@ public class WikiResource {
 					.putHeader("Content-Type", "application/json")
 					.as(BodyCodec.jsonObject())
 					.rxSendJsonObject(gistPayload));
+			webClient.close();
 
 			if (response.statusCode() == 201) {
 				flash.put("backup_gist_url", response.body().getString("html_url"));

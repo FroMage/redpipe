@@ -66,7 +66,8 @@ public class HelloResource {
 		Single<HttpResponse<Buffer>> responseHandler = 
 				client.get(uri.getPort(), uri.getHost(), uri.getPath()).rxSend();
 
-		return responseHandler.map(response -> response.body().toString());
+		return responseHandler.map(response -> response.body().toString())
+				.doAfterTerminate(() -> client.close());
 	}
 	
 	@GET
