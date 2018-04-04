@@ -325,8 +325,10 @@ Note that this uses [Weld](http://weld.cdi-spec.org) and the weld-vertx extensio
 ## Configuration
 
 Unless you call `Server.start()` with a `JsonObject` configuration to override it, 
-the `conf/config.json` file will be loaded and used for configuration. Here are the configuration options
-available:
+the `conf/config.json` file will be loaded and used for configuration. 
+
+In addition to the standard [Vertx options](https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html), 
+these are the configuration options available:
 
 <table>
  <caption>General options</caption>
