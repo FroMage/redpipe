@@ -44,11 +44,11 @@ public class AppTest {
     public void after(TestContext context) {
         Async async = context.async();
         webClient.close();
-        server.close(result -> {
-            if(result.failed())
-                context.fail(result.cause());
-            async.complete();
-        });
+        server.close().subscribe(v -> async.complete(),
+        		x -> {
+        			context.fail(x); 
+        			async.complete();
+        		});
     }
 
     @Test

@@ -54,8 +54,12 @@ public class ApiTest {
 	@After
 	public void finish(TestContext context) {
 		webClient.close();
-		// FIXME: doesn't use RxJava
-		server.close(context.asyncAssertSuccess());
+		Async async = context.async();
+        server.close().subscribe(v -> async.complete(),
+        		x -> {
+        			context.fail(x); 
+        			async.complete();
+        		});
 	}
 
 	@Test

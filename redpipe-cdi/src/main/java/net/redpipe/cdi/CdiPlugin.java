@@ -33,6 +33,8 @@ import rx.Single;
 
 public class CdiPlugin extends Plugin {
 
+	private Weld weld;
+
 	@Override
 	public Single<Void> init() {
 		// Setup the Vertx-CDI integration
@@ -56,9 +58,15 @@ public class CdiPlugin extends Plugin {
 	}
 
 	@Override
+	public Single<Void> shutdown() {
+		weld.shutdown();
+		return super.shutdown();
+	}
+	
+	@Override
 	public Single<Void> preInit() {
 		// CDI
-		Weld weld = new Weld();
+		weld = new Weld();
 		weld.addExtension(new VertxExtension());
 		weld.initialize();
 

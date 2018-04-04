@@ -11,6 +11,7 @@ public abstract class Plugin {
 	public Single<Void> preInit(){ return Single.just(null); }
 	
 	public Single<Void> init(){ return Single.just(null); }
+	public Single<Void> shutdown(){ return Single.just(null); }
 
 	public Single<Void> deployToResteasy(VertxResteasyDeployment deployment){ return Single.just(null); }
 	

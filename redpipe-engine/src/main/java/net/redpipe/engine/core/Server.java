@@ -423,8 +423,9 @@ public class Server {
 //        app.addHandler(consoleHandler);
 	}
 
-	public void close(Handler<AsyncResult<Void>> asyncAssertSuccess) {
-		vertx.close(asyncAssertSuccess);
+	public Single<Void> close() {
+		return doOnPlugins(plugin -> plugin.shutdown())
+				.flatMap(v -> vertx.rxClose());
 	}
 
 	public Vertx getVertx() {
