@@ -75,4 +75,28 @@ public class AppTest {
             async.complete();
         });
     }
+
+    @Test
+    public void testCdiInjection(TestContext context) {
+      final ConsoleHandler consoleHandler = new ConsoleHandler();
+      consoleHandler.setLevel(Level.FINEST);
+      consoleHandler.setFormatter(new SimpleFormatter());
+
+      final Logger app = Logger.getLogger("org.jboss.weld.vertx");
+      app.setLevel(Level.FINEST);
+      app.addHandler(consoleHandler);
+
+      Async async = context.async();
+        webClient.get("/test/injection")
+        .as(BodyCodec.string())
+        .rxSend()
+        .subscribe(body -> {
+            context.assertEquals(200, body.statusCode());
+            async.complete();
+        }, x -> { 
+            x.printStackTrace();
+            context.fail(x);
+            async.complete();
+        });
+    }
 }
