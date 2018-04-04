@@ -2,31 +2,25 @@ package net.redpipe.engine.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Scanner;
+import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
-import io.vertx.core.Future;
-import io.vertx.core.json.DecodeException;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.rx.java.ObservableFuture;
-import io.vertx.rx.java.RxHelper;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
-import net.redpipe.engine.resteasy.RxVertxProvider;
-import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
-import net.redpipe.engine.spi.Plugin;
-import net.redpipe.engine.template.TemplateRenderer;
+
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.config.DefaultJaxrsConfig;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -35,7 +29,10 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.config.ConfigRetriever;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.AuthProvider;
@@ -49,6 +46,11 @@ import io.vertx.rxjava.ext.web.Session;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.SessionHandler;
 import io.vertx.rxjava.ext.web.sstore.LocalSessionStore;
+import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
+import net.redpipe.engine.resteasy.RxVertxProvider;
+import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
+import net.redpipe.engine.spi.Plugin;
+import net.redpipe.engine.template.TemplateRenderer;
 import rx.Single;
 import rx.plugins.RxJavaHooks;
 
@@ -57,7 +59,7 @@ public class Server {
 	private Vertx vertx;
 	protected List<Plugin> plugins;
     private static final Logger log = LoggerFactory.getLogger(Server.class);
-    protected String config_file = "conf/config.json";
+    protected String configFile = "conf/config.json";
 
 	public Server(){
 //		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
@@ -83,9 +85,10 @@ public class Server {
 		// Propagate the Resteasy context on RxJava
 		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
 
-        return init()
-                .flatMap(none -> loadFileConfig(defaultConfig))
-                .flatMap(config -> initVertx(config))
+		JsonObject config = loadFileConfig(defaultConfig);
+        AppGlobals.get().setConfig(config);
+
+        return initVertx(config)
                 .flatMap(vertx -> {
                     this.vertx = vertx;
                     AppGlobals.get().setVertx(this.vertx);
@@ -99,21 +102,8 @@ public class Server {
                 });
 	}
 
-    private Single<Void> init()
-    {
-        AppGlobals.init();
-        return Single.just(null);
-    }
-
-    private Single<Void> configFile(String config_file)
-    {
-        this.config_file=config_file;
-        return Single.just(null);
-    }
-
     private Single<Vertx> initVertx(JsonObject config)
     {
-        ObservableFuture<Vertx> resultHandler = RxHelper.observableFuture();
         VertxOptions options;
         if (config != null)
         {
@@ -126,14 +116,13 @@ public class Server {
         options.setWarningExceptionTime(Long.MAX_VALUE);
         if (options.isClustered())
         {
-            Vertx.clusteredVertx(options, resultHandler.toHandler());
+            return Vertx.rxClusteredVertx(options);
         }
         else
         {
             vertx = Vertx.vertx(options);
-            resultHandler.toHandler().handle(Future.succeededFuture(vertx));
+            return Single.just(vertx);
         }
-        return resultHandler.single().toSingle();
     }
 	
 	private Single<Void> setupPlugins() {
@@ -283,11 +272,11 @@ public class Server {
 		return null;
 	}
 
-    private Single<JsonObject> loadFileConfig(JsonObject config)
+    private JsonObject loadFileConfig(JsonObject config)
     {
         if (config != null)
         {
-            return save(config);
+            return config;
         }
         try
         {
@@ -300,7 +289,7 @@ public class Server {
             // Ignore it.
         }
 
-        String confArg = this.config_file;
+        String confArg = this.configFile;
         File file = new File(confArg);
         System.out.println(file.getAbsolutePath());
         try (Scanner scanner = new Scanner(new File(confArg)).useDelimiter("\\A"))
@@ -308,25 +297,19 @@ public class Server {
             String sconf = scanner.next();
             try
             {
-                return save(new JsonObject(sconf));
+                return new JsonObject(sconf);
             }
             catch (DecodeException e)
             {
                 log.error("Configuration file " + sconf + " does not contain a valid JSON object");
                 // empty config
-                return save(new JsonObject());
+                return new JsonObject();
             }
         }
         catch (FileNotFoundException e)
         {
-            return save(new JsonObject());
+            return new JsonObject();
         }
-    }
-
-    private Single<JsonObject> save(JsonObject jsonObject)
-    {
-        AppGlobals.get().setConfig(jsonObject);
-        return Single.just(jsonObject);
     }
 
 	private Single<JsonObject> loadConfig(JsonObject config) {
