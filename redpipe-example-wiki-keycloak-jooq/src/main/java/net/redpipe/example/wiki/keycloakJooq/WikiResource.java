@@ -4,6 +4,7 @@ import static net.redpipe.fibers.Fibers.await;
 import static net.redpipe.fibers.Fibers.fiber;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -28,6 +31,7 @@ import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.User;
+import io.vertx.rxjava.ext.web.Session;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.codec.BodyCodec;
@@ -167,10 +171,72 @@ public class WikiResource {
 		});
 	}
 
+	@Path("/github-login")
+	@GET
+	public Template githubLoginForm(){
+		return new Template("templates/githubLogin.ftl")
+					.set("title", "Login to Github");
+	}
+
+	@Path("/github-login")
+	@POST
+	public Response githubLogin(@FormParam("clientId") String clientId, 
+			@FormParam("clientSecret") String clientSecret,
+			@Context Session session) throws URISyntaxException{
+		// https://github.com/login/oauth/authorize?scope=user:email&client_id=
+		session.put("github_client_id", clientId);
+		session.put("github_client_secret", clientSecret);
+		return Response.seeOther(new URI("https://github.com/login/oauth/authorize?scope=gist&client_id="+clientId)).build();
+	}
+
+	@Path("/github-callback")
+	@GET
+	public Single<Response> githubCallback(@QueryParam("code") String code,
+			@Context Vertx vertx,
+			@Context Session session) throws URISyntaxException{
+		return fiber(() -> {
+
+			WebClient webClient = WebClient.create(vertx, new WebClientOptions()
+					.setSsl(true)
+					.setUserAgent("vert-x3"));
+			String clientId = session.get("github_client_id");
+			String clientSecret = session.get("github_client_secret");
+			JsonObject payload = new JsonObject()
+					.put("client_id", clientId)
+					.put("client_secret", clientSecret)
+					.put("code", code);
+			HttpResponse<JsonObject> response = await(webClient.post(443, "github.com", "/login/oauth/access_token") 
+					.putHeader("Accept", "application/json") 
+					.putHeader("Content-Type", "application/json")
+					.as(BodyCodec.jsonObject())
+					.rxSendJsonObject(payload));
+
+			if (response.statusCode() == 200) {
+				session.put("github_token", response.body().getValue("access_token"));
+				return Response.seeOther(Router.getURI(WikiResource::index)).build();
+			} else {
+				StringBuilder message = new StringBuilder()
+						.append("Could not get access token: ")
+						.append(response.statusMessage());
+				JsonObject body = response.body();
+				if (body != null) {
+					message.append(System.getProperty("line.separator"))
+					.append(body.encodePrettily());
+				}
+				return Response.status(Status.BAD_GATEWAY).type(MediaType.TEXT_PLAIN).entity(message).build();
+			}
+		});
+	}
+
 	@RequiresPermissions("create")
 	@Path("/backup")
 	@POST
-	public Single<Object> backup(@Context Vertx vertx){
+	public Single<Object> backup(@Context Vertx vertx, @Context Session session){
+		String token = session.get("github_token");
+		if(token == null) {
+			return Single.just(Response.seeOther(Router.getURI(WikiResource::githubLoginForm)).build());
+		}
+		
 		return fiber(() -> {
 			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			List<Pages> pages = await(dao.findAllAsync());
@@ -193,6 +259,7 @@ public class WikiResource {
 			HttpResponse<JsonObject> response = await(webClient.post(443, "api.github.com", "/gists") 
 					.putHeader("Accept", "application/vnd.github.v3+json") 
 					.putHeader("Content-Type", "application/json")
+					.putHeader("Authorization", "token "+token)
 					.as(BodyCodec.jsonObject())
 					.rxSendJsonObject(gistPayload));
 			webClient.close();
@@ -209,7 +276,7 @@ public class WikiResource {
 					message.append(System.getProperty("line.separator"))
 					.append(body.encodePrettily());
 				}
-				return Response.status(Status.BAD_GATEWAY).entity(message).build();
+				return Response.status(Status.BAD_GATEWAY).type(MediaType.TEXT_PLAIN).entity(message).build();
 			}
 		});
 	}
