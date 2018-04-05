@@ -8,6 +8,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -59,8 +60,7 @@ public abstract class BaseSecurityResource {
 				throw new RuntimeException(e);
 			}
 		}).onErrorReturn(t -> {
-			t.printStackTrace();
-			return Response.status(Status.FORBIDDEN).build();
+			return Response.status(Status.FORBIDDEN).entity(t.getMessage()).type(MediaType.TEXT_PLAIN).build();
 		});
 	}
 
