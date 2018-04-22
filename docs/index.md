@@ -537,6 +537,24 @@ public class AppResource extends FileResource {
 
 Your files will then be accessible from the `/webroot/` path prefix.
 
+### Serving `index.html` at `/` by default
+
+Usually web servers do this by default.
+
+{% highlight java %}
+@Path("/{path:(.*)?}")
+public class AppResource extends FileResource {
+
+  @GET
+  public Response index(@PathParam("path") String path) throws IOException {
+    return super.getFile(path.equals("") ? "index.html" : path);
+  }
+}
+{% endhighlight %}
+
+Your home page will then be accessible from the root path (eg: [http://localhost:9000](http://localhost:9000)).
+
+
 ## Plugins
 
 You can write plugins by declaring a `META-INF/services/net.redpipe.engine.spi.Plugin` file in your

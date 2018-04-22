@@ -63,8 +63,14 @@ entries:
       url: /#writing-your-own-template-renderer
       output: web
   - title: Serving static files
-    url: /#serving-static-files
     output: web
+    folderitems:
+      - title: Basics
+        url: /#serving-static-files
+        output: web
+      - title: Serving index.html by default
+        url: /#serving-indexhtml-at--by-default
+        output: web
   - title: Plugins
     url: /#plugins
     output: web
