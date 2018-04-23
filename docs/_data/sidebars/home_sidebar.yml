@@ -108,4 +108,6 @@ entries:
     - title: OpenShift
       url: /#openshift
       output: web
-        
+    - title: Run your WebApp with Maven
+      url: /#run-your-webapp-with-maven
+      output: web

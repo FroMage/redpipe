@@ -979,3 +979,58 @@ And then configure your `pom.xml` so that it creates a fat-jar with the proper m
 Then, just follow the [official guidelines](https://docs.openshift.com/online/using_images/s2i_images/java.html) by
 pushing your code to GitHub and starting an image with it. You can even try our sample app at 
 `https://github.com/FroMage/redpipe-openshift-helloworld.git` (no context dir).
+
+### Run your WebApp with Maven
+
+This is a `pom.xml` sample to easily run your project. Just run `mvn install exec:java`
+
+{% highlight xml %}
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>demo</groupId>
+    <artifactId>demo</artifactId>
+    <name>demo</name>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <redpipe.version>0.0.1</redpipe.version>
+        <mainClass>demo.Main</mainClass>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>${mainClass}</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-engine</artifactId>
+            <version>${redpipe.version}</version>
+        </dependency>
+    </dependencies>
+    
+</project>
+{% endhighlight %}
