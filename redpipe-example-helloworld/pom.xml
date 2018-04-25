@@ -12,6 +12,7 @@
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<mainClass>net.redpipe.example.helloworld.Main</mainClass>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -56,6 +57,28 @@
 			<plugin>
 				<groupId>com.vlkan</groupId>
 				<artifactId>quasar-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>${mainClass}</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

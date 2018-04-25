@@ -369,7 +369,7 @@ public class Server {
 
 		ReaderConfigUtils.initReaderConfig(servletConfig);
 
-		BeanConfig swaggerConfig = new BeanConfig();
+		BeanConfig swaggerConfig = new MyBeanConfig();
 		swaggerConfig.setVersion("1.0");
 		swaggerConfig.setSchemes(new String[]{"http"});
 		swaggerConfig.setHost("localhost:"+AppGlobals.get().getConfig().getInteger("http_port", 9000));
