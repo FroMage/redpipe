@@ -117,6 +117,7 @@ public class AppGlobals {
 	}
 	
 	public void injectGlobals() {
+		// FIXME: inject using the more precise Type using the new resteasy injection API
 		for (Entry<Class<?>, Object> entry : typedGlobals.entrySet()) {
 			ResteasyProviderFactory.pushContext((Class)entry.getKey(), entry.getValue());
 		}
