@@ -3,7 +3,7 @@ layout: default
 title: Redpipe
 github_url: https://github.com/FroMage/redpipe
 github_source_url: https://github.com/FroMage/redpipe/tree/master
-version: 0.0.1
+version: 0.0.2
 ---
 
 ![Logo]({{ "images/redpipe-600.png" }})
@@ -65,7 +65,7 @@ Include the following dependency in your `pom.xml`:
 <dependency>
   <groupId>net.redpipe</groupId>
   <artifactId>redpipe-engine</artifactId>
-  <version>{{version}}</version>
+  <version>{{page.version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -224,7 +224,7 @@ You need to import the following module in order to use fibers:
 <dependency>
   <groupId>net.redpipe</groupId>
   <artifactId>redpipe-fibers</artifactId>
-  <version>{{version}}</version>
+  <version>{{page.version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -264,7 +264,7 @@ In order to get URIs that map to resource methods, you can use the redpipe routi
 <dependency>
   <groupId>net.redpipe</groupId>
   <artifactId>redpipe-router</artifactId>
-  <version>{{version}}</version>
+  <version>{{page.version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -298,7 +298,7 @@ will be used to scan your classpath for resources and providers:
 <dependency>
   <groupId>net.redpipe</groupId>
   <artifactId>redpipe-fast-classpath-scanner</artifactId>
-  <version>{{version}}</version>
+  <version>{{page.version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -312,7 +312,7 @@ Alternately, you can delegate scanning of resources and providers to [CDI](http:
 <dependency>
   <groupId>net.redpipe</groupId>
   <artifactId>redpipe-cdi</artifactId>
-  <version>{{version}}</version>
+  <version>{{page.version}}</version>
 </dependency>
 {% endhighlight %}
 
@@ -453,7 +453,7 @@ We support the following plugable template engines, which you just have to add a
 <dependency>
   <groupId>net.redpipe</groupId>
   <artifactId>redpipe-templating-freemarker</artifactId>
-  <version>{{version}}</version>
+  <version>{{page.version}}</version>
 </dependency>
 {% endhighlight %}
   </td>
@@ -869,7 +869,7 @@ And then configure your `pom.xml` so that it creates a fat-jar with the proper m
 
     <groupId>fr.epardaud</groupId>
     <artifactId>redpipe-openshift-helloworld</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>{{page.version}}</version>
     <packaging>jar</packaging>
 
     <name>redpipe-openshift-helloworld</name>
@@ -892,7 +892,7 @@ And then configure your `pom.xml` so that it creates a fat-jar with the proper m
         <dependency>
             <groupId>net.redpipe</groupId>
             <artifactId>redpipe-engine</artifactId>
-            <version>0.0.1</version>
+            <version>{{page.version}}</version>
         </dependency>
 
     </dependencies>
@@ -1000,7 +1000,7 @@ This is a `pom.xml` sample to easily run your project. Just run `mvn install exe
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <redpipe.version>0.0.1</redpipe.version>
+        <redpipe.version>{{page.version}}</redpipe.version>
         <mainClass>demo.Main</mainClass>
     </properties>
 
