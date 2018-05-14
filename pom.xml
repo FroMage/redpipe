@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.redpipe</groupId>
 	<artifactId>redpipe-parent</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Redpipe</name>
@@ -47,7 +47,7 @@
 		<url>https://github.com/FroMage/redpipe</url>
 		<connection>scm:git:git://github.com/FroMage/redpipe.git</connection>
 		<developerConnection>scm:git:git@github.com:FroMage/redpipe.git</developerConnection>
-		<tag>0.0.2</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<build>
