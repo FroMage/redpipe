@@ -12,8 +12,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<kafka.version>0.10.2.1</kafka.version>
-		<debezium.version>0.5.1</debezium.version>
+		<kafka.version>1.0.0</kafka.version>
+		<debezium.version>0.7.1</debezium.version>
 	</properties>
 
 	<dependencies>
@@ -56,7 +56,7 @@
 
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka_2.12</artifactId>
+			<artifactId>kafka_2.11</artifactId>
 			<version>${kafka.version}</version>
 		</dependency>
 	</dependencies>
