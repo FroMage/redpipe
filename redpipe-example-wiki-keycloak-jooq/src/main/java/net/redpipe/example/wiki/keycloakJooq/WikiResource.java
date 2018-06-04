@@ -139,7 +139,7 @@ public class WikiResource {
 			if(isNewPage)
 		        query = dao.insert(new Pages().setName(title).setContent(markdown));
 			else
-				query = dao.update(new Pages().setId(Integer.valueOf(id)).setContent(markdown));
+				query = dao.update(new Pages().setId(Integer.valueOf(id)).setContent(markdown).setName(title));
 			await(query);
 			URI location = Router.getURI(WikiResource::renderPage, title);
 			return Response.seeOther(location).build();
