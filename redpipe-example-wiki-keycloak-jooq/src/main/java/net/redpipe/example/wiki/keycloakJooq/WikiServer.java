@@ -10,7 +10,6 @@ import net.redpipe.example.wiki.keycloakJooq.jooq.tables.daos.PagesDao;
 
 import com.github.rjeschke.txtmark.Processor;
 
-import io.github.jklingsporn.vertx.jooq.async.rx.AsyncJooqSQLClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
@@ -102,13 +101,12 @@ public class WikiServer extends Server {
 		
 		Vertx vertx = AppGlobals.get().getVertx();
 		AsyncSQLClient dbClient = PostgreSQLClient.createNonShared(vertx, myConfig);
-		AsyncJooqSQLClient client = AsyncJooqSQLClient.create(vertx, dbClient);
 
 		Configuration configuration = new DefaultConfiguration();
 		configuration.set(SQLDialect.POSTGRES);
 
-		PagesDao dao = new PagesDao(configuration);
-		dao.setClient(client);
+		// FIXME: switch to rxjava2
+		PagesDao dao = new PagesDao(configuration, io.vertx.reactivex.ext.asyncsql.AsyncSQLClient.newInstance(dbClient.getDelegate()));
 		
 		AppGlobals.get().setGlobal("dao", dao);
 		

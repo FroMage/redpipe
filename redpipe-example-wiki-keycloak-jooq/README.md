@@ -86,6 +86,6 @@ You're all set for Keycloak!
     postgres $ exit
 1. Load the database schema:
     $ psql -h localhost -U redpipewiki redpipewiki
-    redpipewiki=> \i redpipe-wiki/db.sql 
+    redpipewiki=> \i redpipe-example-wiki-keycloak-jooq/db.sql 
 
 You're all set for Postgres!    

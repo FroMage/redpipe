@@ -40,6 +40,7 @@ import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.ext.auth.AuthProvider;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import rx.RxReactiveStreams;
 import rx.Single;
 
 @NoAuthRedirect
@@ -94,7 +95,7 @@ public class ApiResource {
 	@Path("pages")
 	public Single<Response> apiRoot(){
 		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-		return dao.findAllAsync()
+		return RxReactiveStreams.toSingle(dao.findAll()
 				.map(res -> {
 					JsonObject response = new JsonObject();
 					List<JsonObject> pages = res
@@ -107,22 +108,22 @@ public class ApiResource {
 					.put("success", true)
 					.put("pages", pages);
 					return Response.ok(response).build();
-				});
+				}).toFlowable());
 	}
 
 	@GET
 	@Path("pages/{id}")
 	public Single<Response> apiGetPage(@PathParam("id") String id){
 		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-		return dao.findByIdAsync(Integer.valueOf(id))
+		return RxReactiveStreams.toSingle(dao.findOneById(Integer.valueOf(id))
 				.map(res -> {
 					JsonObject response = new JsonObject();
-					if (res != null) {
+					if (res.isPresent()) {
 						JsonObject payload = new JsonObject()
-								.put("name", res.getName())
+								.put("name", res.get().getName())
 								.put("id", id)
-								.put("markdown", res.getContent())
-								.put("html", Processor.process(res.getContent()));
+								.put("markdown", res.get().getContent())
+								.put("html", Processor.process(res.get().getContent()));
 						response
 						.put("success", true)
 						.put("page", payload);
@@ -133,7 +134,7 @@ public class ApiResource {
 						.put("error", "There is no page with ID " + id);
 						return Response.status(Status.NOT_FOUND).entity(response).build();
 					}
-				});
+				}).toFlowable());
 	}
 
 	@RequiresPermissions("create")
@@ -142,10 +143,10 @@ public class ApiResource {
 	public Single<Response> apiCreatePage(@ApiUpdateValid({"name", "markdown"}) JsonObject page, 
 			@Context HttpServerRequest req){
 		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-        return dao.client().execute(DSL.using(dao.configuration()).insertInto(dao.getTable())
-        		.columns(Tables.PAGES.NAME, Tables.PAGES.CONTENT)
-        		.values(page.getString("name"), page.getString("markdown")))
-				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build());
+		return RxReactiveStreams.toSingle(dao.insert(new Pages()
+				.setName(page.getString("name"))
+				.setContent(page.getString("markdown")))
+				.map(res -> Response.status(Status.CREATED).entity(new JsonObject().put("success", true)).build()).toFlowable());
 	}
 
 	@RequiresPermissions("update")
@@ -156,14 +157,14 @@ public class ApiResource {
 			@Context HttpServerRequest req,
 			@Context Vertx vertx){
 		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-		return dao.updateExecAsync(new Pages().setId(Integer.valueOf(id)).setContent(page.getString("markdown")))
+		return RxReactiveStreams.toSingle(dao.update(new Pages().setId(Integer.valueOf(id)).setContent(page.getString("markdown")))
 				.map(res -> {
 				    JsonObject event = new JsonObject()
 				    	      .put("id", id)
 				    	      .put("client", page.getString("client"));
 				    vertx.eventBus().publish("page.saved", event);
 					return Response.ok(new JsonObject().put("success", true)).build();
-				});
+				}).toFlowable());
 	}
 
 	@RequiresPermissions("delete")
@@ -171,7 +172,7 @@ public class ApiResource {
 	@Path("pages/{id}")
 	public Single<Response> apiDeletePage(@PathParam("id") String id){
 		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-		return dao.deleteExecAsync(Integer.valueOf(id))
-				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
+		return RxReactiveStreams.toSingle(dao.deleteById(Integer.valueOf(id))
+				.map(res -> Response.ok(new JsonObject().put("success", true)).build()).toFlowable());
 	}
 }

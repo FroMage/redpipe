@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.FormParam;
@@ -45,6 +46,7 @@ import net.redpipe.example.wiki.keycloakJooq.jooq.Tables;
 import net.redpipe.example.wiki.keycloakJooq.jooq.tables.daos.PagesDao;
 import net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages;
 import net.redpipe.router.Router;
+import rx.RxReactiveStreams;
 import rx.Single;
 
 @RequiresUser
@@ -66,7 +68,7 @@ public class WikiResource {
 	public Single<Template> index(){
 		return fiber(() -> {
 			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-			List<Pages> res = await(dao.findAllAsync());
+			List<Pages> res = await(dao.findAll());
 			List<String> pages = res
 					.stream()
 					.map(page -> page.getName())
@@ -92,16 +94,16 @@ public class WikiResource {
 	public Single<Template> renderPage(@PathParam("page") String page){
 		return fiber(() -> {
 			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-			Pages res = await(dao.fetchOneByNameAsync(page));
+			Optional<Pages> res = await(dao.findOneByName(page));
 			Integer id; 
 			String rawContent;
-			boolean newPage = res == null;
+			boolean newPage = !res.isPresent();
 			if(newPage){
 				id = -1;
 				rawContent = EMPTY_PAGE_MARKDOWN;
 			}else{
-				id = res.getId();
-				rawContent = res.getContent();
+				id = res.get().getId();
+				rawContent = res.get().getContent();
 			}
 			if(newPage && !await(user.rxIsAuthorised("create")))
 				throw new AuthorizationException("Not authorized");
@@ -133,13 +135,11 @@ public class WikiResource {
 				throw new AuthorizationException("Not authorized");
 
 			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-			Single<Integer> query;
+			io.reactivex.Single<Integer> query;
 			if(isNewPage)
-		        query = dao.client().execute(DSL.using(dao.configuration()).insertInto(dao.getTable())
-		        		.columns(Tables.PAGES.NAME, Tables.PAGES.CONTENT)
-		        		.values(title, markdown));
+		        query = dao.insert(new Pages().setName(title).setContent(markdown));
 			else
-				query = dao.updateExecAsync(new Pages().setId(Integer.valueOf(id)).setContent(markdown));
+				query = dao.update(new Pages().setId(Integer.valueOf(id)).setContent(markdown));
 			await(query);
 			URI location = Router.getURI(WikiResource::renderPage, title);
 			return Response.seeOther(location).build();
@@ -165,7 +165,7 @@ public class WikiResource {
 	public Single<Response> delete(@FormParam("id") String id){
 		return fiber(() -> {
 			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-			await(dao.deleteExecAsync(Integer.valueOf(id)));
+			await(dao.deleteById(Integer.valueOf(id)));
 			URI location = Router.getURI(WikiResource::index);
 			return Response.seeOther(location).build();
 		});
@@ -239,7 +239,7 @@ public class WikiResource {
 		
 		return fiber(() -> {
 			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-			List<Pages> pages = await(dao.findAllAsync());
+			List<Pages> pages = await(dao.findAll());
 
 			JsonObject filesObject = new JsonObject();
 			JsonObject gistPayload = new JsonObject() 
