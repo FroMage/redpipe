@@ -46,6 +46,26 @@ public class Fibers {
 		}
 	}
 
+	@SuppressWarnings({ "serial" })
+	@Suspendable
+	public static <T> T await(io.reactivex.Single<T> single) throws SuspendExecution{
+		if(single == null)
+			throw new NullPointerException();
+		try {
+			return new FiberAsync<T, Throwable>(){
+				@Override
+				protected void requestAsync() {
+					single.subscribe(ret -> asyncCompleted(ret),
+							t -> asyncFailed(t));	
+				}
+			}.run();
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static <T> Single<T> fiber(SuspendableCallableWithConnection<T> body){
 		return fiber(() -> {
 			SQLConnection connection = await(SQLUtil.getConnection());
