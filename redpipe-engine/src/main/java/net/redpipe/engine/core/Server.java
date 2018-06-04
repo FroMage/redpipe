@@ -26,8 +26,6 @@ import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
