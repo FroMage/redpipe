@@ -20,7 +20,7 @@ write reactive web applications:
 
 - [Eclipse Vert.x](http://vertx.io) and [Netty](https://netty.io), for all the low-level plumbing,
 - [JAX-RS](https://javaee.github.io/tutorial/jaxrs002.html#GILIK) ([Resteasy](http://resteasy.jboss.org)), for all your web endpoints,
-- [RxJava](https://github.com/ReactiveX/RxJava) for your reactive code,
+- [RxJava](https://github.com/ReactiveX/RxJava) 1 and 2 for your reactive code,
 - [Vert.x Web](http://vertx.io/docs/vertx-web/java/) for all existing filters, templating support,
 - [Swagger](https://swagger.io) to describe your web endpoints,
 - [CDI](http://cdi-spec.org) ([Weld](http://weld.cdi-spec.org)) for JAX-RS discovery and injection (optional),
@@ -148,7 +148,8 @@ you should see `HelloWorld`.
 ## RxJava support
 
 Out of the box, we support RxJava's [`Single`](http://reactivex.io/documentation/single.html)
-and [`Observable`](http://reactivex.io/documentation/observable.html) types.
+and [`Observable`](http://reactivex.io/documentation/observable.html) types for both RxJava 1 and 2,
+although use of RxJava 2 is recommended because RxJava 1 is deprecated.
 
 If your resource returns a `Single<T>`, the `T` will be send to your client asynchronously as if you
 returned it directly. In particular, standard and custom
@@ -395,8 +396,16 @@ injected:
   <th>Description</th>
  </tr>
  <tr>
-  <td>io.vertx.reactivex.core.Vertx</td>
+  <td>io.vertx.core.Vertx</td>
   <td>The Vert.x instance.</td>
+ </tr>
+ <tr>
+  <td>io.vertx.reactivex.core.Vertx</td>
+  <td>The Vert.x instance (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.core.Vertx</td>
+  <td>The Vert.x instance (RxJava 1).</td>
  </tr>
  <tr>
   <td>net.redpipe.engine.core.AppGlobals</td>
@@ -412,27 +421,59 @@ injected:
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.web.RoutingContext</td>
-  <td>The Vert.x Web <code>RoutingContext</code>.</td>
+  <td>The Vert.x Web <code>RoutingContext</code> (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.web.RoutingContext</td>
+  <td>The Vert.x Web <code>RoutingContext</code> (RxJava 1).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.core.http.HttpServerRequest</td>
+  <td>The Vert.x request (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.core.http.HttpServerRequest</td>
+  <td>The Vert.x request (RxJava 1).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.core.http.HttpServerRequest</td>
   <td>The Vert.x request.</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.core.http.HttpServerResponse</td>
+  <td>The Vert.x response (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.core.http.HttpServerResponse</td>
+  <td>The Vert.x response (RxJava 1).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.core.http.HttpServerResponse</td>
   <td>The Vert.x response.</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.auth.AuthProvider</td>
-  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>).</td>
+  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>) (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.auth.AuthProvider</td>
+  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>) (RxJava 1).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.auth.User</td>
-  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>).</td>
+  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>) (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.auth.User</td>
+  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>) (RxJava 1).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.web.Session</td>
-  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>).</td>
+  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>) (RxJava 2).</td>
+ </tr>
+ <tr>
+  <td>io.vertx.rxjava.ext.web.Session</td>
+  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>) (RxJava 1).</td>
  </tr>
 </table> 
 

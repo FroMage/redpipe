@@ -227,6 +227,8 @@ public class Server {
     					setupRoutes(router);
     					router.route().handler(routingContext -> {
     						ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
+    						ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.web.RoutingContext.class, 
+    								io.vertx.rxjava.ext.web.RoutingContext.newInstance(routingContext.getDelegate()));
     						resteasyHandler.handle(routingContext.request());
     					});
     				}).andThen(doOnPlugins(plugin -> plugin.postRoute()))
@@ -293,9 +295,17 @@ public class Server {
 			      }
 			});
 			
+			// rx2
 			ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
 			ResteasyProviderFactory.pushContext(User.class, context.user());
 			ResteasyProviderFactory.pushContext(Session.class, context.session());
+			// rx1
+			ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.auth.AuthProvider.class, 
+					auth != null ? io.vertx.rxjava.ext.auth.AuthProvider.newInstance(auth.getDelegate()) : null);
+			ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.auth.User.class, 
+					context.user() != null ? io.vertx.rxjava.ext.auth.User.newInstance(context.user().getDelegate()) : null);
+			ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.web.Session.class, 
+					context.session() != null ? io.vertx.rxjava.ext.web.Session.newInstance(context.session().getDelegate()) : null);
 			context.next();
 		});
 	}
