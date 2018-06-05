@@ -10,18 +10,19 @@ import javax.ws.rs.core.Response.Status;
 
 import org.jboss.resteasy.annotations.Stream;
 
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.core.http.HttpServerRequest;
-import io.vertx.reactivex.core.http.HttpServerResponse;
-import io.vertx.reactivex.ext.auth.AuthProvider;
-import io.vertx.reactivex.ext.auth.User;
-import io.vertx.reactivex.ext.web.RoutingContext;
-import io.vertx.reactivex.ext.web.Session;
+import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.core.http.HttpServerRequest;
+import io.vertx.rxjava.core.http.HttpServerResponse;
+import io.vertx.rxjava.ext.auth.AuthProvider;
+import io.vertx.rxjava.ext.auth.User;
+import io.vertx.rxjava.ext.web.RoutingContext;
+import io.vertx.rxjava.ext.web.Session;
+import rx.Observable;
+import rx.Single;
 
-@Path("/")
-public class TestResource {
+
+@Path("/rx1")
+public class TestResourceRxJava1 {
 
 	@Path("inject")
 	@GET
@@ -41,12 +42,6 @@ public class TestResource {
 		return "ok";
 	}
 
-	@Path("hello")
-	@GET
-	public String hello() {
-		return "hello";
-	}
-
 	@Path("hello-single")
 	@GET
 	public Single<String> helloSingle() {
@@ -57,14 +52,14 @@ public class TestResource {
 	@Path("hello-observable")
 	@GET
 	public Observable<String> helloObservable() {
-		return Observable.fromArray("one", "two");
+		return Observable.just("one", "two");
 	}
 
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("hello-observable-collect")
 	@GET
 	public Observable<String> helloObservableCollect() {
-		return Observable.fromArray("one", "two");
+		return Observable.just("one", "two");
 	}
 
 	
@@ -72,6 +67,6 @@ public class TestResource {
 	@Path("hello-observable-sse")
 	@GET
 	public Observable<String> helloObservableSse() {
-		return Observable.fromArray("one", "two");
+		return Observable.just("one", "two");
 	}
 }
