@@ -20,6 +20,9 @@ import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
+import io.reactivex.Completable;
+import io.reactivex.Single;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -31,25 +34,35 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.rxjava.config.ConfigRetriever;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.auth.AuthProvider;
-import io.vertx.rxjava.ext.auth.User;
-import io.vertx.rxjava.ext.jdbc.JDBCClient;
-import io.vertx.rxjava.ext.sql.SQLClient;
-import io.vertx.rxjava.ext.web.Cookie;
-import io.vertx.rxjava.ext.web.Router;
-import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.Session;
-import io.vertx.rxjava.ext.web.handler.CookieHandler;
-import io.vertx.rxjava.ext.web.handler.SessionHandler;
-import io.vertx.rxjava.ext.web.sstore.LocalSessionStore;
+import io.vertx.reactivex.config.ConfigRetriever;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.auth.AuthProvider;
+import io.vertx.reactivex.ext.auth.User;
+import io.vertx.reactivex.ext.jdbc.JDBCClient;
+import io.vertx.reactivex.ext.sql.SQLClient;
+import io.vertx.reactivex.ext.web.Cookie;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.Session;
+import io.vertx.reactivex.ext.web.handler.CookieHandler;
+import io.vertx.reactivex.ext.web.handler.SessionHandler;
+import io.vertx.reactivex.ext.web.sstore.LocalSessionStore;
 import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
 import net.redpipe.engine.resteasy.RxVertxProvider;
+import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnObservableCreateAction;
 import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnCompletableAssemblyAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnCompletableCreateAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnFlowableAssemblyAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnFlowableCreateAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnMaybeAssemblyAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnMaybeCreateAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnObservableAssemblyAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnObservableCreateAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnSingleAssemblyAction;
+import net.redpipe.engine.rxjava2.ContextPropagatorOnSingleCreateAction;
 import net.redpipe.engine.spi.Plugin;
 import net.redpipe.engine.template.TemplateRenderer;
-import rx.Single;
 import rx.plugins.RxJavaHooks;
 
 public class Server {
@@ -63,36 +76,52 @@ public class Server {
 //		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
 	}
 	
-	public Single<Void> start(){
+	public Completable start(){
 		return start((JsonObject)null);
 	}
 
-	public Single<Void> start(Class<?>... resourceOrProviderClasses){
+	public Completable start(Class<?>... resourceOrProviderClasses){
 		return start(null, resourceOrProviderClasses);
 	}
 	
-	public Single<Void> start(JsonObject defaultConfig, Class<?>... resourceOrProviderClasses){
-		setupLogging();
-		
-		VertxOptions options = new VertxOptions();
-		options.setWarningExceptionTime(Long.MAX_VALUE);
-		AppGlobals.init();
+	public Completable start(JsonObject defaultConfig, Class<?>... resourceOrProviderClasses){
+		return Single.<JsonObject>create(s -> {
+			setupLogging();
 
-		// Propagate the Resteasy context on RxJava
-		RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
+			VertxOptions options = new VertxOptions();
+			options.setWarningExceptionTime(Long.MAX_VALUE);
+			AppGlobals.init();
 
-		JsonObject config = loadFileConfig(defaultConfig);
-        AppGlobals.get().setConfig(config);
+			// Propagate the Resteasy context on RxJava1
+			RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
+			RxJavaHooks.setOnObservableCreate(new ResteasyContextPropagatingOnObservableCreateAction());
 
-        return initVertx(config)
-                .flatMap(vertx -> {
+			// Propagate the Resteasy context on RxJava2
+			RxJavaPlugins.setOnSingleSubscribe(new ContextPropagatorOnSingleCreateAction());
+			RxJavaPlugins.setOnCompletableSubscribe(new ContextPropagatorOnCompletableCreateAction());
+			RxJavaPlugins.setOnFlowableSubscribe(new ContextPropagatorOnFlowableCreateAction());
+			RxJavaPlugins.setOnMaybeSubscribe(new ContextPropagatorOnMaybeCreateAction());
+			RxJavaPlugins.setOnObservableSubscribe(new ContextPropagatorOnObservableCreateAction());
+			
+			RxJavaPlugins.setOnSingleAssembly(new ContextPropagatorOnSingleAssemblyAction());
+			RxJavaPlugins.setOnCompletableAssembly(new ContextPropagatorOnCompletableAssemblyAction());
+			RxJavaPlugins.setOnFlowableAssembly(new ContextPropagatorOnFlowableAssemblyAction());
+			RxJavaPlugins.setOnMaybeAssembly(new ContextPropagatorOnMaybeAssemblyAction());
+			RxJavaPlugins.setOnObservableAssembly(new ContextPropagatorOnObservableAssemblyAction());
+
+			JsonObject config = loadFileConfig(defaultConfig);
+			AppGlobals.get().setConfig(config);
+			s.onSuccess(config);
+		})
+				.flatMap(this::initVertx)
+				.flatMapCompletable(vertx -> {
                     this.vertx = vertx;
                     AppGlobals.get().setVertx(this.vertx);
                     return setupPlugins();
                 })
-                .flatMap(v -> setupTemplateRenderers())
-                .flatMap(v -> setupResteasy(resourceOrProviderClasses))
-                .flatMap(deployment -> {
+                .concatWith(setupTemplateRenderers())
+                .andThen(setupResteasy(resourceOrProviderClasses))
+                .flatMapCompletable(deployment -> {
                     setupSwagger(deployment);
                     return setupVertx(deployment);
                 });
@@ -121,9 +150,11 @@ public class Server {
         }
     }
 	
-	private Single<Void> setupPlugins() {
-		loadPlugins();
-		return doOnPlugins(plugin -> plugin.preInit());
+	private Completable setupPlugins() {
+		return Completable.defer(() -> {
+			loadPlugins();
+			return doOnPlugins(plugin -> plugin.preInit());
+		});
 	}
 
 	protected void loadPlugins() {
@@ -132,34 +163,38 @@ public class Server {
 			plugins.add(plugin);
 	}
 
-	private Single<Void> setupTemplateRenderers() {
-		List<TemplateRenderer> renderers = new ArrayList<>();
-		for(TemplateRenderer renderer : ServiceLoader.load(TemplateRenderer.class))
-			renderers.add(renderer);
-		AppGlobals.get().setTemplateRenderers(renderers);
-		return Single.just(null);
+	private Completable setupTemplateRenderers() {
+		return Completable.defer(() -> {
+			List<TemplateRenderer> renderers = new ArrayList<>();
+			for(TemplateRenderer renderer : ServiceLoader.load(TemplateRenderer.class))
+				renderers.add(renderer);
+			AppGlobals.get().setTemplateRenderers(renderers);
+			return Completable.complete();
+		});
 	}
 
-    private Single<Void> setupVertx(VertxResteasyDeployment deployment) {
-		// Get a DB
-        SQLClient dbClient = createDbClient(AppGlobals.get().getConfig());
+    private Completable setupVertx(VertxResteasyDeployment deployment) {
+    	return Completable.defer(() -> {
+    		// Get a DB
+    		SQLClient dbClient = createDbClient(AppGlobals.get().getConfig());
 
-		Class<?> mainClass = null;
-		for (Class<?> resourceClass : deployment.getActualResourceClasses()) {
-			if(resourceClass.getAnnotation(MainResource.class) != null){
-				mainClass = resourceClass;
-				break;
-			}
-		}
-		
-		// Save our injected globals
-		AppGlobals globals = AppGlobals.get();
-		globals.setDbClient(dbClient);
-		globals.setMainClass(mainClass);
-		globals.setDeployment(deployment);
+    		Class<?> mainClass = null;
+    		for (Class<?> resourceClass : deployment.getActualResourceClasses()) {
+    			if(resourceClass.getAnnotation(MainResource.class) != null){
+    				mainClass = resourceClass;
+    				break;
+    			}
+    		}
 
-		return doOnPlugins(plugin -> plugin.init())
-			.flatMap(v -> startVertx(deployment));
+    		// Save our injected globals
+    		AppGlobals globals = AppGlobals.get();
+    		globals.setDbClient(dbClient);
+    		globals.setMainClass(mainClass);
+    		globals.setDeployment(deployment);
+
+    		return doOnPlugins(plugin -> plugin.init())
+    				.andThen(startVertx(deployment));
+    	});
 	}
 	
 	protected SQLClient createDbClient(JsonObject config) {
@@ -169,49 +204,50 @@ public class Server {
 				.put("max_pool_size", config.getInteger("db_max_pool_size", 30)));
 	}
 
-	private Single<Void> doOnPlugins(Function<Plugin, Single<Void>> operation){
-		Single<Void> last = Single.just(null);
-		for(Plugin plugin : plugins) {
-			last = last.flatMap(v -> operation.apply(plugin));
-		}
-		return last;
+	private Completable doOnPlugins(Function<Plugin, Completable> operation){
+		return Completable.defer(() -> {
+			Completable last = Completable.complete();
+			for(Plugin plugin : plugins) {
+				last = last.andThen(operation.apply(plugin));
+			}
+			return last;
+		});
 	}
 
-    private Single<Void> startVertx(VertxResteasyDeployment deployment)
+    private Completable startVertx(VertxResteasyDeployment deployment)
     {
-        Router router = Router.router(vertx);
-        AppGlobals.get().setRouter(router);
+    	return Completable.defer(() -> {
+    		Router router = Router.router(vertx);
+    		AppGlobals.get().setRouter(router);
 
-        VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
+    		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
 
-        return doOnPlugins(plugin -> plugin.preRoute())
-                .map(v -> {
-                    setupRoutes(router);
-                    router.route().handler(routingContext -> {
-                        ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
-                        resteasyHandler.handle(routingContext.request());
-                    });
-                    return null;
-                }).flatMap(v -> doOnPlugins(plugin -> plugin.postRoute()))
-                .flatMap(v -> {
-                    return Single.<Void>create(sub -> {
-                        // Start the front end server using the Jax-RS controller
-                        vertx.createHttpServer()
-                                .requestHandler(router::accept)
-                                .listen(AppGlobals.get().getConfig().getInteger("http_port", 9000), ar -> {
-                                    if (ar.failed())
-                                    {
-                                        ar.cause().printStackTrace();
-                                        sub.onError(ar.cause());
-                                    }
-                                    else
-                                    {
-                                        System.out.println("Server started on port " + ar.result().actualPort());
-                                        sub.onSuccess(null);
-                                    }
-                                });
-                    });
-                });
+    		return doOnPlugins(plugin -> plugin.preRoute())
+    				.doOnComplete(() -> {
+    					setupRoutes(router);
+    					router.route().handler(routingContext -> {
+    						ResteasyProviderFactory.pushContext(RoutingContext.class, routingContext);
+    						resteasyHandler.handle(routingContext.request());
+    					});
+    				}).andThen(doOnPlugins(plugin -> plugin.postRoute()))
+    				.concatWith(Completable.create(sub -> {
+    					// Start the front end server using the Jax-RS controller
+    					vertx.createHttpServer()
+    					.requestHandler(router::accept)
+    					.listen(AppGlobals.get().getConfig().getInteger("http_port", 9000), ar -> {
+    						if (ar.failed())
+    						{
+    							ar.cause().printStackTrace();
+    							sub.onError(ar.cause());
+    						}
+    						else
+    						{
+    							System.out.println("Server started on port " + ar.result().actualPort());
+    							sub.onComplete();
+    						}
+    					});
+    				}));
+    	});
     }
 
 	protected void setupRoutes(Router router) {
@@ -385,26 +421,28 @@ public class Server {
 	}
 
 	protected Single<VertxResteasyDeployment> setupResteasy(Class<?>... resourceOrProviderClasses) {
-		// Build the Jax-RS hello world deployment
-		VertxResteasyDeployment deployment = new VertxResteasyDeployment();
-		deployment.getDefaultContextObjects().put(Vertx.class, AppGlobals.get().getVertx());
-		deployment.getDefaultContextObjects().put(AppGlobals.class, AppGlobals.get());
-		
-		return doOnPlugins(plugin -> plugin.deployToResteasy(deployment)).map(v -> {
-			for(Class<?> klass : resourceOrProviderClasses) {
-				if(klass.isAnnotationPresent(Path.class))
-					deployment.getActualResourceClasses().add(klass);
-				if(klass.isAnnotationPresent(Provider.class))
-					deployment.getActualProviderClasses().add(klass);
-			}
-			try {
-				deployment.start();
-			}catch(ExceptionInInitializerError err) {
-				// rxjava behaves badly on LinkageError
-				rethrow(err.getCause());
-			}
-			return deployment;
-		}).doOnError(t -> t.printStackTrace());
+		return Single.defer(() -> {
+			// Build the Jax-RS hello world deployment
+			VertxResteasyDeployment deployment = new VertxResteasyDeployment();
+			deployment.getDefaultContextObjects().put(Vertx.class, AppGlobals.get().getVertx());
+			deployment.getDefaultContextObjects().put(AppGlobals.class, AppGlobals.get());
+
+			return doOnPlugins(plugin -> plugin.deployToResteasy(deployment)).toSingle(() -> {
+				for(Class<?> klass : resourceOrProviderClasses) {
+					if(klass.isAnnotationPresent(Path.class))
+						deployment.getActualResourceClasses().add(klass);
+					if(klass.isAnnotationPresent(Provider.class))
+						deployment.getActualProviderClasses().add(klass);
+				}
+				try {
+					deployment.start();
+				}catch(ExceptionInInitializerError err) {
+					// rxjava behaves badly on LinkageError
+					rethrow(err.getCause());
+				}
+				return deployment;
+			}).doOnError(t -> t.printStackTrace());
+		});
 	}
 
 	private <T extends Throwable> void rethrow(Throwable cause) throws T {
@@ -421,9 +459,9 @@ public class Server {
 //        app.addHandler(consoleHandler);
 	}
 
-	public Single<Void> close() {
+	public Completable close() {
 		return doOnPlugins(plugin -> plugin.shutdown())
-				.flatMap(v -> vertx.rxClose());
+				.concatWith(vertx.rxClose());
 	}
 
 	public Vertx getVertx() {

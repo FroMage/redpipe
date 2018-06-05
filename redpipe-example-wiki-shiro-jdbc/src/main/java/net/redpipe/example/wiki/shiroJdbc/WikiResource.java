@@ -24,23 +24,23 @@ import javax.ws.rs.core.Response.Status;
 
 import com.github.rjeschke.txtmark.Processor;
 
+import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.auth.User;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.auth.User;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import io.vertx.rxjava.ext.web.Session;
-import io.vertx.rxjava.ext.web.client.HttpResponse;
-import io.vertx.rxjava.ext.web.client.WebClient;
-import io.vertx.rxjava.ext.web.codec.BodyCodec;
 import net.redpipe.engine.core.MainResource;
 import net.redpipe.engine.security.AuthorizationException;
 import net.redpipe.engine.security.RequiresPermissions;
 import net.redpipe.engine.security.RequiresUser;
 import net.redpipe.engine.template.Template;
 import net.redpipe.router.Router;
-import rx.Single;
 
 @RequiresUser
 @MainResource

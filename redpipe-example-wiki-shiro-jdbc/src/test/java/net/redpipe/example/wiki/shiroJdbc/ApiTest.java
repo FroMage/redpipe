@@ -16,8 +16,8 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.rxjava.ext.web.client.WebClient;
-import io.vertx.rxjava.ext.web.codec.BodyCodec;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.codec.BodyCodec;
 
 @RunWith(VertxUnitRunner.class)
 public class ApiTest {
@@ -40,7 +40,7 @@ public class ApiTest {
 				
 		server = new WikiServer();
 		server.start(config)
-		.subscribe(v -> {
+		.subscribe(() -> {
 			webClient = WebClient.create(server.getVertx(),
 					new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000));
 			async.complete();
@@ -55,7 +55,7 @@ public class ApiTest {
 	public void finish(TestContext context) {
 		webClient.close();
 		Async async = context.async();
-        server.close().subscribe(v -> async.complete(),
+        server.close().subscribe(() -> async.complete(),
         		x -> {
         			context.fail(x); 
         			async.complete();

@@ -11,7 +11,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import io.vertx.rxjava.core.buffer.Buffer;
+import io.vertx.reactivex.core.buffer.Buffer;
 
 @Provider
 public class BufferBodyWriter implements MessageBodyWriter<Buffer>{

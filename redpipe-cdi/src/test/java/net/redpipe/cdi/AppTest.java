@@ -14,8 +14,8 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.rxjava.ext.web.client.WebClient;
-import io.vertx.rxjava.ext.web.codec.BodyCodec;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import net.redpipe.engine.core.Server;
 
 @RunWith(VertxUnitRunner.class)
@@ -28,7 +28,7 @@ public class AppTest {
     public void before(TestContext context) {
         Async async = context.async();
         server = new Server();
-        server.start().subscribe(v -> {
+        server.start().subscribe(() -> {
             System.err.println("Server started");
             webClient = WebClient.create(server.getVertx(),
                     new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000).setIdleTimeout(0));
@@ -44,7 +44,7 @@ public class AppTest {
     public void after(TestContext context) {
         Async async = context.async();
         webClient.close();
-        server.close().subscribe(v -> async.complete(),
+        server.close().subscribe(() -> async.complete(),
         		x -> {
         			context.fail(x); 
         			async.complete();

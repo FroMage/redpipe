@@ -8,13 +8,12 @@ import java.util.Map.Entry;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import net.redpipe.engine.template.TemplateRenderer;
-
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.sql.SQLClient;
-import io.vertx.rxjava.ext.sql.SQLConnection;
-import io.vertx.rxjava.ext.web.Router;
-import rx.Single;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.sql.SQLClient;
+import io.vertx.reactivex.ext.sql.SQLConnection;
+import io.vertx.reactivex.ext.web.Router;
 
 public class AppGlobals {
 	

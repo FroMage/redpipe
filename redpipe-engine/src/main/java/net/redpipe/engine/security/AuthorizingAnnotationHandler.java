@@ -4,9 +4,9 @@ import java.lang.annotation.Annotation;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import io.vertx.rxjava.ext.auth.User;
-import io.vertx.rxjava.ext.web.RoutingContext;
-import rx.Single;
+import io.reactivex.Single;
+import io.vertx.reactivex.ext.auth.User;
+import io.vertx.reactivex.ext.web.RoutingContext;
 
 public abstract class AuthorizingAnnotationHandler {
 

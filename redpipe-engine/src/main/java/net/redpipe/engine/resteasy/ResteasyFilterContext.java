@@ -35,7 +35,7 @@ public class ResteasyFilterContext implements RoutingContext {
 
 	public ResteasyFilterContext(ContainerRequestContext requestContext) {
 		super();
-		delegate = ResteasyProviderFactory.getContextData(io.vertx.rxjava.ext.web.RoutingContext.class).getDelegate();
+		delegate = ResteasyProviderFactory.getContextData(io.vertx.reactivex.ext.web.RoutingContext.class).getDelegate();
 		this.requestContext = (PreMatchContainerRequestContext)requestContext;
 		this.requestContext.suspend();
 	}
@@ -249,14 +249,14 @@ public class ResteasyFilterContext implements RoutingContext {
 	@Override
 	public void setSession(Session session) {
 //		System.err.println("setSession: "+session);
-		ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.web.Session.class, io.vertx.rxjava.ext.web.Session.newInstance(session));
+		ResteasyProviderFactory.pushContext(io.vertx.reactivex.ext.web.Session.class, io.vertx.reactivex.ext.web.Session.newInstance(session));
 		delegate.setSession(session);
 	}
 
 	@Override
 	public void setUser(User user) {
 //		System.err.println("setUser: "+user);
-		ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.auth.User.class, io.vertx.rxjava.ext.auth.User.newInstance(user));
+		ResteasyProviderFactory.pushContext(io.vertx.reactivex.ext.auth.User.class, io.vertx.reactivex.ext.auth.User.newInstance(user));
 		delegate.setUser(user);
 	}
 

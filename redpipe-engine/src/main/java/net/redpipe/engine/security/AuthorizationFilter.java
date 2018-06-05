@@ -12,8 +12,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 
 import org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext;
 
-import rx.Single;
-
+import io.reactivex.Single;
 
 public class AuthorizationFilter implements ContainerRequestFilter {
     private final Map<AuthorizingAnnotationHandler, Annotation> authzChecks;

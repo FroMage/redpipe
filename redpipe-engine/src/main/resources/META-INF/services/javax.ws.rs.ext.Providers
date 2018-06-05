@@ -5,6 +5,9 @@ net.redpipe.engine.resteasy.JsonObjectBodyWriter
 net.redpipe.engine.resteasy.RxVertxProvider
 net.redpipe.engine.rxjava.ObservableProvider
 net.redpipe.engine.rxjava.SingleProvider
+net.redpipe.engine.rxjava2.ObservableProvider
+net.redpipe.engine.rxjava2.FlowableProvider
+net.redpipe.engine.rxjava2.SingleProvider
 net.redpipe.engine.security.AuthenticationExceptionMapper
 net.redpipe.engine.security.AuthorizationExceptionMapper
 net.redpipe.engine.security.AuthorizationFilterFeature

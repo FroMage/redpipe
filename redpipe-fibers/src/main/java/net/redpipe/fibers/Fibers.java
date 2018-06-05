@@ -3,9 +3,7 @@ package net.redpipe.fibers;
 import java.util.Map;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import net.redpipe.engine.core.AppGlobals;
-import net.redpipe.engine.db.SQLUtil;
-import co.paralleluniverse.fibers.DefaultFiberScheduler;
+
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberAsync;
 import co.paralleluniverse.fibers.FiberExecutorScheduler;
@@ -13,10 +11,12 @@ import co.paralleluniverse.fibers.FiberScheduler;
 import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.fibers.Suspendable;
 import co.paralleluniverse.strands.SuspendableCallable;
-import io.vertx.rxjava.core.Context;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.sql.SQLConnection;
-import rx.Single;
+import io.reactivex.Single;
+import io.vertx.reactivex.core.Context;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.sql.SQLConnection;
+import net.redpipe.engine.core.AppGlobals;
+import net.redpipe.engine.db.SQLUtil;
 
 public class Fibers {
 
@@ -29,26 +29,6 @@ public class Fibers {
 	@SuppressWarnings({ "serial" })
 	@Suspendable
 	public static <T> T await(Single<T> single) throws SuspendExecution{
-		if(single == null)
-			throw new NullPointerException();
-		try {
-			return new FiberAsync<T, Throwable>(){
-				@Override
-				protected void requestAsync() {
-					single.subscribe(ret -> asyncCompleted(ret),
-							t -> asyncFailed(t));	
-				}
-			}.run();
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@SuppressWarnings({ "serial" })
-	@Suspendable
-	public static <T> T await(io.reactivex.Single<T> single) throws SuspendExecution{
 		if(single == null)
 			throw new NullPointerException();
 		try {
@@ -87,10 +67,10 @@ public class Fibers {
 					ResteasyProviderFactory.pushContextDataMap(contextDataMap);
 					AppGlobals.set(globals);
 					T ret = body.run();
-					if(!sub.isUnsubscribed())
+					if(!sub.isDisposed())
 						sub.onSuccess(ret);
 				}catch(Throwable x){
-					if(!sub.isUnsubscribed())
+					if(!sub.isDisposed())
 						sub.onError(x);
 				}finally {
 					ResteasyProviderFactory.removeContextDataLevel();

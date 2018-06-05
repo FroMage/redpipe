@@ -5,21 +5,22 @@ import java.io.IOException;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.HttpRequest;
 
-import rx.Single;
+import io.reactivex.Completable;
+
 
 public abstract class Plugin {
-	public Single<Void> preInit(){ return Single.just(null); }
+	public Completable preInit(){ return Completable.complete(); }
 	
-	public Single<Void> init(){ return Single.just(null); }
-	public Single<Void> shutdown(){ return Single.just(null); }
+	public Completable init(){ return Completable.complete(); }
+	public Completable shutdown(){ return Completable.complete(); }
 
-	public Single<Void> deployToResteasy(VertxResteasyDeployment deployment){ return Single.just(null); }
+	public Completable deployToResteasy(VertxResteasyDeployment deployment){ return Completable.complete(); }
 	
 	// FIXME: Looks out of place
 	public void aroundRequest(HttpRequest req, RunnableWithException<IOException> continuation) throws IOException{
 		continuation.run();
 	}
 
-	public Single<Void> preRoute() { return Single.just(null); }
-	public Single<Void> postRoute() { return Single.just(null); }
+	public Completable preRoute() { return Completable.complete(); }
+	public Completable postRoute() { return Completable.complete(); }
 }

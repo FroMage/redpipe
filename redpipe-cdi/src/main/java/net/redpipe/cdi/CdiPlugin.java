@@ -24,81 +24,88 @@ import org.jboss.weld.bean.builtin.BeanManagerProxy;
 import org.jboss.weld.context.bound.BoundRequestContext;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.vertx.VertxExtension;
+
+import io.reactivex.Completable;
+import io.vertx.reactivex.core.Vertx;
 import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.spi.Plugin;
 import net.redpipe.engine.spi.RunnableWithException;
 
-import io.vertx.rxjava.core.Vertx;
-import rx.Single;
 
 public class CdiPlugin extends Plugin {
 
 	private Weld weld;
 
 	@Override
-	public Single<Void> init() {
-		// Setup the Vertx-CDI integration
-		VertxExtension vertxExtension = CDI.current().select(VertxExtension.class).get();
-		BeanManager beanManager = CDI.current().getBeanManager();
-		// has to be done in a blocking thread
-		Vertx vertx = AppGlobals.get().getVertx();
-		return vertx.rxExecuteBlocking(future -> {
-			vertxExtension.registerConsumers(vertx.getDelegate(), BeanManagerProxy.unwrap(beanManager).event());
-			future.complete();
+	public Completable init() {
+		return Completable.defer(() -> {
+			// Setup the Vertx-CDI integration
+			VertxExtension vertxExtension = CDI.current().select(VertxExtension.class).get();
+			BeanManager beanManager = CDI.current().getBeanManager();
+			// has to be done in a blocking thread
+			Vertx vertx = AppGlobals.get().getVertx();
+			return vertx.rxExecuteBlocking(future -> {
+				vertxExtension.registerConsumers(vertx.getDelegate(), BeanManagerProxy.unwrap(beanManager).event());
+				future.complete();
+			}).ignoreElement();
 		});
 	}
 
 	@Override
-	public Single<Void> deployToResteasy(VertxResteasyDeployment deployment) {
+	public Completable deployToResteasy(VertxResteasyDeployment deployment) {
 		ResteasyCdiExtension cdiExtension = CDI.current().select(ResteasyCdiExtension.class).get();
 		deployment.setActualResourceClasses(cdiExtension.getResources());
 		deployment.setInjectorFactoryClass(CdiInjectorFactory.class.getName());
 		deployment.getActualProviderClasses().addAll(cdiExtension.getProviders());
-		return Single.just(null);
+		return Completable.complete();
 	}
 
 	@Override
-	public Single<Void> shutdown() {
-		weld.shutdown();
-		return super.shutdown();
+	public Completable shutdown() {
+		return Completable.defer(() -> {
+			weld.shutdown();
+			return super.shutdown();
+		});
 	}
 	
 	@Override
-	public Single<Void> preInit() {
-		// CDI
-		weld = new Weld();
-		weld.addExtension(new VertxExtension());
-		weld.initialize();
+	public Completable preInit() {
+		return Completable.defer(() -> {
+			// CDI
+			weld = new Weld();
+			weld.addExtension(new VertxExtension());
+			weld.initialize();
 
-		// Set up Resteasy to build BV with CDI
-		try {
-			NamingManager.setInitialContextFactoryBuilder(new InitialContextFactoryBuilder() {
-				@Override
-				public InitialContextFactory createInitialContextFactory(Hashtable<?, ?> environment) throws NamingException {
-					return new InitialContextFactory() {
+			// Set up Resteasy to build BV with CDI
+			try {
+				NamingManager.setInitialContextFactoryBuilder(new InitialContextFactoryBuilder() {
+					@Override
+					public InitialContextFactory createInitialContextFactory(Hashtable<?, ?> environment) throws NamingException {
+						return new InitialContextFactory() {
 
-						@Override
-						public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
-							Context ctx = new InitialContext(){
-								@Override
-								public Object lookup(String name) throws NamingException {
-									if(name.equals("java:comp/ValidatorFactory"))
-										return CDI.current().select(ValidatorFactory.class).get();
-									return null;
-								}
-							};
-							return ctx;
-						}
-					};
-				}
-			});
-		} catch (IllegalStateException e) {
-			// ignore because it can only be set once
-		} catch (NamingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return Single.just(null);
+							@Override
+							public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
+								Context ctx = new InitialContext(){
+									@Override
+									public Object lookup(String name) throws NamingException {
+										if(name.equals("java:comp/ValidatorFactory"))
+											return CDI.current().select(ValidatorFactory.class).get();
+										return null;
+									}
+								};
+								return ctx;
+							}
+						};
+					}
+				});
+			} catch (IllegalStateException e) {
+				// ignore because it can only be set once
+			} catch (NamingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return super.preInit();
+		});
 	}
 
 	@Override

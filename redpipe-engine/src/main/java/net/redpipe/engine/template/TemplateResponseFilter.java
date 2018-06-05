@@ -19,11 +19,21 @@ public class TemplateResponseFilter implements ContainerResponseFilter {
 			SuspendableContainerResponseContext ctx = (SuspendableContainerResponseContext) responseContext;
 			ctx.suspend();
 			Template template = (Template) responseContext.getEntity();
-			template.render().subscribe(resp -> {
-				ctx.setEntity(resp.getEntity());
-				ctx.setStatus(resp.getStatus());
-				ctx.resume();
-			}, err -> ctx.resume(err));
+			try {
+				template.render().subscribe(resp -> {
+					ctx.setEntity(resp.getEntity());
+					ctx.setStatus(resp.getStatus());
+					ctx.resume();
+				}, err -> {
+					System.err.println("ONE");
+					err.printStackTrace();
+					ctx.resume(err);
+				});
+			}catch(Throwable t) {
+				System.err.println("TWO");
+				t.printStackTrace();
+				ctx.resume(t);
+			}
 		}
 	}
 

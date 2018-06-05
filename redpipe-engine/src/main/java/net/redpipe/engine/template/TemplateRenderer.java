@@ -4,7 +4,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import rx.Single;
+import io.reactivex.Single;
+
 
 public interface TemplateRenderer {
 

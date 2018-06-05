@@ -10,25 +10,25 @@ import net.redpipe.example.wiki.keycloakJooq.jooq.tables.daos.PagesDao;
 
 import com.github.rjeschke.txtmark.Processor;
 
+import io.reactivex.Completable;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.PermittedOptions;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.asyncsql.AsyncSQLClient;
-import io.vertx.rxjava.ext.asyncsql.PostgreSQLClient;
-import io.vertx.rxjava.ext.auth.AuthProvider;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
-import io.vertx.rxjava.ext.auth.oauth2.providers.KeycloakAuth;
-import io.vertx.rxjava.ext.sql.SQLClient;
-import io.vertx.rxjava.ext.web.Router;
-import io.vertx.rxjava.ext.web.handler.JWTAuthHandler;
-import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
-import io.vertx.rxjava.ext.web.handler.UserSessionHandler;
-import io.vertx.rxjava.ext.web.handler.sockjs.SockJSHandler;
-import rx.Single;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.asyncsql.AsyncSQLClient;
+import io.vertx.reactivex.ext.asyncsql.PostgreSQLClient;
+import io.vertx.reactivex.ext.auth.AuthProvider;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
+import io.vertx.reactivex.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.reactivex.ext.auth.oauth2.providers.KeycloakAuth;
+import io.vertx.reactivex.ext.sql.SQLClient;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.handler.JWTAuthHandler;
+import io.vertx.reactivex.ext.web.handler.OAuth2AuthHandler;
+import io.vertx.reactivex.ext.web.handler.UserSessionHandler;
+import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 
 public class WikiServer extends Server {
 
@@ -69,17 +69,19 @@ public class WikiServer extends Server {
 		super.loadPlugins();
 		plugins.add(new Plugin() {
 			@Override
-			public Single<Void> preRoute() {
-				AppGlobals globals = AppGlobals.get();
-				
-				SockJSHandler sockJSHandler = SockJSHandler.create(globals.getVertx());
-				BridgeOptions bridgeOptions = new BridgeOptions()
-				  .addInboundPermitted(new PermittedOptions().setAddress("app.markdown"))
-				  .addOutboundPermitted(new PermittedOptions().setAddress("page.saved"));
-				sockJSHandler.bridge(bridgeOptions);
-				globals.getRouter().route("/eventbus/*").handler(sockJSHandler);
+			public Completable preRoute() {
+				return Completable.defer(() -> {
+					AppGlobals globals = AppGlobals.get();
 
-				return super.preRoute();
+					SockJSHandler sockJSHandler = SockJSHandler.create(globals.getVertx());
+					BridgeOptions bridgeOptions = new BridgeOptions()
+							.addInboundPermitted(new PermittedOptions().setAddress("app.markdown"))
+							.addOutboundPermitted(new PermittedOptions().setAddress("page.saved"));
+					sockJSHandler.bridge(bridgeOptions);
+					globals.getRouter().route("/eventbus/*").handler(sockJSHandler);
+
+					return super.preRoute();
+				});
 			}
 		});
 	}
@@ -105,8 +107,7 @@ public class WikiServer extends Server {
 		Configuration configuration = new DefaultConfiguration();
 		configuration.set(SQLDialect.POSTGRES);
 
-		// FIXME: switch to rxjava2
-		PagesDao dao = new PagesDao(configuration, io.vertx.reactivex.ext.asyncsql.AsyncSQLClient.newInstance(dbClient.getDelegate()));
+		PagesDao dao = new PagesDao(configuration, dbClient);
 		
 		AppGlobals.get().setGlobal("dao", dao);
 		
@@ -114,15 +115,14 @@ public class WikiServer extends Server {
 	}
 	
 	@Override
-	public Single<Void> start(JsonObject defaultConfig, Class<?>... resourcesOrProviders) {
+	public Completable start(JsonObject defaultConfig, Class<?>... resourcesOrProviders) {
 		return super.start(defaultConfig, resourcesOrProviders)
-				.map(v -> {
+				.doOnComplete(() -> {
 					AppGlobals globals = AppGlobals.get();
 					globals.getVertx().eventBus().<String>consumer("app.markdown", msg -> {
 						  String html = Processor.process(msg.body());
 						  msg.reply(html);
 						});
-					return null;
 				});
 	}
 }

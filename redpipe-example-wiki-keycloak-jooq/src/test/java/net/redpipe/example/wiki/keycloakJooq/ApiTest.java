@@ -24,18 +24,17 @@ import org.testcontainers.jdbc.ext.ScriptUtils;
 import net.redpipe.engine.core.Server;
 import net.redpipe.example.wiki.keycloakJooq.AppResource;
 import net.redpipe.example.wiki.keycloakJooq.WikiServer;
-
+import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.rxjava.core.MultiMap;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.web.client.WebClient;
-import io.vertx.rxjava.ext.web.codec.BodyCodec;
-import rx.Single;
+import io.vertx.reactivex.core.MultiMap;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.codec.BodyCodec;
 
 @RunWith(VertxUnitRunner.class)
 public class ApiTest {
@@ -58,7 +57,7 @@ public class ApiTest {
 		Async async = context.async();
 
 		Single<String> keyCloakSetup = setupKeyCloak();
-		keyCloakSetup.flatMap(rsaKey -> {
+		keyCloakSetup.flatMapCompletable(rsaKey -> {
 			System.err.println("Got RSA key: "+rsaKey);
 			JsonObject config = new JsonObject().put("db_name", "test")
 					.put("db_port", postgres.getFirstMappedPort())
@@ -83,7 +82,7 @@ public class ApiTest {
 			server = new WikiServer();
 			return server.start(config);
 		})
-		.subscribe(v -> {
+		.subscribe(() -> {
 			webClient = WebClient.create(server.getVertx(),
 					new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000));
 			initSql();
@@ -283,7 +282,7 @@ public class ApiTest {
 	public void finish(TestContext context) {
 		webClient.close();
 		Async async = context.async();
-        server.close().subscribe(v -> async.complete(),
+        server.close().subscribe(() -> async.complete(),
         		x -> {
         			context.fail(x); 
         			async.complete();

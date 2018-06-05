@@ -5,23 +5,21 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import net.redpipe.engine.core.AppGlobals;
-import net.redpipe.engine.core.Server;
 
 import io.debezium.kafka.KafkaCluster;
 import io.debezium.util.Testing;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaReadStream;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.reactivex.kafka.client.consumer.KafkaConsumer;
+import net.redpipe.engine.core.AppGlobals;
+import net.redpipe.engine.core.Server;
 import rx.subjects.BehaviorSubject;
-import rx.subjects.Subject;
 
 public class Main extends Server {
     public static void main( String[] args ){
     	new Server().start(new JsonObject().put("scan", new JsonArray().add(Main.class.getPackage().getName())))
-    	.subscribe(v -> onStart(),
+    	.subscribe(() -> onStart(),
     			x -> x.printStackTrace());
     }
 

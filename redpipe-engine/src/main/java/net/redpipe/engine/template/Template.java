@@ -5,9 +5,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import io.reactivex.Single;
 import net.redpipe.engine.core.AppGlobals;
-
-import rx.Single;
 
 public class Template {
 	private Map<String, Object> variables;

@@ -20,10 +20,10 @@ import net.redpipe.engine.spi.Plugin;
 
 import io.netty.buffer.ByteBufInputStream;
 import io.vertx.core.Handler;
-import io.vertx.rxjava.core.Context;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.http.HttpServerRequest;
-import io.vertx.rxjava.core.http.HttpServerResponse;
+import io.vertx.reactivex.core.Context;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.http.HttpServerRequest;
+import io.vertx.reactivex.core.http.HttpServerResponse;
 
 public class VertxPluginRequestHandler implements Handler<HttpServerRequest>
 {

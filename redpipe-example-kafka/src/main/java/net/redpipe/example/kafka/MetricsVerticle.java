@@ -1,15 +1,15 @@
 package net.redpipe.example.kafka;
 
-import com.sun.management.OperatingSystemMXBean;
-
 import java.lang.management.ManagementFactory;
 import java.util.UUID;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import com.sun.management.OperatingSystemMXBean;
+
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaWriteStream;
-import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.reactivex.core.AbstractVerticle;
 
 public class MetricsVerticle extends AbstractVerticle {
 

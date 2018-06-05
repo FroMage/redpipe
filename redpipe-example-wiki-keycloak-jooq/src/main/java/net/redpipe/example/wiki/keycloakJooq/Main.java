@@ -7,7 +7,7 @@ public class Main {
 		Server test = new WikiServer();
 		// FIXME: this really needs to be done before we start serving pages
 		test.start()
-			.subscribe(yes -> System.err.println("INIT done"), 
+			.subscribe(() -> System.err.println("INIT done"), 
 				x -> {
 					x.printStackTrace();
 				});

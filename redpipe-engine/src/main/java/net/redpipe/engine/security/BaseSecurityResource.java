@@ -17,11 +17,11 @@ import net.redpipe.engine.core.AppGlobals;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.ext.auth.AuthProvider;
-import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.Session;
-import rx.Single;
+import io.vertx.reactivex.ext.auth.AuthProvider;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.Session;
 
 @Path("/")
 public abstract class BaseSecurityResource {

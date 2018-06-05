@@ -11,9 +11,9 @@ import javax.ws.rs.core.Response;
 import org.jboss.weld.vertx.VertxConsumer;
 import org.jboss.weld.vertx.VertxEvent;
 
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.Vertx;
-import rx.Single;
+import io.vertx.reactivex.core.Vertx;
 
 @ApplicationScoped
 @Path("test")

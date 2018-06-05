@@ -395,7 +395,7 @@ injected:
   <th>Description</th>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.core.Vertx</td>
+  <td>io.vertx.reactivex.core.Vertx</td>
   <td>The Vert.x instance.</td>
  </tr>
  <tr>
@@ -411,27 +411,27 @@ injected:
   <th>Description</th>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.ext.web.RoutingContext</td>
+  <td>io.vertx.reactivex.ext.web.RoutingContext</td>
   <td>The Vert.x Web <code>RoutingContext</code>.</td>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.core.http.HttpServerRequest</td>
+  <td>io.vertx.reactivex.core.http.HttpServerRequest</td>
   <td>The Vert.x request.</td>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.core.http.HttpServerResponse</td>
+  <td>io.vertx.reactivex.core.http.HttpServerResponse</td>
   <td>The Vert.x response.</td>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.ext.auth.AuthProvider</td>
+  <td>io.vertx.reactivex.ext.auth.AuthProvider</td>
   <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>).</td>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.ext.auth.User</td>
+  <td>io.vertx.reactivex.ext.auth.User</td>
   <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>).</td>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.ext.web.Session</td>
+  <td>io.vertx.reactivex.ext.web.Session</td>
   <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>).</td>
  </tr>
 </table> 

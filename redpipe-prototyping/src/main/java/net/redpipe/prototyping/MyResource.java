@@ -14,19 +14,15 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.Stream;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.rx.java.ObservableHandler;
-import io.vertx.rx.java.RxHelper;
-import io.vertx.rxjava.ext.web.client.HttpResponse;
-import io.vertx.rxjava.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
+import io.vertx.reactivex.ext.web.client.WebClient;
 import net.redpipe.fibers.Fibers;
-import rx.Observable;
-import rx.Single;
 
 @Path("/hello")
 public class MyResource {
@@ -66,50 +62,21 @@ public class MyResource {
 		System.err.println("Created client");
 	}
 
-	@Path("4")
-	@GET
-	public void hello4(@Suspended final AsyncResponse asyncResponse,
-		      // Inject the Vertx instance
-		      @Context Vertx vertx){
-		System.err.println("Creating client");
-		HttpClientOptions options = new HttpClientOptions();
-		options.setSsl(true);
-		options.setTrustAll(true);
-		options.setVerifyHost(false);
-		HttpClient client = vertx.createHttpClient(options);
-		ObservableHandler<HttpClientResponse> responseHandler = RxHelper.observableHandler();
-		client.getNow(443,
-				"www.google.com", 
-				"/robots.txt", 
-				responseHandler.toHandler());
-		
-		ObservableHandler<Buffer> bodyHandler = RxHelper.observableHandler();
-		responseHandler.subscribe(resp -> {
-			System.err.println("Got response");
-			resp.bodyHandler(bodyHandler.toHandler());
-		});
-		
-		bodyHandler.subscribe(body -> {
-			System.err.println("Got body");
-			asyncResponse.resume(Response.ok(body.toString()).build());
-		});
-		System.err.println("Created client");
-	}
 
 	@Path("5")
 	@GET
 	public void hello5(@Suspended final AsyncResponse asyncResponse,
 		      // Inject the Vertx instance
 		      @Context Vertx vertx){
-		io.vertx.rxjava.core.Vertx rxVertx = io.vertx.rxjava.core.Vertx.newInstance(vertx);
+		io.vertx.reactivex.core.Vertx rxVertx = io.vertx.reactivex.core.Vertx.newInstance(vertx);
 		System.err.println("Creating client");
 		HttpClientOptions options = new HttpClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
-		io.vertx.rxjava.core.http.HttpClient client = rxVertx.createHttpClient(options);
+		io.vertx.reactivex.core.http.HttpClient client = rxVertx.createHttpClient(options);
 		// DOES NOT WORK: https://github.com/vert-x3/vertx-rx/issues/13
-		Observable<io.vertx.rxjava.core.http.HttpClientResponse> responseHandler = client.get(443,
+		Observable<io.vertx.reactivex.core.http.HttpClientResponse> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").toObservable();
 
@@ -130,14 +97,14 @@ public class MyResource {
 	public void hello6(@Suspended final AsyncResponse asyncResponse,
 		      // Inject the Vertx instance
 		      @Context Vertx vertx){
-		io.vertx.rxjava.core.Vertx rxVertx = io.vertx.rxjava.core.Vertx.newInstance(vertx);
+		io.vertx.reactivex.core.Vertx rxVertx = io.vertx.reactivex.core.Vertx.newInstance(vertx);
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
 		WebClient client = WebClient.create(rxVertx, options);
-		Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+		Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
@@ -154,14 +121,14 @@ public class MyResource {
 	@Path("7")
 	@GET
 	public CompletionStage<String> hello7(@Context Vertx vertx){
-		io.vertx.rxjava.core.Vertx rxVertx = io.vertx.rxjava.core.Vertx.newInstance(vertx);
+		io.vertx.reactivex.core.Vertx rxVertx = io.vertx.reactivex.core.Vertx.newInstance(vertx);
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
 		WebClient client = WebClient.create(rxVertx, options);
-		Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+		Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
@@ -180,14 +147,14 @@ public class MyResource {
 	@Path("7error")
 	@GET
 	public CompletionStage<String> hello7Error(@Context Vertx vertx){
-		io.vertx.rxjava.core.Vertx rxVertx = io.vertx.rxjava.core.Vertx.newInstance(vertx);
+		io.vertx.reactivex.core.Vertx rxVertx = io.vertx.reactivex.core.Vertx.newInstance(vertx);
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
 		WebClient client = WebClient.create(rxVertx, options);
-		Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+		Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
@@ -205,14 +172,14 @@ public class MyResource {
 
 	@Path("8")
 	@GET
-	public Single<String> hello8(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Single<String> hello8(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
 		WebClient client = WebClient.create(rxVertx, options);
-		Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+		Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
@@ -226,14 +193,14 @@ public class MyResource {
 	@Path("8user")
 	@Produces("text/json")
 	@GET
-	public Single<DataClass> hello8User(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Single<DataClass> hello8User(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
 		WebClient client = WebClient.create(rxVertx, options);
-		Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+		Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
@@ -246,14 +213,14 @@ public class MyResource {
 
 	@Path("8error")
 	@GET
-	public Single<String> hello8Error(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Single<String> hello8Error(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating client");
 		WebClientOptions options = new WebClientOptions();
 		options.setSsl(true);
 		options.setTrustAll(true);
 		options.setVerifyHost(false);
 		WebClient client = WebClient.create(rxVertx, options);
-		Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+		Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 				"www.google.com", 
 				"/robots.txt").rxSend();
 
@@ -269,7 +236,7 @@ public class MyResource {
 	@Path("9")
 	@GET
 	@Produces(MediaType.SERVER_SENT_EVENTS)
-	public Observable<String> hello9(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Observable<String> hello9(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
 			System.err.println("Tick: "+r);
@@ -280,7 +247,7 @@ public class MyResource {
 	@Path("9nostream")
 	@Produces("text/json")
 	@GET
-	public Observable<String> hello9nostream(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Observable<String> hello9nostream(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
 			System.err.println("Tick: "+r);
@@ -292,7 +259,7 @@ public class MyResource {
 	@Produces("text/json")
 	@GET
 	@Stream
-	public Observable<String> hello9chunked(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Observable<String> hello9chunked(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
 			System.err.println("Tick: "+r);
@@ -302,7 +269,7 @@ public class MyResource {
 
 	@Path("9error")
 	@GET
-	public Observable<String> hello9Error(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Observable<String> hello9Error(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		int[] i = new int[]{0};
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
@@ -316,7 +283,7 @@ public class MyResource {
 	@Produces("text/json")
 	@Path("9user")
 	@GET
-	public Observable<DataClass> hello9User(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Observable<DataClass> hello9User(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		System.err.println("Creating timer");
 		return rxVertx.periodicStream(1000).toObservable().map(r -> {
 			System.err.println("Tick: "+r);
@@ -326,7 +293,7 @@ public class MyResource {
 
 	@Path("coroutines/1")
 	@GET
-	public Single<Response> helloAsync(@Context io.vertx.rxjava.core.Vertx rxVertx){
+	public Single<Response> helloAsync(@Context io.vertx.reactivex.core.Vertx rxVertx){
 		return Fibers.fiber(() -> {
 			System.err.println("Creating client");
 			WebClientOptions options = new WebClientOptions();
@@ -334,13 +301,13 @@ public class MyResource {
 			options.setTrustAll(true);
 			options.setVerifyHost(false);
 			WebClient client = WebClient.create(rxVertx, options);
-			Single<HttpResponse<io.vertx.rxjava.core.buffer.Buffer>> responseHandler = client.get(443,
+			Single<HttpResponse<io.vertx.reactivex.core.buffer.Buffer>> responseHandler = client.get(443,
 					"www.google.com", 
 					"/robots.txt").rxSend();
 
 			System.err.println("Got response");
 
-			HttpResponse<io.vertx.rxjava.core.buffer.Buffer> httpResponse = Fibers.await(responseHandler);
+			HttpResponse<io.vertx.reactivex.core.buffer.Buffer> httpResponse = Fibers.await(responseHandler);
 			System.err.println("Got body");
 			client.close();
 			

@@ -7,11 +7,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import net.redpipe.engine.template.TemplateRenderer;
 
-import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.templ.FreeMarkerTemplateEngine;
-import rx.Single;
+import io.reactivex.Single;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.templ.FreeMarkerTemplateEngine;
+import net.redpipe.engine.template.TemplateRenderer;
 
 public class FreeMarkerTemplateRenderer implements TemplateRenderer {
 

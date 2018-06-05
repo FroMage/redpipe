@@ -11,14 +11,14 @@ import javax.ws.rs.core.UriInfo;
 
 import org.jboss.resteasy.annotations.Stream;
 
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.buffer.Buffer;
-import io.vertx.rxjava.ext.web.client.HttpResponse;
-import io.vertx.rxjava.ext.web.client.WebClient;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
+import io.vertx.reactivex.ext.web.client.WebClient;
 import net.redpipe.engine.template.Template;
 import net.redpipe.fibers.Fibers;
-import rx.Observable;
-import rx.Single;
 
 @Path("/")
 public class HelloResource {
@@ -37,7 +37,7 @@ public class HelloResource {
 	@Path("stream")
 	@GET
 	public Observable<String> helloStream() {
-		return Observable.from(new String[] {"Hello", "World"});
+		return Observable.fromArray(new String[] {"Hello", "World"});
 	}
 
 	@Path("composed")

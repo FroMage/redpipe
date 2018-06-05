@@ -27,16 +27,16 @@ import net.redpipe.engine.security.RequiresUser;
 
 import com.github.rjeschke.txtmark.Processor;
 
+import io.reactivex.Single;
 import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTOptions;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.http.HttpServerRequest;
-import io.vertx.rxjava.ext.auth.AuthProvider;
-import io.vertx.rxjava.ext.auth.User;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import rx.Single;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.http.HttpServerRequest;
+import io.vertx.reactivex.ext.auth.AuthProvider;
+import io.vertx.reactivex.ext.auth.User;
+import io.vertx.reactivex.ext.auth.jwt.JWTAuth;
 
 @NoAuthRedirect
 @RequiresUser

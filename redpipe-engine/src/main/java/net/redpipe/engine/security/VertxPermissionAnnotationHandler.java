@@ -2,8 +2,8 @@ package net.redpipe.engine.security;
 
 import java.lang.annotation.Annotation;
 
-import io.vertx.rxjava.ext.auth.User;
-import rx.Single;
+import io.reactivex.Single;
+import io.vertx.reactivex.ext.auth.User;
 
 public class VertxPermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 
