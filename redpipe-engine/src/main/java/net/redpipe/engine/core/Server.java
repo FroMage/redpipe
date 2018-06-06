@@ -2,13 +2,10 @@ package net.redpipe.engine.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Scanner;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
@@ -16,6 +13,13 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import io.swagger.converter.ModelConverter;
+import io.swagger.converter.ModelConverterContext;
+import io.swagger.converter.ModelConverters;
+import io.swagger.jaxrs.ext.SwaggerExtensions;
+import io.swagger.models.Model;
+import io.swagger.models.properties.Property;
+import net.redpipe.engine.swagger.RxModelConverter;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -382,6 +386,7 @@ public class Server {
 	}
 
 	private void setupSwagger(VertxResteasyDeployment deployment) {
+		ModelConverters.getInstance().addConverter(new RxModelConverter());
 		// Swagger
 		ServletConfig servletConfig = new ServletConfig(){
 
