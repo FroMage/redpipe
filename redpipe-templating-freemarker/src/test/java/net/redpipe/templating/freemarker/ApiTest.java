@@ -83,4 +83,41 @@ public class ApiTest {
 		});
 	}
 
+	@Test
+	public void checkTemplateNoRenderer(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/no-renderer")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			System.err.println(r.body());
+			context.assertEquals(500, r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateMissing(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/missing")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			System.err.println(r.body());
+			context.assertEquals(500, r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
 }
