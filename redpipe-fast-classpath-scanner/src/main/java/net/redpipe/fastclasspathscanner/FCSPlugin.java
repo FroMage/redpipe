@@ -21,8 +21,7 @@ public class FCSPlugin extends Plugin {
 			if(packages == null) {
 				System.err.println("Not scanning any packages, please specify the 'scan' array of packages in configuration");
 			}else {
-				String[] packagesToScan = (String[]) packages.getList().toArray(new String[packages.size()+1]);
-				packagesToScan[packagesToScan.length-1] = "net.redpipe.engine";
+				String[] packagesToScan = (String[]) packages.getList().toArray(new String[packages.size()]);
 				new FastClasspathScanner(packagesToScan)
 				.matchClassesWithAnnotation(Path.class, klass -> {
 					if(!Modifier.isAbstract(klass.getModifiers()))
