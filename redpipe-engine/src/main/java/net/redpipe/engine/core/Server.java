@@ -218,7 +218,8 @@ public class Server {
     {
     	return Completable.defer(() -> {
     		Router router = Router.router(vertx);
-    		AppGlobals.get().setRouter(router);
+    		AppGlobals globals = AppGlobals.get();
+    		globals.setRouter(router);
 
     		VertxPluginRequestHandler resteasyHandler = new VertxPluginRequestHandler(vertx, deployment, plugins);
 
@@ -232,22 +233,15 @@ public class Server {
     						resteasyHandler.handle(routingContext.request());
     					});
     				}).concatWith(doOnPlugins(plugin -> plugin.postRoute()))
-    				.concatWith(Completable.create(sub -> {
+    				.concatWith(Completable.defer(() -> {
     					// Start the front end server using the Jax-RS controller
-    					vertx.createHttpServer()
-    					.requestHandler(router::accept)
-    					.listen(AppGlobals.get().getConfig().getInteger("http_port", 9000), ar -> {
-    						if (ar.failed())
-    						{
-    							ar.cause().printStackTrace();
-    							sub.onError(ar.cause());
-    						}
-    						else
-    						{
-    							System.out.println("Server started on port " + ar.result().actualPort());
-    							sub.onComplete();
-    						}
-    					});
+    					int port = globals.getConfig().getInteger("http_port", 9000);
+    					return vertx.createHttpServer()
+    							.requestHandler(router::accept)
+    							.rxListen(port)
+    							.doOnSuccess(server -> System.out.println("Server started on port " + server.actualPort()))
+    							.doOnError(t -> t.printStackTrace())
+    							.ignoreElement();
     				}));
     	});
     }
