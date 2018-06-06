@@ -62,7 +62,6 @@ public class SwaggerApiTest {
                     context.assertEquals(200, r.statusCode());
                     JsonObject swaggerDef = r.body();
                     context.assertNotNull(swaggerDef);
-                    System.out.println(swaggerDef);
                     // general
                     context.assertEquals("2.0", swaggerDef.getString("swagger"));
                     // version
