@@ -16,36 +16,37 @@ import java.util.List;
 
 public class RxModelConverter implements ModelConverter {
 
-    private static final List<String> skippableClasses = new ArrayList<>();
+    private static final List<String> delegateToFirstTypeArg = new ArrayList<>();
     static {
-        skippableClasses.add(Single.class.getName());
-        skippableClasses.add(Observable.class.getName());
-        skippableClasses.add(rx.Single.class.getName());
-        skippableClasses.add(rx.Observable.class.getName());
-
+        delegateToFirstTypeArg.add(Single.class.getName());
+        delegateToFirstTypeArg.add(Observable.class.getName());
+        delegateToFirstTypeArg.add(rx.Single.class.getName());
+        delegateToFirstTypeArg.add(rx.Observable.class.getName());
     }
 
 
     @Override
     public Property resolveProperty(Type type, ModelConverterContext context, Annotation[] annotations, Iterator<ModelConverter> chain) {
+        Type delegateType = type;
         if (type instanceof ParameterizedType) {
             ParameterizedType param = (ParameterizedType) type;
-            if (skippableClasses.contains(param.getRawType().getTypeName())) {
-                return chain.next().resolveProperty(param.getActualTypeArguments()[0], context, annotations, chain);
+            if (delegateToFirstTypeArg.contains(param.getRawType().getTypeName())) {
+                delegateType = param.getActualTypeArguments()[0];
             }
         }
-        return chain.next().resolveProperty(type, context, annotations, chain);
+        return chain.next().resolveProperty(delegateType, context, annotations, chain);
     }
 
     @Override
     public Model resolve(Type type, ModelConverterContext context, Iterator<ModelConverter> chain) {
+        Type delegateType = type;
         if (type instanceof ParameterizedType) {
             ParameterizedType param = (ParameterizedType) type;
-            if (skippableClasses.contains(param.getRawType().getTypeName())) {
-                return chain.next().resolve(param.getActualTypeArguments()[0], context, chain);
+            if (delegateToFirstTypeArg.contains(param.getRawType().getTypeName())) {
+                delegateType = param.getActualTypeArguments()[0];
             }
         }
-        return chain.next().resolve(type, context, chain);
+        return chain.next().resolve(delegateType, context, chain);
     }
 
 }
