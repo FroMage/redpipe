@@ -109,7 +109,7 @@ public class WikiServer extends Server {
 
 		PagesDao dao = new PagesDao(configuration, dbClient);
 		
-		AppGlobals.get().setGlobal("dao", dao);
+		AppGlobals.get().setGlobal(PagesDao.class, dao);
 		
 		return dbClient;
 	}

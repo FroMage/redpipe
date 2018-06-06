@@ -59,11 +59,13 @@ public class WikiResource {
 
 	@Context
 	private User user;
+	
+	@Context
+	private PagesDao dao;
 
 	@GET
 	public Single<Template> index(){
 		return fiber(() -> {
-			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			List<Pages> res = await(dao.findAll());
 			List<String> pages = res
 					.stream()
@@ -89,7 +91,6 @@ public class WikiResource {
 	@GET
 	public Single<Template> renderPage(@PathParam("page") String page){
 		return fiber(() -> {
-			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			Optional<Pages> res = await(dao.findOneByName(page));
 			Integer id; 
 			String rawContent;
@@ -130,7 +131,6 @@ public class WikiResource {
 			if(!await(user.rxIsAuthorised(requiredPermission)))
 				throw new AuthorizationException("Not authorized");
 
-			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			io.reactivex.Single<Integer> query;
 			if(isNewPage)
 		        query = dao.insert(new Pages().setName(title).setContent(markdown));
@@ -160,7 +160,6 @@ public class WikiResource {
 	@POST
 	public Single<Response> delete(@FormParam("id") String id){
 		return fiber(() -> {
-			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			await(dao.deleteById(Integer.valueOf(id)));
 			URI location = Router.getURI(WikiResource::index);
 			return Response.seeOther(location).build();
@@ -234,7 +233,6 @@ public class WikiResource {
 		}
 		
 		return fiber(() -> {
-			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			List<Pages> pages = await(dao.findAll());
 
 			JsonObject filesObject = new JsonObject();

@@ -47,6 +47,9 @@ import net.redpipe.fibers.Fibers;
 @Path("/wiki/api")
 public class ApiResource {
 	
+	@Context
+	private PagesDao dao;
+	
 	@NoAuthFilter
 	@Produces("text/plain")
 	@GET
@@ -92,7 +95,6 @@ public class ApiResource {
 	@GET
 	@Path("pages")
 	public Single<Response> apiRoot(){
-		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 		return dao.findAll()
 				.map(res -> {
 					JsonObject response = new JsonObject();
@@ -112,7 +114,6 @@ public class ApiResource {
 	@GET
 	@Path("pages/{id}")
 	public Single<Response> apiGetPage(@PathParam("id") String id){
-		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 		return dao.findOneById(Integer.valueOf(id))
 				.map(res -> {
 					JsonObject response = new JsonObject();
@@ -140,7 +141,6 @@ public class ApiResource {
 	@Path("pages")
 	public Single<Response> apiCreatePage(@ApiUpdateValid({"name", "markdown"}) JsonObject page, 
 			@Context HttpServerRequest req){
-		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 		return dao.insert(new Pages()
 				.setName(page.getString("name"))
 				.setContent(page.getString("markdown")))
@@ -155,7 +155,6 @@ public class ApiResource {
 			@Context HttpServerRequest req,
 			@Context Vertx vertx){
 		return Fibers.fiber(() -> {
-			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 			Optional<Pages> res = Fibers.await(dao.findOneById(Integer.valueOf(id)));
 			if(!res.isPresent())
 				return Response.status(Status.NOT_FOUND).build();
@@ -172,7 +171,6 @@ public class ApiResource {
 	@DELETE
 	@Path("pages/{id}")
 	public Single<Response> apiDeletePage(@PathParam("id") String id){
-		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
 		return dao.deleteById(Integer.valueOf(id))
 				.map(res -> Response.ok(new JsonObject().put("success", true)).build());
 	}
