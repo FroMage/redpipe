@@ -4,6 +4,7 @@ import static net.redpipe.fibers.Fibers.await;
 import static net.redpipe.fibers.Fibers.fiber;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.DELETE;
@@ -38,6 +39,7 @@ import net.redpipe.engine.security.RequiresPermissions;
 import net.redpipe.engine.security.RequiresUser;
 import net.redpipe.example.wiki.keycloakJooq.jooq.tables.daos.PagesDao;
 import net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages;
+import net.redpipe.fibers.Fibers;
 
 @NoAuthRedirect
 @RequiresUser
@@ -152,15 +154,18 @@ public class ApiResource {
 			@ApiUpdateValid("markdown") JsonObject page,
 			@Context HttpServerRequest req,
 			@Context Vertx vertx){
-		PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
-		return dao.update(new Pages().setId(Integer.valueOf(id)).setContent(page.getString("markdown")))
-				.map(res -> {
-				    JsonObject event = new JsonObject()
-				    	      .put("id", id)
-				    	      .put("client", page.getString("client"));
-				    vertx.eventBus().publish("page.saved", event);
-					return Response.ok(new JsonObject().put("success", true)).build();
-				});
+		return Fibers.fiber(() -> {
+			PagesDao dao = (PagesDao) AppGlobals.get().getGlobal("dao");
+			Optional<Pages> res = Fibers.await(dao.findOneById(Integer.valueOf(id)));
+			if(!res.isPresent())
+				return Response.status(Status.NOT_FOUND).build();
+			Fibers.await(dao.update(res.get().setContent(page.getString("markdown"))));
+			JsonObject event = new JsonObject()
+					.put("id", id)
+					.put("client", page.getString("client"));
+			vertx.eventBus().publish("page.saved", event);
+			return Response.ok(new JsonObject().put("success", true)).build();
+		});
 	}
 
 	@RequiresPermissions("delete")
