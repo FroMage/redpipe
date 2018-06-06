@@ -21,9 +21,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.HttpWaitStrategy;
 import org.testcontainers.jdbc.ext.ScriptUtils;
-import net.redpipe.engine.core.Server;
-import net.redpipe.example.wiki.keycloakJooq.AppResource;
-import net.redpipe.example.wiki.keycloakJooq.WikiServer;
+
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -35,6 +33,7 @@ import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
+import net.redpipe.engine.core.Server;
 
 @RunWith(VertxUnitRunner.class)
 public class ApiTest {
@@ -58,7 +57,6 @@ public class ApiTest {
 
 		Single<String> keyCloakSetup = setupKeyCloak();
 		keyCloakSetup.flatMapCompletable(rsaKey -> {
-			System.err.println("Got RSA key: "+rsaKey);
 			JsonObject config = new JsonObject().put("db_name", "test")
 					.put("db_port", postgres.getFirstMappedPort())
 					.put("db_user", postgres.getUsername())
@@ -116,7 +114,6 @@ public class ApiTest {
 		WebClient webClient = WebClient.create(vertx,
 				new WebClientOptions().setDefaultHost(keyCloak.getContainerIpAddress())
 					.setDefaultPort(keyCloak.getMappedPort(8080)));
-		System.err.println(keyCloakUrl);
 
 		return webClient
 		.post("/auth/realms/master/protocol/openid-connect/token")
@@ -129,7 +126,6 @@ public class ApiTest {
 		.map(r -> r.body())
 		.flatMap(token -> {
 			String jwtTokenHeaderValue = "Bearer " + token.getString("access_token");
-			System.err.println(token);
 			
 			/*
 			    user.root=w00t,admin
@@ -264,7 +260,7 @@ public class ApiTest {
 								.rxSend()
 								.map(r -> r.body())
 								.map(keysResponse -> {
-									
+
 									vertx.close();
 									for(Object obj : keysResponse.getJsonArray("keys")) {
 										JsonObject key = (JsonObject) obj;
@@ -304,6 +300,7 @@ public class ApiTest {
 			.rxSendJsonObject(page)
 			.map(r -> r.body())
 			.flatMap(token -> {
+
 				String jwtTokenHeaderValue = "Bearer " + token;
 				return webClient.post("/wiki/api/pages")
 						.putHeader("Authorization", jwtTokenHeaderValue)
@@ -321,23 +318,25 @@ public class ApiTest {
 							context.assertTrue(response.getBoolean("success"));
 							JsonArray array = response.getJsonArray("pages");
 							context.assertEquals(1, array.size());
-							context.assertNotNull(array.getJsonObject(0).getInteger("id"));
-							return webClient.put("/wiki/api/pages/0")
+							Integer id = array.getJsonObject(0).getInteger("id");
+							context.assertNotNull(id);
+							return webClient.put("/wiki/api/pages/"+id)
 									.putHeader("Authorization", jwtTokenHeaderValue)
 									.as(BodyCodec.jsonObject())
 									.rxSendJsonObject(new JsonObject()
 											.put("id", 0)
 											.put("markdown", "Oh Yeah!"))
-									.map(r -> r.body());
-						}).flatMap(response -> {
-							context.assertTrue(response.getBoolean("success"));
-							return webClient.delete("/wiki/api/pages/0")
-									.putHeader("Authorization", jwtTokenHeaderValue)
-									.as(BodyCodec.jsonObject())
-									.rxSendJsonObject(new JsonObject()
-											.put("id", 0)
-											.put("markdown", "Oh Yeah!"))
-									.map(r -> r.body());
+									.map(r -> r.body())
+									.flatMap(response2 -> {
+										context.assertTrue(response2.getBoolean("success"));
+										return webClient.delete("/wiki/api/pages/"+id)
+												.putHeader("Authorization", jwtTokenHeaderValue)
+												.as(BodyCodec.jsonObject())
+												.rxSendJsonObject(new JsonObject()
+														.put("id", 0)
+														.put("markdown", "Oh Yeah!"))
+												.map(r -> r.body());
+									});
 					});
 		}).doOnError(x -> context.fail(x)).subscribe(response -> {
 			context.assertTrue(response.getBoolean("success"));
