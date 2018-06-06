@@ -193,7 +193,7 @@ public class Server {
     		globals.setDeployment(deployment);
 
     		return doOnPlugins(plugin -> plugin.init())
-    				.andThen(startVertx(deployment));
+    				.concatWith(startVertx(deployment));
     	});
 	}
 	
@@ -208,7 +208,7 @@ public class Server {
 		return Completable.defer(() -> {
 			Completable last = Completable.complete();
 			for(Plugin plugin : plugins) {
-				last = last.andThen(operation.apply(plugin));
+				last = last.concatWith(operation.apply(plugin));
 			}
 			return last;
 		});
@@ -231,7 +231,7 @@ public class Server {
     								io.vertx.rxjava.ext.web.RoutingContext.newInstance(routingContext.getDelegate()));
     						resteasyHandler.handle(routingContext.request());
     					});
-    				}).andThen(doOnPlugins(plugin -> plugin.postRoute()))
+    				}).concatWith(doOnPlugins(plugin -> plugin.postRoute()))
     				.concatWith(Completable.create(sub -> {
     					// Start the front end server using the Jax-RS controller
     					vertx.createHttpServer()
