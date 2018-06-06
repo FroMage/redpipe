@@ -390,7 +390,7 @@ public class Server {
 	}
 
 	private void setupSwagger(VertxResteasyDeployment deployment) {
-		// ModelConverters.getInstance().addConverter(new RxModelConverter());
+		ModelConverters.getInstance().addConverter(new RxModelConverter());
 		// Swagger
 		ServletConfig servletConfig = new ServletConfig(){
 
