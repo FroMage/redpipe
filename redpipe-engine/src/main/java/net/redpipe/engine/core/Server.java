@@ -2,10 +2,13 @@ package net.redpipe.engine.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Scanner;
+import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
@@ -13,13 +16,6 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
-import io.swagger.converter.ModelConverter;
-import io.swagger.converter.ModelConverterContext;
-import io.swagger.converter.ModelConverters;
-import io.swagger.jaxrs.ext.SwaggerExtensions;
-import io.swagger.models.Model;
-import io.swagger.models.properties.Property;
-import net.redpipe.engine.swagger.RxModelConverter;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -27,6 +23,7 @@ import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.plugins.RxJavaPlugins;
+import io.swagger.converter.ModelConverters;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -53,7 +50,7 @@ import io.vertx.reactivex.ext.web.handler.CookieHandler;
 import io.vertx.reactivex.ext.web.handler.SessionHandler;
 import io.vertx.reactivex.ext.web.sstore.LocalSessionStore;
 import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
-import net.redpipe.engine.resteasy.RxVertxProvider;
+import net.redpipe.engine.resteasy.RedpipeServletContext;
 import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnObservableCreateAction;
 import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
 import net.redpipe.engine.rxjava2.ContextPropagatorOnCompletableAssemblyAction;
@@ -67,6 +64,7 @@ import net.redpipe.engine.rxjava2.ContextPropagatorOnObservableCreateAction;
 import net.redpipe.engine.rxjava2.ContextPropagatorOnSingleAssemblyAction;
 import net.redpipe.engine.rxjava2.ContextPropagatorOnSingleCreateAction;
 import net.redpipe.engine.spi.Plugin;
+import net.redpipe.engine.swagger.RxModelConverter;
 import net.redpipe.engine.template.TemplateRenderer;
 import rx.plugins.RxJavaHooks;
 
@@ -387,7 +385,11 @@ public class Server {
 
 	private void setupSwagger(VertxResteasyDeployment deployment) {
 		ModelConverters.getInstance().addConverter(new RxModelConverter());
+		
 		// Swagger
+		ServletContext servletContext = new RedpipeServletContext();
+		AppGlobals.get().setGlobal(ServletContext.class, servletContext);
+
 		ServletConfig servletConfig = new ServletConfig(){
 
 			@Override
@@ -397,7 +399,7 @@ public class Server {
 
 			@Override
 			public ServletContext getServletContext() {
-				return RxVertxProvider.ServletContext;
+				return servletContext;
 			}
 
 			@Override
@@ -424,6 +426,7 @@ public class Server {
 			resourcePackages.add(klass.getPackage().getName());
 		}
 		swaggerConfig.setResourcePackage(String.join(",", resourcePackages));
+		swaggerConfig.setServletConfig(servletConfig);
 		swaggerConfig.setPrettyPrint(true);
 		swaggerConfig.setScan(true);
 		
