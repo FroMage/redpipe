@@ -34,6 +34,7 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.net.NetServerOptions;
 import io.vertx.reactivex.config.ConfigRetriever;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.auth.AuthProvider;
@@ -236,9 +237,10 @@ public class Server {
     				.concatWith(Completable.defer(() -> {
     					// Start the front end server using the Jax-RS controller
     					int port = globals.getConfig().getInteger("http_port", 9000);
+    					String host = globals.getConfig().getString("http_host", NetServerOptions.DEFAULT_HOST);
     					return vertx.createHttpServer()
     							.requestHandler(router::accept)
-    							.rxListen(port)
+    							.rxListen(port, host)
     							.doOnSuccess(server -> System.out.println("Server started on port " + server.actualPort()))
     							.doOnError(t -> t.printStackTrace())
     							.ignoreElement();

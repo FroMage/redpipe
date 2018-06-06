@@ -363,6 +363,12 @@ these are the configuration options available:
   <td>Http port to bind to.</td>
   <td>9000</td>
  </tr>
+ <tr>
+  <td>http_host</td>
+  <td>String</td>
+  <td>Http host to bind to.</td>
+  <td>0.0.0.0 (all interfaces)</td>
+ </tr>
 </table> 
 
 <table>
