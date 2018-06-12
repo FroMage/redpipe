@@ -30,7 +30,7 @@ public class TestResourceEmpty {
     @GET
     @Path("/maybe/fulfilled")
     public Maybe<String> returnFulfilledMaybe() {
-        return Maybe.just("something"); // should be 404
+        return Maybe.just("something"); // should be 200
     }
 
 }
