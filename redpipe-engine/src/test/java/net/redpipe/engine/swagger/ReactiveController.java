@@ -1,5 +1,7 @@
 package net.redpipe.engine.swagger;
 
+import io.reactivex.Maybe;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -47,10 +49,28 @@ public class ReactiveController {
         return Observable.just(SNOOPY);
     }
 
-
     @GET
-    @Path("/observable")
+    @Path("/observable2")
     public io.reactivex.Observable<Dog> getSingleObservable2() {
         return io.reactivex.Observable.just(SNOOPY);
     }
+
+    @GET
+    @Path("/completable")
+    public Completable getCompletable() {
+        return Completable.complete();
+    }
+
+    @GET
+    @Path("/completable2")
+    public io.reactivex.Completable getCompletable2() {
+        return io.reactivex.Completable.complete();
+    }
+
+    @GET
+    @Path("/maybe")
+    public Maybe<Dog> getMaybe() {
+        return Maybe.just(SNOOPY);
+    }
+
 }

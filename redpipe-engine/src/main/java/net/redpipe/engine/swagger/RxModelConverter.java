@@ -1,5 +1,7 @@
 package net.redpipe.engine.swagger;
 
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.swagger.converter.ModelConverter;
@@ -17,17 +19,26 @@ import java.util.List;
 public class RxModelConverter implements ModelConverter {
 
     private static final List<String> delegateToFirstTypeArg = new ArrayList<>();
+    private static final List<String> discardType = new ArrayList<>();
     static {
         delegateToFirstTypeArg.add(Single.class.getName());
         delegateToFirstTypeArg.add(Observable.class.getName());
         delegateToFirstTypeArg.add(rx.Single.class.getName());
         delegateToFirstTypeArg.add(rx.Observable.class.getName());
+        delegateToFirstTypeArg.add(Maybe.class.getName());
+    }
+    static {
+        discardType.add(Completable.class.getName());
+        discardType.add(rx.Completable.class.getName());
     }
 
 
     @Override
     public Property resolveProperty(Type type, ModelConverterContext context, Annotation[] annotations, Iterator<ModelConverter> chain) {
         Type delegateType = type;
+        if (discardType.contains(type.getTypeName())) {
+            return null; // break the chain => ignore type
+        }
         if (type instanceof ParameterizedType) {
             ParameterizedType param = (ParameterizedType) type;
             if (delegateToFirstTypeArg.contains(param.getRawType().getTypeName())) {
@@ -40,6 +51,9 @@ public class RxModelConverter implements ModelConverter {
     @Override
     public Model resolve(Type type, ModelConverterContext context, Iterator<ModelConverter> chain) {
         Type delegateType = type;
+        if (discardType.contains(type.getTypeName())) {
+            return null; // break the chain => ignore type
+        }
         if (type instanceof ParameterizedType) {
             ParameterizedType param = (ParameterizedType) type;
             if (delegateToFirstTypeArg.contains(param.getRawType().getTypeName())) {
