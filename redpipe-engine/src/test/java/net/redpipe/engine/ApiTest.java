@@ -36,7 +36,7 @@ public class ApiTest {
 		Async async = context.async();
 
 		server = new Server();
-		server.start(TestResource.class, TestResourceRxJava1.class)
+		server.start(TestResource.class, TestResourceRxJava1.class, TestResourceEmpty.class)
 		.subscribe(() -> {
 			webClient = WebClient.create(server.getVertx(),
 					new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000));
@@ -257,7 +257,7 @@ public class ApiTest {
 	public void checkHelloObservableSSERx1(TestContext context) {
 		checkHelloObservableSSE("/rx1", context);
 	}
-	
+
 	private void checkHelloObservableSSE(String prefix, TestContext context) {
 		CountDownLatch latch = new CountDownLatch(2);
 		Client client = ClientBuilder.newClient();
@@ -280,5 +280,51 @@ public class ApiTest {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Test
+	public void checkCompletableRx1(TestContext context) {
+		checkCompletable("completable1", context);
+	}
+
+	@Test
+	public void checkCompletableRx2(TestContext context) {
+		checkCompletable("completable2", context);
+	}
+
+	@Test
+	public void checkEmptyMaybe(TestContext context) {
+		checkEmpty("maybe/empty", context, 404);
+	}
+
+	@Test
+	public void checkFulfilledMaybe(TestContext context) {
+		Async async = context.async();
+		webClient
+		.get("/empty/maybe/fulfilled")
+		.rxSend()
+		.doOnError(context::fail)
+		.subscribe(resp -> {
+			context.assertEquals(200, resp.statusCode());
+			context.assertNotNull(resp.bodyAsString());
+			async.complete();
+		});
+	}
+
+	private void checkCompletable(String suffix, TestContext context) {
+		checkEmpty(suffix, context, 204);
+	}
+
+	private void checkEmpty(String suffix, TestContext context, int expectedStatus) {
+		Async async = context.async();
+		webClient
+		.get("/empty/" + suffix)
+		.rxSend()
+		.doOnError(context::fail)
+		.subscribe(resp -> {
+			context.assertEquals(expectedStatus, resp.statusCode());
+			context.assertNull(resp.body());
+			async.complete();
+		});
 	}
 }

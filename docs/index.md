@@ -148,10 +148,10 @@ you should see `HelloWorld`.
 ## RxJava support
 
 Out of the box, we support RxJava's [`Single`](http://reactivex.io/documentation/single.html)
-and [`Observable`](http://reactivex.io/documentation/observable.html) types for both RxJava 1 and 2,
+and [`Observable`](http://reactivex.io/documentation/observable.html), [`Completable`](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Completable.html) and [`Maybe`](http://reactivex.io/RxJava/javadoc/io/reactivex/Maybe.html) types for both RxJava 1 and 2,
 although use of RxJava 2 is recommended because RxJava 1 is deprecated.
 
-If your resource returns a `Single<T>`, the `T` will be send to your client asynchronously as if you
+If your resource returns a `Single<T>`, the `T` will be sent to your client asynchronously as if you
 returned it directly. In particular, standard and custom
 [`MessageBodyWriter<T>`](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/ext/MessageBodyWriter.html)
 apply as soon as the `Single` is _resolved_, as do 
@@ -170,6 +170,15 @@ If your resource returns an `Observable<T>`:
   [Server-Sent Events](https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events)
   (SSE). As always, standard and custom body writers
   are called to serialise your entities to events.
+
+If your resource returns a `Completable`, an HTTP Response with status code 204 will be returned once the completable 
+is _resolved_.
+
+If your resource returns a `Maybe<T>`, then the following response will be sent asynchronously once the maybe is
+resolved:
+- If the maybe is empty: an empty HTTP response using __HTTP status code `404`__ indicating the resource has not been found
+- If the maybe has been fulfilled with an object of type `T`: an HTTP response __with status code `200`__, 
+using the proper [`MessageBodyWriter<T>`](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/ext/MessageBodyWriter.html) 
 
 ## Fibers
 
