@@ -9,6 +9,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.jboss.resteasy.annotations.Stream;
+import org.jboss.resteasy.annotations.Stream.MODE;
 
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpServerRequest;
@@ -48,7 +49,7 @@ public class TestResourceRxJava1 {
 		return Single.just("hello");
 	}
 
-	@Stream
+	@Stream(MODE.RAW)
 	@Path("hello-observable")
 	@GET
 	public Observable<String> helloObservable() {
