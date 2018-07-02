@@ -1,44 +1,46 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>net.redpipe</groupId>
-		<artifactId>redpipe-parent</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
-	</parent>
-	<artifactId>redpipe-prototyping</artifactId>
-	<name>redpipe-prototyping</name>
-	<url>http://maven.apache.org</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.redpipe</groupId>
+        <artifactId>redpipe-parent</artifactId>
+        <version>0.0.3-SNAPSHOT</version>
+    </parent>
+    <artifactId>redpipe-prototyping</artifactId>
+    <name>redpipe-prototyping</name>
+    <url>http://maven.apache.org</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-engine</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-engine</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-fibers</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.vlkan</groupId>
-				<artifactId>quasar-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-fibers</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vlkan</groupId>
+                <artifactId>quasar-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

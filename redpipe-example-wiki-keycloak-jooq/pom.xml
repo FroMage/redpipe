@@ -1,174 +1,175 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>net.redpipe</groupId>
-		<artifactId>redpipe-parent</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
-	</parent>
-	<artifactId>redpipe-example-wiki-keycloak-jooq</artifactId>
-	<name>redpipe-example-wiki-keycloak-jooq</name>
-	<url>http://maven.apache.org</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.redpipe</groupId>
+        <artifactId>redpipe-parent</artifactId>
+        <version>0.0.3-SNAPSHOT</version>
+    </parent>
+    <artifactId>redpipe-example-wiki-keycloak-jooq</artifactId>
+    <name>redpipe-example-wiki-keycloak-jooq</name>
+    <url>http://maven.apache.org</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-unit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>1.4.3</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>42.1.4</version>
-			<scope>test</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-unit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.4.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.1.4</version>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-engine</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-engine</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-fibers</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-fibers</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-router</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-router</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-templating-freemarker</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-templating-freemarker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-fast-classpath-scanner</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-fast-classpath-scanner</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-mysql-postgresql-client</artifactId>
-			<version>${version.vertx}</version>
-		</dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mysql-postgresql-client</artifactId>
+            <version>${version.vertx}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-auth-jwt</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-auth-jwt</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-auth-oauth2</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-auth-oauth2</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava-reactive-streams</artifactId>
         </dependency>
 
-		<dependency>
-			<groupId>io.github.jklingsporn</groupId>
-			<artifactId>vertx-jooq-rx-async</artifactId>
-			<version>3.1.0</version>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>io.github.jklingsporn</groupId>
+            <artifactId>vertx-jooq-rx-async</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+    </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.vlkan</groupId>
-				<artifactId>quasar-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<!-- Specify the maven code generator plugin -->
-				<groupId>org.jooq</groupId>
-				<artifactId>jooq-codegen-maven</artifactId>
-				<version>3.10.5</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.vlkan</groupId>
+                <artifactId>quasar-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <!-- Specify the maven code generator plugin -->
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>3.10.5</version>
 
-				<!-- The plugin should hook into the generate goal -->
-				<executions>
-					<execution>
-						<goals>
-							<!-- 
-							-->
-							<goal>generate</goal> 
-						</goals>
-					</execution>
-				</executions>
+                <!-- The plugin should hook into the generate goal -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <!-- -->
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
 
-				<dependencies>
-					<dependency>
-						<groupId>org.postgresql</groupId>
-						<artifactId>postgresql</artifactId>
-						<version>42.1.4</version>
-					</dependency>
-					<dependency>
-						<groupId>io.github.jklingsporn</groupId>
-						<artifactId>vertx-jooq-generate</artifactId>
-						<version>3.1.0</version>
-					</dependency>
-				</dependencies>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.1.4</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.github.jklingsporn</groupId>
+                        <artifactId>vertx-jooq-generate</artifactId>
+                        <version>3.1.0</version>
+                    </dependency>
+                </dependencies>
 
-				<!-- Specify the plugin configuration. The configuration format is the same as for the standalone code generator -->
-				<configuration>
-					<!-- JDBC connection parameters -->
-					<jdbc>
-						<driver>org.postgresql.Driver</driver>
-						<url>jdbc:postgresql:redpipewiki</url>
-						<user>redpipewiki</user>
-						<password>redpipewiki</password>
-					</jdbc>
+                <!-- Specify the plugin configuration. The configuration format is the same as for the standalone code generator -->
+                <configuration>
+                    <!-- JDBC connection parameters -->
+                    <jdbc>
+                        <driver>org.postgresql.Driver</driver>
+                        <url>jdbc:postgresql:redpipewiki</url>
+                        <user>redpipewiki</user>
+                        <password>redpipewiki</password>
+                    </jdbc>
 
-					<!-- Generator parameters -->
-					<generator>
-						<name>io.github.jklingsporn.vertx.jooq.generate.VertxGenerator</name>
-						<database>
-							<name>org.jooq.util.postgres.PostgresDatabase</name>
-							<includes>.*</includes>
-							<inputSchema>public</inputSchema>
-						</database>
-						<target>
-							<!-- This is where jOOQ will put your files -->
-							<packageName>net.redpipe.example.wiki.keycloakJooq.jooq</packageName>
-							<directory>src/main/java</directory>
-						</target>
-						<generate>
-							<interfaces>true</interfaces>
-							<daos>true</daos>
-							<fluentSetters>true</fluentSetters>
-						</generate>
+                    <!-- Generator parameters -->
+                    <generator>
+                        <name>io.github.jklingsporn.vertx.jooq.generate.VertxGenerator</name>
+                        <database>
+                            <name>org.jooq.util.postgres.PostgresDatabase</name>
+                            <includes>.*</includes>
+                            <inputSchema>public</inputSchema>
+                        </database>
+                        <target>
+                            <!-- This is where jOOQ will put your files -->
+                            <packageName>net.redpipe.example.wiki.keycloakJooq.jooq</packageName>
+                            <directory>src/main/java</directory>
+                        </target>
+                        <generate>
+                            <interfaces>true</interfaces>
+                            <daos>true</daos>
+                            <fluentSetters>true</fluentSetters>
+                        </generate>
 
 
-						<strategy>
-							<name>io.github.jklingsporn.vertx.jooq.generate.rx.AsyncRXVertxGeneratorStrategy</name>
-						</strategy>
-					</generator>
+                        <strategy>
+                            <name>io.github.jklingsporn.vertx.jooq.generate.rx.AsyncRXVertxGeneratorStrategy</name>
+                        </strategy>
+                    </generator>
 
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

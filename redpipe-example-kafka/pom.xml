@@ -1,63 +1,65 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>net.redpipe</groupId>
-		<artifactId>redpipe-parent</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
-	</parent>
-	<artifactId>redpipe-example-kafka</artifactId>
-	<name>redpipe-example-kafka</name>
-	<url>http://maven.apache.org</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.redpipe</groupId>
+        <artifactId>redpipe-parent</artifactId>
+        <version>0.0.3-SNAPSHOT</version>
+    </parent>
+    <artifactId>redpipe-example-kafka</artifactId>
+    <name>redpipe-example-kafka</name>
+    <url>http://maven.apache.org</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<kafka.version>1.0.0</kafka.version>
-		<debezium.version>0.7.1</debezium.version>
-	</properties>
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <kafka.version>1.0.0</kafka.version>
+        <debezium.version>0.7.1</debezium.version>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-engine</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-engine</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-fast-classpath-scanner</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-fast-classpath-scanner</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-kafka-client</artifactId>
-			<version>${version.vertx}</version>
-		</dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-kafka-client</artifactId>
+            <version>${version.vertx}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>io.debezium</groupId>
-			<artifactId>debezium-core</artifactId>
-			<version>${debezium.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-core</artifactId>
+            <version>${debezium.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>io.debezium</groupId>
-			<artifactId>debezium-core</artifactId>
-			<version>${debezium.version}</version>
-			<type>test-jar</type>
-		</dependency>
+        <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-core</artifactId>
+            <version>${debezium.version}</version>
+            <type>test-jar</type>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka_2.11</artifactId>
-			<version>${kafka.version}</version>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.11</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
+    </dependencies>
 </project>
