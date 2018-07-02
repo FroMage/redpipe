@@ -7,9 +7,9 @@ import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ContextInjector;
 
-import io.vertx.rxjava.ext.sql.SQLConnection;
+import io.reactivex.Single;
+import io.vertx.reactivex.ext.sql.SQLConnection;
 import net.redpipe.engine.core.AppGlobals;
-import rx.Single;
 
 @Provider
 public class SQLConnectionInjector implements ContextInjector<Single<SQLConnection>, SQLConnection>{

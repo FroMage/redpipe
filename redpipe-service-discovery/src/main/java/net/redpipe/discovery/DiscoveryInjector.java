@@ -7,10 +7,10 @@ import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.spi.ContextInjector;
 
-import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
+import io.reactivex.Single;
+import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.Record;
 import net.redpipe.engine.core.AppGlobals;
-import rx.Single;
 
 @Provider
 public class DiscoveryInjector implements ContextInjector<Single<Record>,Record> {
