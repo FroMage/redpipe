@@ -21,6 +21,13 @@
 		</dependency>
 
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-unit</artifactId>
+            <version>${version.vertx}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>net.redpipe</groupId>
             <artifactId>redpipe-engine</artifactId>
             <version>${project.version}</version>

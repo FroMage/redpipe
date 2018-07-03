@@ -1,1 +1,2 @@
-net.redpipe.discovery.DiscoveryInjector
+net.redpipe.discovery.DiscoveryRecordInjector
+net.redpipe.discovery.DiscoveryWebClientInjector

@@ -8,20 +8,22 @@ import javax.ws.rs.ext.Provider;
 import org.jboss.resteasy.spi.ContextInjector;
 
 import io.reactivex.Single;
+import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.servicediscovery.ServiceDiscovery;
-import io.vertx.servicediscovery.Record;
 import net.redpipe.engine.core.AppGlobals;
 
 @Provider
-public class DiscoveryInjector implements ContextInjector<Single<Record>,Record> {
+public class DiscoveryWebClientInjector implements ContextInjector<Single<WebClient>,WebClient> {
 
 	@Override
-	public Single<Record> resolve(Class<? extends Single<Record>> rawType, Type genericType, Annotation[] annotations) {
+	public Single<WebClient> resolve(Class<? extends Single<WebClient>> rawType, Type genericType, Annotation[] annotations) {
 		ServiceDiscovery discovery = AppGlobals.get().getGlobal(ServiceDiscovery.class);
 		for (Annotation annotation : annotations) {
 			if(annotation.annotationType() == ServiceName.class) {
 				String serviceName = ((ServiceName) annotation).value();
-				return discovery.rxGetRecord(record -> record.getName().equals(serviceName));
+				// FIXME: release client
+				return discovery.rxGetRecord(record -> record.getName().equals(serviceName))
+						.map(record -> discovery.getReference(record).getAs(WebClient.class));
 			}
 		}
 		return null;
