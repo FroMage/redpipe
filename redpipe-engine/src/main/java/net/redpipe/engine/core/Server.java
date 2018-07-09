@@ -20,9 +20,9 @@ import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
+import io.reactiverse.reactivecontexts.core.Context;
 import io.reactivex.Completable;
 import io.reactivex.Single;
-import io.reactivex.plugins.RxJavaPlugins;
 import io.swagger.converter.ModelConverters;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
@@ -51,22 +51,9 @@ import io.vertx.reactivex.ext.web.handler.SessionHandler;
 import io.vertx.reactivex.ext.web.sstore.LocalSessionStore;
 import net.redpipe.engine.dispatcher.VertxPluginRequestHandler;
 import net.redpipe.engine.resteasy.RedpipeServletContext;
-import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnObservableCreateAction;
-import net.redpipe.engine.rxjava.ResteasyContextPropagatingOnSingleCreateAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnCompletableAssemblyAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnCompletableCreateAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnFlowableAssemblyAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnFlowableCreateAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnMaybeAssemblyAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnMaybeCreateAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnObservableAssemblyAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnObservableCreateAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnSingleAssemblyAction;
-import net.redpipe.engine.rxjava2.ContextPropagatorOnSingleCreateAction;
 import net.redpipe.engine.spi.Plugin;
 import net.redpipe.engine.swagger.RxModelConverter;
 import net.redpipe.engine.template.TemplateRenderer;
-import rx.plugins.RxJavaHooks;
 
 public class Server {
 	
@@ -95,22 +82,8 @@ public class Server {
 			options.setWarningExceptionTime(Long.MAX_VALUE);
 			AppGlobals.init();
 
-			// Propagate the Resteasy context on RxJava1
-			RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
-			RxJavaHooks.setOnObservableCreate(new ResteasyContextPropagatingOnObservableCreateAction());
-
-			// Propagate the Resteasy context on RxJava2
-			RxJavaPlugins.setOnSingleSubscribe(new ContextPropagatorOnSingleCreateAction());
-			RxJavaPlugins.setOnCompletableSubscribe(new ContextPropagatorOnCompletableCreateAction());
-			RxJavaPlugins.setOnFlowableSubscribe(new ContextPropagatorOnFlowableCreateAction());
-			RxJavaPlugins.setOnMaybeSubscribe(new ContextPropagatorOnMaybeCreateAction());
-			RxJavaPlugins.setOnObservableSubscribe(new ContextPropagatorOnObservableCreateAction());
-			
-			RxJavaPlugins.setOnSingleAssembly(new ContextPropagatorOnSingleAssemblyAction());
-			RxJavaPlugins.setOnCompletableAssembly(new ContextPropagatorOnCompletableAssemblyAction());
-			RxJavaPlugins.setOnFlowableAssembly(new ContextPropagatorOnFlowableAssemblyAction());
-			RxJavaPlugins.setOnMaybeAssembly(new ContextPropagatorOnMaybeAssemblyAction());
-			RxJavaPlugins.setOnObservableAssembly(new ContextPropagatorOnObservableAssemblyAction());
+			// Propagate the Resteasy/Redpipe/CDI contexts
+			Context.load();
 
 			JsonObject config = loadFileConfig(defaultConfig);
 			AppGlobals.get().setConfig(config);

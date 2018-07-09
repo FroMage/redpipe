@@ -26,8 +26,9 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<version.vertx>3.5.1</version.vertx>
-		<version.resteasy>4.0.0.Beta4</version.resteasy>
+		<version.resteasy>4.0.0-SNAPSHOT</version.resteasy>
 		<version.jackson>2.9.1</version.jackson>
+        <version.reactive-contexts>1.0.0</version.reactive-contexts>
 	</properties>
 
 	<developers>
@@ -217,6 +218,18 @@
 				<version>${version.resteasy}</version>
 			</dependency>
 
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-rxjava</artifactId>
+                <version>${version.resteasy}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-rxjava2</artifactId>
+                <version>${version.resteasy}</version>
+            </dependency>
+
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-core</artifactId>
@@ -319,6 +332,13 @@
 				<artifactId>hibernate-validator-cdi</artifactId>
 				<version>5.4.1.Final</version>
 			</dependency>
+
+            <!-- Reactive contexts -->
+            <dependency>
+                <groupId>io.reactiverse</groupId>
+                <artifactId>reactive-contexts-core</artifactId>
+                <version>${version.reactive-contexts}</version>
+            </dependency>
 		</dependencies>
 	</dependencyManagement>
 
