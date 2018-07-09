@@ -134,7 +134,7 @@ If you want to return a stream, you have three options for how to serialise them
 To send Hello World as a stream, simply add this method to your resource:
 
 {% highlight java %}
-@Stream
+@Stream(Mode.RAW)
 @Path("stream")
 @GET
 public Observable<String> helloStream() {
@@ -411,16 +411,8 @@ injected:
   <th>Description</th>
  </tr>
  <tr>
-  <td>io.vertx.core.Vertx</td>
-  <td>The Vert.x instance.</td>
- </tr>
- <tr>
   <td>io.vertx.reactivex.core.Vertx</td>
-  <td>The Vert.x instance (RxJava 2).</td>
- </tr>
- <tr>
-  <td>io.vertx.rxjava.core.Vertx</td>
-  <td>The Vert.x instance (RxJava 1).</td>
+  <td>The Vert.x instance (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
   <td>net.redpipe.engine.core.AppGlobals</td>
@@ -436,59 +428,35 @@ injected:
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.web.RoutingContext</td>
-  <td>The Vert.x Web <code>RoutingContext</code> (RxJava 2).</td>
- </tr>
- <tr>
-  <td>io.vertx.rxjava.ext.web.RoutingContext</td>
-  <td>The Vert.x Web <code>RoutingContext</code> (RxJava 1).</td>
+  <td>The Vert.x Web <code>RoutingContext</code> (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.core.http.HttpServerRequest</td>
-  <td>The Vert.x request (RxJava 2).</td>
- </tr>
- <tr>
-  <td>io.vertx.rxjava.core.http.HttpServerRequest</td>
-  <td>The Vert.x request (RxJava 1).</td>
- </tr>
- <tr>
-  <td>io.vertx.core.http.HttpServerRequest</td>
-  <td>The Vert.x request.</td>
+  <td>The Vert.x request (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.core.http.HttpServerResponse</td>
-  <td>The Vert.x response (RxJava 2).</td>
- </tr>
- <tr>
-  <td>io.vertx.rxjava.core.http.HttpServerResponse</td>
-  <td>The Vert.x response (RxJava 1).</td>
- </tr>
- <tr>
-  <td>io.vertx.core.http.HttpServerResponse</td>
-  <td>The Vert.x response.</td>
+  <td>The Vert.x response (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.auth.AuthProvider</td>
-  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>) (RxJava 2).</td>
- </tr>
- <tr>
-  <td>io.vertx.rxjava.ext.auth.AuthProvider</td>
-  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>) (RxJava 1).</td>
+  <td>The Vert.x <code>AuthProvider</code> instance, if any (defaults to <code>null</code>) (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.auth.User</td>
-  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>) (RxJava 2).</td>
- </tr>
- <tr>
-  <td>io.vertx.rxjava.ext.auth.User</td>
-  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>) (RxJava 1).</td>
+  <td>The Vert.x <code>User</code>, if any (defaults to <code>null</code>) (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
   <td>io.vertx.reactivex.ext.web.Session</td>
-  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>) (RxJava 2).</td>
+  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>) (Also available as RxJava 1 & core).</td>
  </tr>
  <tr>
-  <td>io.vertx.rxjava.ext.web.Session</td>
-  <td>The Vert.x Web <code>Session</code> instance, if any (defaults to <code>null</code>) (RxJava 1).</td>
+  <td>io.vertx.reactivex.ext.sql.SQLConnection</td>
+  <td>An <code>SQLConnection</code> (Also available as RxJava 1 & core).</td>
+ </tr>
+ <tr>
+  <td>@HasPermission("permission") boolean</td>
+  <td>True if there is a current user and he has that permission.</td>
  </tr>
 </table> 
 
@@ -645,8 +613,7 @@ You can get a `Single<SQLConnection>` with `SQLUtil.getConnection()`. Alternatel
 {% highlight java %}
 @POST
 @Path("pages")
-public Single<Response> apiCreatePage(JsonObject page, 
-                                      @Context HttpServerRequest req){
+public Single<Response> apiCreatePage(JsonObject page){
   JsonArray params = new JsonArray();
   params.add(page.getString("name"))
         .add(page.getString("markdown"));
@@ -655,6 +622,23 @@ public Single<Response> apiCreatePage(JsonObject page,
           .map(res -> Response.status(Status.CREATED).build());
 }
 {% endhighlight %}
+
+It is also possible to get a `SQLConnection` injected:
+
+{% highlight java %}
+@POST
+@Path("pages")
+public Single<Response> apiCreatePage(JsonObject page, 
+                                      @Context SQLConnection connection){
+  JsonArray params = new JsonArray();
+  params.add(page.getString("name"))
+        .add(page.getString("markdown"));
+
+  return connection.rxUpdateWithParams(SQL.SQL_CREATE_PAGE, params)
+          .map(res -> Response.status(Status.CREATED).build());
+}
+{% endhighlight %}
+
 
 #### Custom data-base set-up
 
@@ -712,7 +696,9 @@ checks:
 - `@RequiresUser`: requires that the current user exists,
 - `@NoAuthFilter`: disables authorization checks,
 - `@NoAuthRedirect`: return an HTTP FORBIDDEN (403) instead of a redirect to the login page, if authorization fails.
- 
+
+You can also inject permissions as a `boolean` with the `@Context @HasPermission("permission-name")` annotations.
+
 #### Keycloak
 
 Install [Keycloak](http://www.keycloak.org), start and configure it.
