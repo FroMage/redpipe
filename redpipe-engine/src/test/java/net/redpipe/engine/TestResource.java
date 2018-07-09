@@ -1,5 +1,7 @@
 package net.redpipe.engine;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -20,6 +22,10 @@ import io.vertx.reactivex.ext.auth.AuthProvider;
 import io.vertx.reactivex.ext.auth.User;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.Session;
+import net.redpipe.engine.security.HasPermission;
+import net.redpipe.engine.security.NoAuthRedirect;
+import net.redpipe.engine.security.RequiresPermissions;
+import net.redpipe.engine.security.RequiresUser;
 
 @Path("/")
 public class TestResource {
@@ -74,5 +80,34 @@ public class TestResource {
 	@GET
 	public Observable<String> helloObservableSse() {
 		return Observable.fromArray("one", "two");
+	}
+
+	@NoAuthRedirect
+	@RequiresUser
+	@Path("inject-user")
+	@GET
+	public String injectUser(@Context User user,
+			@Context AuthProvider authProvider) {
+		if(user == null
+				|| authProvider == null)
+			throw new WebApplicationException(Status.INTERNAL_SERVER_ERROR);
+		return "ok";
+	}
+
+	@NoAuthRedirect
+	@RequiresPermissions("create")
+	@Path("auth-create")
+	@GET
+	public Single<String> authCreate() {
+		return Single.just("ok").delay(1, TimeUnit.SECONDS);
+	}
+
+	@NoAuthRedirect
+	@RequiresUser
+	@Path("auth-check")
+	@GET
+	public Single<Boolean> authCheck(@Context User user,
+			@Context @HasPermission("create") boolean second) {
+		return user.rxIsAuthorised("create").map(first -> first && second);
 	}
 }

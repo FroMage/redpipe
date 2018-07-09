@@ -1,11 +1,15 @@
 package net.redpipe.engine;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.sse.SseEventSource;
 
 import org.junit.After;
@@ -17,12 +21,21 @@ import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.shiro.ShiroAuthOptions;
+import io.vertx.ext.auth.shiro.ShiroAuthRealmType;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.reactivex.ext.auth.AuthProvider;
+import io.vertx.reactivex.ext.auth.shiro.ShiroAuth;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
+import io.vertx.reactivex.ext.web.handler.AuthHandler;
+import io.vertx.reactivex.ext.web.handler.BasicAuthHandler;
+import io.vertx.reactivex.ext.web.handler.UserSessionHandler;
+import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.core.Server;
 
 @RunWith(VertxUnitRunner.class)
@@ -35,7 +48,40 @@ public class ApiTest {
 	public void prepare(TestContext context) throws IOException {
 		Async async = context.async();
 
-		server = new Server();
+		server = new Server() {
+			@Override
+			protected AuthProvider setupAuthenticationRoutes() {
+				AppGlobals globals = AppGlobals.get();
+				AuthProvider auth = ShiroAuth.create(globals.getVertx(), new ShiroAuthOptions()
+						.setType(ShiroAuthRealmType.PROPERTIES)
+						.setConfig(new JsonObject()));
+				
+				globals.getRouter().route().handler(UserSessionHandler.create(auth));
+
+				AuthHandler authHandler = BasicAuthHandler.create(auth);
+
+				globals.getRouter().route().handler(context -> {
+					// only filter if we have a header, otherwise it will try to force auth, regardless if whether
+					// we want auth
+					if(context.request().getHeader(HttpHeaders.AUTHORIZATION) != null) {
+						// make sure we pause until we're ready to read
+						context.request().pause();
+						authHandler.handle(context);
+					}else
+						context.next();
+				});
+				globals.getRouter().route().handler(context -> {
+					// unpause now that we have auth
+					if(context.request().getHeader(HttpHeaders.AUTHORIZATION) != null) {
+						context.request().resume();
+					}
+					context.next();
+				});
+
+				return auth;
+			}
+
+		};
 		server.start(TestResource.class, TestResourceRxJava1.class, TestResourceEmpty.class)
 		.subscribe(() -> {
 			webClient = WebClient.create(server.getVertx(),
@@ -133,10 +179,19 @@ public class ApiTest {
 
 	@Test
 	public void checkInject(TestContext context) {
+		checkInject("", context);
+	}
+	
+	@Test
+	public void checkInjectRx1(TestContext context) {
+		checkInject("/rx1", context);
+	}
+
+	private void checkInject(String prefix, TestContext context) {
 		Async async = context.async();
 
 		webClient
-		.get("/inject")
+		.get(prefix+"/inject")
 		.as(BodyCodec.string())
 		.rxSend()
 		.map(r -> {
@@ -150,15 +205,195 @@ public class ApiTest {
 	}
 
 	@Test
-	public void checkInjectRx1(TestContext context) {
+	public void checkInjectUser(TestContext context) {
+		checkInjectUser("", context);
+	}
+	
+	@Test
+	public void checkInjectUserRx1(TestContext context) {
+		checkInjectUser("/rx1", context);
+	}
+
+	private void checkInjectUser(String prefix, TestContext context) {
 		Async async = context.async();
 
 		webClient
-		.get("/rx1/inject")
+		.get(prefix+"/inject-user")
+		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:w00t".getBytes(Charset.forName("us-ascii"))))
 		.as(BodyCodec.string())
 		.rxSend()
 		.map(r -> {
 			context.assertEquals("ok", r.body());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkInjectUserRequired(TestContext context) {
+		checkInjectUserRequired("", context);
+	}
+	
+	@Test
+	public void checkInjectUserRequiredRx1(TestContext context) {
+		checkInjectUserRequired("/rx1", context);
+	}
+
+	private void checkInjectUserRequired(String prefix, TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get(prefix+"/inject-user")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.UNAUTHORIZED.getStatusCode(), r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkInjectUserInvalid(TestContext context) {
+		checkInjectUserInvalid("", context);
+	}
+	
+	@Test
+	public void checkInjectUserInvalidRx1(TestContext context) {
+		checkInjectUserInvalid("/rx1", context);
+	}
+
+	private void checkInjectUserInvalid(String prefix, TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get(prefix+"/inject-user")
+		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:invalid".getBytes(Charset.forName("us-ascii"))))
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.UNAUTHORIZED.getStatusCode(), r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkAuthRoleForbidden(TestContext context) {
+		checkAuthRoleForbidden("", context);
+	}
+	
+	@Test
+	public void checkAuthRoleForbiddenRx1(TestContext context) {
+		checkAuthRoleForbidden("/rx1", context);
+	}
+
+	private void checkAuthRoleForbidden(String prefix, TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get(prefix+"/auth-create")
+		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("bar:gee".getBytes(Charset.forName("us-ascii"))))
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.FORBIDDEN.getStatusCode(), r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkAuthRoleOK(TestContext context) {
+		checkAuthRoleOK("", context);
+	}
+	
+	@Test
+	public void checkAuthRoleOKRx1(TestContext context) {
+		checkAuthRoleOK("/rx1", context);
+	}
+
+	private void checkAuthRoleOK(String prefix, TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get(prefix+"/auth-create")
+		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:w00t".getBytes(Charset.forName("us-ascii"))))
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.OK.getStatusCode(), r.statusCode());
+			context.assertEquals("ok", r.body());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkAuthRoleCheckOK(TestContext context) {
+		checkAuthRoleCheckOK("", context);
+	}
+	
+	@Test
+	public void checkAuthRoleCheckOKRx1(TestContext context) {
+		checkAuthRoleCheckOK("/rx1", context);
+	}
+
+	private void checkAuthRoleCheckOK(String prefix, TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get(prefix+"/auth-check")
+		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:w00t".getBytes(Charset.forName("us-ascii"))))
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.OK.getStatusCode(), r.statusCode());
+			context.assertEquals("true", r.body());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkAuthRoleCheckDenied(TestContext context) {
+		checkAuthRoleCheckDenied("", context);
+	}
+	
+	@Test
+	public void checkAuthRoleCheckDeniedRx1(TestContext context) {
+		checkAuthRoleCheckDenied("/rx1", context);
+	}
+
+	private void checkAuthRoleCheckDenied(String prefix, TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get(prefix+"/auth-check")
+		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("bar:gee".getBytes(Charset.forName("us-ascii"))))
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.OK.getStatusCode(), r.statusCode());
+			context.assertEquals("false", r.body());
 			return r;
 		})
 		.doOnError(x -> context.fail(x))
