@@ -31,12 +31,14 @@ import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.auth.User;
+import io.vertx.reactivex.ext.sql.SQLConnection;
 import io.vertx.reactivex.ext.web.client.HttpResponse;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import io.vertx.rxjava.ext.web.Session;
 import net.redpipe.engine.core.MainResource;
 import net.redpipe.engine.security.AuthorizationException;
+import net.redpipe.engine.security.HasPermission;
 import net.redpipe.engine.security.RequiresPermissions;
 import net.redpipe.engine.security.RequiresUser;
 import net.redpipe.engine.template.Template;
@@ -73,6 +75,26 @@ public class WikiResource {
 					.set("canCreatePage", canCreatePage)
 					.set("username", getUserName())
 					.set("backup_gist_url", flash.get("backup_gist_url"));
+		});
+	}
+
+	@GET
+	@Path("index2")
+	public Single<Template> index2(@Context SQLConnection connection,
+			@Context @HasPermission("create") boolean canCreatePage){
+		return connection.rxQuery(SQL.SQL_ALL_PAGES)
+				.map(res -> {
+					List<String> pages = res.getResults()
+							.stream()
+							.map(json -> json.getString(0))
+							.sorted()
+							.collect(Collectors.toList());
+					return new Template("templates/index.ftl")
+							.set("title", "Wiki home")
+							.set("pages", pages)
+							.set("canCreatePage", canCreatePage)
+							.set("username", getUserName())
+							.set("backup_gist_url", flash.get("backup_gist_url"));
 		});
 	}
 
