@@ -71,6 +71,9 @@ entries:
       - title: Serving index.html by default
         url: /#serving-indexhtml-at--by-default
         output: web
+  - title: Service Discovery
+    url: /#service-discovery
+    output: web
   - title: Plugins
     url: /#plugins
     output: web

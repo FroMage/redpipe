@@ -578,6 +578,47 @@ public class AppResource extends FileResource {
 
 Your home page will then be accessible from the root path (eg: [http://localhost:9000](http://localhost:9000)).
 
+## Service discovery
+
+You can declare and inject service records using the following optional module:
+
+{% highlight xml %}
+<dependency>
+  <groupId>net.redpipe</groupId>
+  <artifactId>redpipe-service-discovery</artifactId>
+  <version>{{page.version}}</version>
+</dependency>
+{% endhighlight %}
+
+Use the `@ServiceName` annotation to declare a service:
+
+{% highlight java %}
+@Path("/test")
+public class TestResource {
+
+    @ServiceName("hello-service")
+    @Path("hello")
+    @GET
+    public String hello() {
+        return "hello";
+    }
+}
+{% endhighlight %}
+
+The same annotation can be used to look up services:
+
+{% highlight java %}
+    @Path("service-user")
+    @GET
+    public String serviceDiscovery(@Context @ServiceName("hello-service") Record record,
+            @Context @ServiceName("hello-service") WebClient client) {
+        // You can use Record, or directly get a WebClient
+    }
+{% endhighlight %}
+
+By default, if running on Kubernetes, Kubernetes services will be imported and available.
+Note that services declared using `@ServiceName` will not be exported to Kubernetes, but
+you can declare them in your build using [Fabric8](#declaring-services-with-fabric8).
 
 ## Plugins
 
@@ -1021,6 +1062,63 @@ And then configure your `pom.xml` so that it creates a fat-jar with the proper m
 Then, just follow the [official guidelines](https://docs.openshift.com/online/using_images/s2i_images/java.html) by
 pushing your code to GitHub and starting an image with it. You can even try our sample app at 
 `https://github.com/FroMage/redpipe-openshift-helloworld.git` (no context dir).
+
+Alternately, you can use [Fabric8](http://maven.fabric8.io/) to build and deploy your module by adding this to your
+`pom.xml`:
+
+{% highlight xml %}
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>fabric8-maven-plugin</artifactId>
+                <version>3.5.38</version>
+            </plugin>
+        </plugins>
+    </build>
+{% endhighlight %}
+
+#### Declaring services with Fabric8
+
+You can declare Kubernetes services, labels and annotations with this configuration:
+
+{% highlight xml %}
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>fabric8-maven-plugin</artifactId>
+                <version>3.5.38</version>
+                <configuration>
+                    <resources>
+                        <labels>
+                            <service>
+                                <property>
+                                    <name>MyLabel</name>
+                                    <value>MyValue</value>
+                                </property>
+                            </service>
+                        </labels>
+                        <annotations>
+                            <service>
+                                <property>
+                                    <name>MyAnnotation</name>
+                                    <value>MyValue</value>
+                                </property>
+                            </service>
+                        </annotations>
+                        <services>
+                            <service>
+                                <name>MyService</name>
+                            </service>
+                        </services>
+                    </resources>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+{% endhighlight %}
+
 
 ### Run your WebApp with Maven
 
