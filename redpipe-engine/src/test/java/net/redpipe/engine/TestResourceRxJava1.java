@@ -24,6 +24,7 @@ import net.redpipe.engine.security.HasPermission;
 import net.redpipe.engine.security.NoAuthRedirect;
 import net.redpipe.engine.security.RequiresPermissions;
 import net.redpipe.engine.security.RequiresUser;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -105,4 +106,10 @@ public class TestResourceRxJava1 {
 			@Context @HasPermission("create") boolean second) {
 		return user.rxIsAuthorised("create").map(first -> first && second);
 	}
+
+    @GET
+    @Path("completable")
+    public Completable returnCompletable() {
+        return Completable.complete(); // should be 204
+    }
 }
