@@ -8,6 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
 import org.jboss.resteasy.annotations.Stream;
@@ -20,6 +21,7 @@ import io.vertx.rxjava.ext.auth.AuthProvider;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.Session;
+import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.security.HasPermission;
 import net.redpipe.engine.security.NoAuthRedirect;
 import net.redpipe.engine.security.RequiresPermissions;
@@ -105,6 +107,35 @@ public class TestResourceRxJava1 {
 	public Single<Boolean> authCheck(@Context User user,
 			@Context @HasPermission("create") boolean second) {
 		return user.rxIsAuthorised("create").map(first -> first && second);
+	}
+
+	@Path("context-single")
+	@GET
+	public Single<String> contextPropagation(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Single.just("ok")
+				.delay(1, TimeUnit.SECONDS)
+				.map(string -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						return "invalid-globals";
+					return string;
+				});
+	}
+
+	@Stream(MODE.RAW)
+	@Path("context-observable")
+	@GET
+	public Observable<String> contextPropagationObservable(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Observable.just("o", "k")
+				.delay(1, TimeUnit.SECONDS)
+				.map(string -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						return "invalid-globals";
+					return string;
+				});
 	}
 
     @GET
