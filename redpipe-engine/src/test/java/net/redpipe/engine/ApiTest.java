@@ -343,6 +343,39 @@ public class ApiTest {
 		checkRequest(200, "something", "/maybe-fulfilled", context);
 	}
 
+	@Test
+	public void checkContextSingle(TestContext context) {
+		checkRequest(200, "ok", "/context-single", context);
+	}
+
+	@Test
+	public void checkContextSingleRx1(TestContext context) {
+		checkRequest(200, "ok", "/rx1/context-single", context);
+	}
+
+	@Test
+	public void checkContextCompletable(TestContext context) {
+		checkRequest(204, "ok", "/context-completable", context);
+	}
+
+	@Test
+	public void checkContextFlowable(TestContext context) {
+		checkRequest(200, "ok", "/context-flowable", context);
+	}
+
+	@Test
+	public void checkContextObservable(TestContext context) {
+		checkRequest(200, "ok", "/context-observable", context);
+	}
+
+	@Test
+	public void checkContextObservableRx1(TestContext context) {
+		checkRequest(200, "ok", "/rx1/context-observable", context);
+	}
+
+	@Test
+	public void checkContextMaybe(TestContext context) {
+		checkRequest(200, "ok", "/context-maybe", context);
 	}
 
 	private void checkRequest(int expectedStatus, String expectedBody, String url, TestContext context) {

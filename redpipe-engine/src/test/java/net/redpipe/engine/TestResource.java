@@ -9,11 +9,13 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import org.jboss.resteasy.annotations.Stream;
 import org.jboss.resteasy.annotations.Stream.MODE;
 
 import io.reactivex.Completable;
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -24,6 +26,7 @@ import io.vertx.reactivex.ext.auth.AuthProvider;
 import io.vertx.reactivex.ext.auth.User;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.Session;
+import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.security.HasPermission;
 import net.redpipe.engine.security.NoAuthRedirect;
 import net.redpipe.engine.security.RequiresPermissions;
@@ -113,6 +116,79 @@ public class TestResource {
 		return user.rxIsAuthorised("create").map(first -> first && second);
 	}
 	
+	@Path("context-single")
+	@GET
+	public Single<String> contextPropagation(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Single.just("ok")
+				.delay(1, TimeUnit.SECONDS)
+				.map(string -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						return "invalid-globals";
+					return string;
+				});
+	}
+
+	@Path("context-maybe")
+	@GET
+	public Maybe<String> contextPropagationMaybe(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Maybe.just("ok")
+				.delay(1, TimeUnit.SECONDS)
+				.map(string -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						return "invalid-globals";
+					return string;
+				});
+	}
+
+	@Path("context-completable")
+	@GET
+	public Completable contextPropagationCompletable(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Completable.complete()
+				.delay(1, TimeUnit.SECONDS)
+				.andThen(Completable.create(source -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						source.onError(new Exception("Invalid globals"));
+					else
+						source.onComplete();
+				}));
+	}
+
+	@Stream(MODE.RAW)
+	@Path("context-flowable")
+	@GET
+	public Flowable<String> contextPropagationFlowable(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Flowable.just("o", "k")
+				.delay(1, TimeUnit.SECONDS)
+				.map(string -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						return "invalid-globals";
+					return string;
+				});
+	}
+
+	@Stream(MODE.RAW)
+	@Path("context-observable")
+	@GET
+	public Observable<String> contextPropagationObservable(@Context UriInfo uriInfo,
+			@Context AppGlobals globals){
+		return Observable.just("o", "k")
+				.delay(1, TimeUnit.SECONDS)
+				.map(string -> {
+					System.err.println("uri: "+uriInfo.getPath());
+					if(globals != AppGlobals.get())
+						return "invalid-globals";
+					return string;
+				});
+	}
+
     @GET
     @Path("completable")
     public Completable returnCompletable() {
