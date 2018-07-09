@@ -355,7 +355,7 @@ public class ApiTest {
 
 	@Test
 	public void checkContextCompletable(TestContext context) {
-		checkRequest(204, "ok", "/context-completable", context);
+		checkRequest(204, null, "/context-completable", context);
 	}
 
 	@Test
