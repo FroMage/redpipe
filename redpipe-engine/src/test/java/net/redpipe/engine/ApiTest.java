@@ -29,8 +29,10 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.ext.auth.AuthProvider;
 import io.vertx.reactivex.ext.auth.shiro.ShiroAuth;
+import io.vertx.reactivex.ext.web.client.HttpRequest;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import io.vertx.reactivex.ext.web.handler.AuthHandler;
@@ -42,6 +44,8 @@ import net.redpipe.engine.core.Server;
 @RunWith(VertxUnitRunner.class)
 public class ApiTest {
 
+	private final static String IGNORE = "**IGNORE**";
+	
 	private Server server;
 	private WebClient webClient;
 
@@ -83,7 +87,7 @@ public class ApiTest {
 			}
 
 		};
-		server.start(TestResource.class, TestResourceRxJava1.class, TestResourceEmpty.class)
+		server.start(TestResource.class, TestResourceRxJava1.class)
 		.subscribe(() -> {
 			webClient = WebClient.create(server.getVertx(),
 					new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000));
@@ -144,321 +148,120 @@ public class ApiTest {
 
 	@Test
 	public void checkErrorCodeRespected(TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get("/does-not-exist")
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(404, r.statusCode(), "status code is 404");
-			return r.body();
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.NOT_FOUND.getStatusCode(), IGNORE, "/does-not-exist", context);
 	}
 
 	@Test
 	public void checkPlainHello(TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get("/hello")
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals("hello", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.OK.getStatusCode(), "hello", "/hello", context);
 	}
 
 	@Test
 	public void checkInject(TestContext context) {
-		checkInject("", context);
+		checkRequest(Status.OK.getStatusCode(), "ok", "/inject", context);
 	}
 	
 	@Test
 	public void checkInjectRx1(TestContext context) {
-		checkInject("/rx1", context);
-	}
-
-	private void checkInject(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/inject")
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals("ok", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.OK.getStatusCode(), "ok", "/rx1/inject", context);
 	}
 
 	@Test
 	public void checkInjectUser(TestContext context) {
-		checkInjectUser("", context);
+		checkRequest(Status.OK.getStatusCode(), "ok", "/inject-user", context, toAuth("root:w00t"));
 	}
 	
 	@Test
 	public void checkInjectUserRx1(TestContext context) {
-		checkInjectUser("/rx1", context);
-	}
-
-	private void checkInjectUser(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/inject-user")
-		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:w00t".getBytes(Charset.forName("us-ascii"))))
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals("ok", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.OK.getStatusCode(), "ok", "/rx1/inject-user", context, toAuth("root:w00t"));
 	}
 
 	@Test
 	public void checkInjectUserRequired(TestContext context) {
-		checkInjectUserRequired("", context);
+		checkRequest(Status.UNAUTHORIZED.getStatusCode(), "User required", "/inject-user", context);
 	}
 	
 	@Test
 	public void checkInjectUserRequiredRx1(TestContext context) {
-		checkInjectUserRequired("/rx1", context);
-	}
-
-	private void checkInjectUserRequired(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/inject-user")
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(Status.UNAUTHORIZED.getStatusCode(), r.statusCode());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.UNAUTHORIZED.getStatusCode(), "User required", "/rx1/inject-user", context);
 	}
 
 	@Test
 	public void checkInjectUserInvalid(TestContext context) {
-		checkInjectUserInvalid("", context);
+		checkRequest(Status.UNAUTHORIZED.getStatusCode(), "Unauthorized", "/inject-user", context, toAuth("root:invalid"));
 	}
 	
 	@Test
 	public void checkInjectUserInvalidRx1(TestContext context) {
-		checkInjectUserInvalid("/rx1", context);
-	}
-
-	private void checkInjectUserInvalid(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/inject-user")
-		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:invalid".getBytes(Charset.forName("us-ascii"))))
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(Status.UNAUTHORIZED.getStatusCode(), r.statusCode());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.UNAUTHORIZED.getStatusCode(), "Unauthorized", "/rx1/inject-user", context, toAuth("root:invalid"));
 	}
 
 	@Ignore("Requires https://github.com/resteasy/Resteasy/pull/1596 merged and released")
 	@Test
 	public void checkAuthRoleForbidden(TestContext context) {
-		checkAuthRoleForbidden("", context);
+		checkRequest(Status.FORBIDDEN.getStatusCode(), null, "/auth-create", context, toAuth("bar:gee"));
 	}
 	
 	@Ignore("Requires https://github.com/resteasy/Resteasy/pull/1596 merged and released")
 	@Test
 	public void checkAuthRoleForbiddenRx1(TestContext context) {
-		checkAuthRoleForbidden("/rx1", context);
-	}
-
-	private void checkAuthRoleForbidden(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/auth-create")
-		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("bar:gee".getBytes(Charset.forName("us-ascii"))))
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(Status.FORBIDDEN.getStatusCode(), r.statusCode());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(Status.FORBIDDEN.getStatusCode(), null, "/rx1/auth-create", context, toAuth("bar:gee"));
 	}
 
 	@Test
 	public void checkAuthRoleOK(TestContext context) {
-		checkAuthRoleOK("", context);
+		checkRequest(200, "ok", "/auth-create", context, toAuth("root:w00t"));
 	}
 	
 	@Test
 	public void checkAuthRoleOKRx1(TestContext context) {
-		checkAuthRoleOK("/rx1", context);
-	}
-
-	private void checkAuthRoleOK(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/auth-create")
-		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:w00t".getBytes(Charset.forName("us-ascii"))))
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(Status.OK.getStatusCode(), r.statusCode());
-			context.assertEquals("ok", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(200, "ok", "/rx1/auth-create", context, toAuth("root:w00t"));
 	}
 
 	@Test
 	public void checkAuthRoleCheckOK(TestContext context) {
-		checkAuthRoleCheckOK("", context);
+		checkRequest(200, "true", "/auth-check", context, toAuth("root:w00t"));
 	}
 	
 	@Test
 	public void checkAuthRoleCheckOKRx1(TestContext context) {
-		checkAuthRoleCheckOK("/rx1", context);
-	}
-
-	private void checkAuthRoleCheckOK(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/auth-check")
-		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("root:w00t".getBytes(Charset.forName("us-ascii"))))
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(Status.OK.getStatusCode(), r.statusCode());
-			context.assertEquals("true", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(200, "true", "/rx1/auth-check", context, toAuth("root:w00t"));
 	}
 
 	@Test
 	public void checkAuthRoleCheckDenied(TestContext context) {
-		checkAuthRoleCheckDenied("", context);
+		checkRequest(200, "false", "/auth-check", context, toAuth("bar:gee"));
 	}
 	
 	@Test
 	public void checkAuthRoleCheckDeniedRx1(TestContext context) {
-		checkAuthRoleCheckDenied("/rx1", context);
+		checkRequest(200, "false", "/rx1/auth-check", context, toAuth("bar:gee"));
 	}
 
-	private void checkAuthRoleCheckDenied(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/auth-check")
-		.putHeader(HttpHeaders.AUTHORIZATION, "Basic "+Base64.getEncoder().encodeToString("bar:gee".getBytes(Charset.forName("us-ascii"))))
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals(Status.OK.getStatusCode(), r.statusCode());
-			context.assertEquals("false", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+	private String toAuth(String userPass) {
+		return "Basic "+Base64.getEncoder().encodeToString(userPass.getBytes(Charset.forName("us-ascii")));
 	}
 
 	@Test
 	public void checkHelloSingle(TestContext context) {
-		checkHelloSingle("", context);
+		checkRequest(200, "hello", "/hello-single", context);
 	}
 
 	@Test
 	public void checkHelloSingleRx1(TestContext context) {
-		checkHelloSingle("/rx1", context);
-	}
-
-	private void checkHelloSingle(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/hello-single")
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals("hello", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
+		checkRequest(200, "hello", "/rx1/hello-single", context);
 	}
 
 	@Test
 	public void checkHelloObservable(TestContext context) {
-		checkHelloObservable("", context);
+		checkRequest(200, "onetwo", "/hello-observable", context);
 	}
 
 	@Test
 	public void checkHelloObservableRx1(TestContext context) {
-		checkHelloObservable("/rx1", context);
+		checkRequest(200, "onetwo", "/rx1/hello-observable", context);
 	}
 	
-	private void checkHelloObservable(String prefix, TestContext context) {
-		Async async = context.async();
-
-		webClient
-		.get(prefix+"/hello-observable")
-		.as(BodyCodec.string())
-		.rxSend()
-		.map(r -> {
-			context.assertEquals("onetwo", r.body());
-			return r;
-		})
-		.doOnError(x -> context.fail(x))
-		.subscribe(response -> {
-			async.complete();
-		});
-	}
-
 	@Test
 	public void checkHelloObservableCollect(TestContext context) {
 		checkHelloObservableCollect("", context);
@@ -522,47 +325,48 @@ public class ApiTest {
 
 	@Test
 	public void checkCompletableRx1(TestContext context) {
-		checkCompletable("completable1", context);
+		checkRequest(204, null, "/rx1/completable", context);
 	}
 
 	@Test
 	public void checkCompletableRx2(TestContext context) {
-		checkCompletable("completable2", context);
+		checkRequest(204, null, "/completable", context);
 	}
 
 	@Test
 	public void checkEmptyMaybe(TestContext context) {
-		checkEmpty("maybe/empty", context, 404);
+		checkRequest(404, null, "/maybe-empty", context);
 	}
 
 	@Test
 	public void checkFulfilledMaybe(TestContext context) {
-		Async async = context.async();
-		webClient
-		.get("/empty/maybe/fulfilled")
-		.rxSend()
-		.doOnError(context::fail)
-		.subscribe(resp -> {
-			context.assertEquals(200, resp.statusCode());
-			context.assertNotNull(resp.bodyAsString());
-			async.complete();
-		});
+		checkRequest(200, "something", "/maybe-fulfilled", context);
 	}
 
-	private void checkCompletable(String suffix, TestContext context) {
-		checkEmpty(suffix, context, 204);
 	}
 
-	private void checkEmpty(String suffix, TestContext context, int expectedStatus) {
+	private void checkRequest(int expectedStatus, String expectedBody, String url, TestContext context) {
+		checkRequest(expectedStatus, expectedBody, url, context, null);
+	}
+	
+	private void checkRequest(int expectedStatus, String expectedBody, String url, TestContext context, String authHeader) {
 		Async async = context.async();
-		webClient
-		.get("/empty/" + suffix)
+
+		HttpRequest<Buffer> request = webClient
+		.get(url);
+		
+		if(authHeader != null)
+			request.putHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		
+		request.as(BodyCodec.string())
 		.rxSend()
+		.map(r -> {
+			context.assertEquals(expectedStatus, r.statusCode());
+			if(expectedBody != IGNORE)
+				context.assertEquals(expectedBody, r.body());
+			return r;
+		})
 		.doOnError(context::fail)
-		.subscribe(resp -> {
-			context.assertEquals(expectedStatus, resp.statusCode());
-			context.assertNull(resp.body());
-			async.complete();
-		});
+		.subscribe(response -> async.complete());
 	}
 }

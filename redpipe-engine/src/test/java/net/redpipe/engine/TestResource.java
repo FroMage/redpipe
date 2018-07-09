@@ -13,6 +13,8 @@ import javax.ws.rs.core.Response.Status;
 import org.jboss.resteasy.annotations.Stream;
 import org.jboss.resteasy.annotations.Stream.MODE;
 
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.reactivex.core.Vertx;
@@ -110,4 +112,22 @@ public class TestResource {
 			@Context @HasPermission("create") boolean second) {
 		return user.rxIsAuthorised("create").map(first -> first && second);
 	}
+	
+    @GET
+    @Path("completable")
+    public Completable returnCompletable() {
+        return Completable.complete(); // should be 204
+    }
+    
+    @GET
+    @Path("maybe-empty")
+    public Maybe<String> returnEmptyMaybe() {
+        return Maybe.empty(); // should be 404
+    }
+
+    @GET
+    @Path("maybe-fulfilled")
+    public Maybe<String> returnFulfilledMaybe() {
+        return Maybe.just("something"); // should be 200
+    }
 }
