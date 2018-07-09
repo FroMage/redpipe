@@ -325,6 +325,7 @@
 	<modules>
 		<module>redpipe-engine</module>
 		<module>redpipe-cdi</module>
+        <module>redpipe-discovery</module>
 		<module>redpipe-fast-classpath-scanner</module>
 		<module>redpipe-fibers</module>
 		<module>redpipe-prototyping</module>

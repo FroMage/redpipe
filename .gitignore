@@ -7,3 +7,4 @@
 .testcontainers-tmp*
 **/*.iml
 .idea
+/*/bin
