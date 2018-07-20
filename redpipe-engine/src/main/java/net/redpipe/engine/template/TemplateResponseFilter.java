@@ -25,12 +25,10 @@ public class TemplateResponseFilter implements ContainerResponseFilter {
 					ctx.setStatus(resp.getStatus());
 					ctx.resume();
 				}, err -> {
-					System.err.println("ONE");
 					err.printStackTrace();
 					ctx.resume(err);
 				});
 			}catch(Throwable t) {
-				System.err.println("TWO");
 				t.printStackTrace();
 				ctx.resume(t);
 			}
