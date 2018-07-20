@@ -7,6 +7,10 @@ import java.util.Map.Entry;
 
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import net.redpipe.engine.mail.Mailer;
+import net.redpipe.engine.mail.MockMailer;
+import net.redpipe.engine.mail.ProdMailer;
 import net.redpipe.engine.template.TemplateRenderer;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -42,6 +46,8 @@ public class AppGlobals {
 	private Map<String, Object> namedGlobals = new HashMap<>();
 	private Map<Class<?>, Object> typedGlobals = new HashMap<>();
 	private VertxResteasyDeployment deployment;
+	private Mailer mailer;
+	private Mode mode = Mode.DEV;
 	
 	public JsonObject getConfig() {
 		return config;
@@ -49,6 +55,7 @@ public class AppGlobals {
 
 	void setConfig(JsonObject config) {
 		this.config = config;
+		mode = Mode.valueOf(config.getString("mode", "dev").toUpperCase());
 	}
 
 	public SQLClient getDbClient() {
@@ -128,5 +135,15 @@ public class AppGlobals {
 	
 	public VertxResteasyDeployment getDeployment() {
 		return deployment;
+	}
+
+	public Mailer getMailer() {
+		if(mailer == null) {
+			if(mode == Mode.PROD)
+				mailer = new ProdMailer(vertx, config);
+			else
+				mailer = new MockMailer();
+		}
+		return mailer;
 	}
 }
