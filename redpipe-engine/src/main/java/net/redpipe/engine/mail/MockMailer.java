@@ -16,7 +16,7 @@ public class MockMailer implements Mailer {
 
 	@Override
 	public Completable send(Mail email) {
-		return email.render().flatMapCompletable(response -> {
+		return email.render(null).flatMapCompletable(response -> {
 			send(email, response);
 			return Completable.complete();
 		});

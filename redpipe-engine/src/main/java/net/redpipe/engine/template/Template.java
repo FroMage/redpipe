@@ -3,6 +3,7 @@ package net.redpipe.engine.template;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.reactivex.Single;
@@ -34,10 +35,40 @@ public class Template {
 		return this;
 	}
 	
-	public Single<Response> render() {
+	public Single<Response> render(String variant) {
 		TemplateRenderer renderer = AppGlobals.get().getTemplateRenderer(name);
 		if(renderer == null)
 			throw new RuntimeException("Failed to find template renderer for template "+name);
-		return renderer.render(name, variables);
+		return renderer.render(name, variables, variant);
+	}
+	
+	public static MediaType parseMediaType(String extension) {
+		// FIXME: bigger list, and override in config
+		if(extension.equalsIgnoreCase("html"))
+			return MediaType.TEXT_HTML_TYPE;
+		if(extension.equalsIgnoreCase("xml"))
+			return MediaType.APPLICATION_XML_TYPE;
+		if(extension.equalsIgnoreCase("txt"))
+			return MediaType.TEXT_PLAIN_TYPE;
+		if(extension.equalsIgnoreCase("json"))
+			return MediaType.APPLICATION_JSON_TYPE;
+		System.err.println("Unknown extension type: "+extension);
+		return MediaType.APPLICATION_OCTET_STREAM_TYPE;
+	}
+
+	public static MediaType parseMediaType(String templatePath, String templateExtension) {
+		int lastSlash = templatePath.lastIndexOf('/');
+		String templateName;
+		if(lastSlash != -1)
+			templateName = templatePath.substring(lastSlash+1);
+		else
+			templateName = templatePath;
+		if(templateName.endsWith(templateExtension))
+			templateName = templateName.substring(0, templateName.length()-templateExtension.length());
+		int lastDot = templateName.lastIndexOf('.');
+		if(lastDot != -1)
+			return parseMediaType(templateName.substring(lastDot+1));
+		// no extension
+		return MediaType.APPLICATION_OCTET_STREAM_TYPE;
 	}
 }

@@ -1,29 +1,27 @@
 package net.redpipe.templating.freemarker;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
+import java.util.List;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.sse.SseEventSource;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
-import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
+import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.core.Server;
+import net.redpipe.engine.mail.MockMailer;
+import net.redpipe.engine.mail.MockMailer.SentMail;
 
 @RunWith(VertxUnitRunner.class)
 public class ApiTest {
@@ -36,7 +34,8 @@ public class ApiTest {
 		Async async = context.async();
 
 		server = new Server();
-		server.start(TestResource.class)
+		server.start(//new JsonObject().put("mode", "prod"), 
+				TestResource.class)
 		.subscribe(() -> {
 			webClient = WebClient.create(server.getVertx(),
 					new WebClientOptions().setDefaultHost("localhost").setDefaultPort(9000));
@@ -83,4 +82,174 @@ public class ApiTest {
 		});
 	}
 
+	@Test
+	public void checkMail(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/mail")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			System.err.println("body: "+r.body());
+			context.assertEquals(200, r.statusCode());
+			MockMailer mailer = (MockMailer) AppGlobals.get().getMailer();
+			List<SentMail> mails = mailer.getMailsSentTo("foo@example.com");
+			context.assertNotNull(mails);
+			context.assertEquals(1, mails.size());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", mails.get(0).text);
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationDefault(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/nego")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationText(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/nego")
+		.putHeader("Accept", "text/plain")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("## my title ##\n" + 
+					"\n" + 
+					"my message", r.body());
+			context.assertEquals("text/plain", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationText2(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/nego")
+		.putHeader("Accept", "text/plain, text/html;q=0.9")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("## my title ##\n" + 
+					"\n" + 
+					"my message", r.body());
+			context.assertEquals("text/plain", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationHtml(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/nego")
+		.putHeader("Accept", "text/html")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationHtml2(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/nego")
+		.putHeader("Accept", "text/html, text/plain;q=0.9")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationNotAcceptable(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/nego")
+		.putHeader("Accept", "text/stef")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(Status.NOT_ACCEPTABLE.getStatusCode(), r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
 }

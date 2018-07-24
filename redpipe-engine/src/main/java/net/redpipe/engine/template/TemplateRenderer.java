@@ -11,6 +11,5 @@ public interface TemplateRenderer {
 
 	boolean supportsTemplate(String name);
 
-	Single<Response> render(String name, Map<String, Object> variables);
-
+	Single<Response> render(String name, Map<String, Object> variables, String variant);
 }
