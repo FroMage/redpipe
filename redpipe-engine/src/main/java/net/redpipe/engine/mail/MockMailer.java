@@ -4,28 +4,32 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
+import java.util.Optional;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
 import io.vertx.reactivex.core.buffer.Buffer;
 
 public class MockMailer implements Mailer {
 
 	private Map<String, List<SentMail>> sentMails = new HashMap<>();
+	
+	public MockMailer() {
+		System.err.println("new MockMailer "+System.identityHashCode(this));
+	}
 
 	@Override
 	public Completable send(Mail email) {
-		return email.render(null).flatMapCompletable(response -> {
-			send(email, response);
-			return Completable.complete();
-		});
+		Single<Optional<Buffer>> htmlRender = email.renderHtml().map(buffer -> Optional.of(buffer)).toSingle(Optional.empty());
+		Single<Buffer> textRender = email.renderText();
+		return Single.zip(textRender, htmlRender, (text, html) -> {
+					send(email, text, html.orElse(null));
+					return Completable.complete();
+				}).flatMapCompletable(c -> c);
 	}
 
-	private void send(Mail email, Response response) {
-		// FIXME: multipart
-		String text = ((Buffer) response.getEntity()).toString();
-		SentMail sentMail = new SentMail(email, text);
+	private void send(Mail email, Buffer text, Buffer html) {
+		SentMail sentMail = new SentMail(email, text.toString(), html != null ? html.toString() : null);
 		System.err.println("Sending mail via MOCK mailer");
 		if (email.to != null) {
 			for (String to : email.to) {
@@ -60,11 +64,13 @@ public class MockMailer implements Mailer {
 	public static class SentMail {
 
 		public final String text;
+		public final String html;
 		public final Mail email;
 
-		public SentMail(Mail email, String text) {
+		public SentMail(Mail email, String text, String html) {
 			this.email = email;
 			this.text = text;
+			this.html = html;
 		}
 
 	}

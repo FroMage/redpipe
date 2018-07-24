@@ -3,12 +3,10 @@ package net.redpipe.templating.freemarker;
 import java.io.IOException;
 import java.util.List;
 
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -19,7 +17,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.reactivex.ext.web.codec.BodyCodec;
-import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.core.Server;
 import net.redpipe.engine.mail.MockMailer;
 import net.redpipe.engine.mail.MockMailer.SentMail;
@@ -120,7 +117,8 @@ public class ApiTest {
 		.map(r -> {
 			System.err.println("body: "+r.body());
 			context.assertEquals(200, r.statusCode());
-			MockMailer mailer = (MockMailer) AppGlobals.get().getMailer();
+			MockMailer mailer = (MockMailer) server.getAppGlobals().getMailer();
+			System.err.println("using mailer "+System.identityHashCode(mailer));
 			List<SentMail> mails = mailer.getMailsSentTo("foo@example.com");
 			context.assertNotNull(mails);
 			context.assertEquals(1, mails.size());
@@ -130,6 +128,40 @@ public class ApiTest {
 					" </head>\n" + 
 					" <body>my message</body>\n" + 
 					"</html>", mails.get(0).text);
+			context.assertNull(mails.get(0).html);
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkMail2(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/mail2")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			System.err.println("body: "+r.body());
+			context.assertEquals(200, r.statusCode());
+			MockMailer mailer = (MockMailer) server.getAppGlobals().getMailer();
+			System.err.println("using mailer "+System.identityHashCode(mailer));
+			List<SentMail> mails = mailer.getMailsSentTo("foo@example.com");
+			context.assertNotNull(mails);
+			context.assertEquals(1, mails.size());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", mails.get(0).html);
+			context.assertEquals("## my title ##\n" + 
+					"\n" + 
+					"my message", mails.get(0).text);
 			return r;
 		})
 		.doOnError(x -> context.fail(x))

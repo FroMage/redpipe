@@ -1,8 +1,10 @@
 package net.redpipe.engine.mail;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mail.MailConfig;
 import io.vertx.ext.mail.MailMessage;
@@ -30,23 +32,24 @@ public class ProdMailer implements Mailer {
 	
 	@Override
 	public Completable send(Mail email) {
-		return email.render(null).flatMapCompletable(response -> {
-			String html = ((Buffer) response.getEntity()).toString();
-
-			MailMessage message = new MailMessage();
-			message.setFrom(email.from);
-			if(email.to != null)
-				message.setTo(Arrays.asList(email.to));
-			if(email.cc != null)
-				message.setCc(Arrays.asList(email.cc));
-			if(email.bcc != null)
-				message.setBcc(Arrays.asList(email.bcc));
-			message.setSubject(email.subject);
-			// FIXME: multipart
-//			message.setText("this is the plain message text");
-			message.setHtml(html);
-			System.err.println("Sending mail via PROD mailer");
-			return mailClient.rxSendMail(message).ignoreElement();
-		});
+		Single<Optional<Buffer>> htmlRender = email.renderHtml().map(buffer -> Optional.of(buffer)).toSingle(Optional.empty());
+		Single<Buffer> textRender = email.renderText();
+		return Single.zip(textRender, htmlRender, (text, html) -> {
+					System.err.println("Got txt and html!");
+					MailMessage message = new MailMessage();
+					message.setFrom(email.from);
+					if(email.to != null)
+						message.setTo(Arrays.asList(email.to));
+					if(email.cc != null)
+						message.setCc(Arrays.asList(email.cc));
+					if(email.bcc != null)
+						message.setBcc(Arrays.asList(email.bcc));
+					message.setSubject(email.subject);
+					message.setText(text.toString());
+					if(html.isPresent())
+						message.setHtml(html.get().toString());
+					System.err.println("Sending mail via PROD mailer");
+					return mailClient.rxSendMail(message).ignoreElement();
+				}).flatMapCompletable(c -> c);
 	}
 }

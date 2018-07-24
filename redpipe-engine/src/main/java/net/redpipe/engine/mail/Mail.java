@@ -2,11 +2,17 @@ package net.redpipe.engine.mail;
 
 import java.util.Map;
 
-import io.reactivex.Completable;
-import net.redpipe.engine.core.AppGlobals;
-import net.redpipe.engine.template.Template;
+import javax.ws.rs.core.MediaType;
 
-public class Mail extends Template {
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
+import io.reactivex.Single;
+import io.vertx.reactivex.core.buffer.Buffer;
+import net.redpipe.engine.core.AppGlobals;
+import net.redpipe.engine.template.AbstractTemplate;
+import net.redpipe.engine.template.TemplateRenderer;
+
+public class Mail extends AbstractTemplate {
 
 	String from;
 	String[] to;
@@ -60,5 +66,33 @@ public class Mail extends Template {
 			throw new IllegalStateException("Missing subject");
 		Mailer mailer = AppGlobals.get().getMailer();
 		return mailer.send(this);
+	}
+
+	public Single<Buffer> renderText() {
+		// FIXME: cache variants?
+		return loadVariants()
+				.flatMap(variants -> {
+					System.err.println("Got variants for txt");
+					String template = variants.getVariantTemplate(MediaType.TEXT_PLAIN_TYPE);
+					TemplateRenderer renderer = AppGlobals.get().getTemplateRenderer(template);
+					if(renderer == null)
+						throw new RuntimeException("Failed to find template renderer for template "+template);
+					return renderer.render(template, variables);
+				}).map(response -> (Buffer)response.getEntity());
+	}
+
+	public Maybe<Buffer> renderHtml() {
+		// FIXME: cache variants?
+		return loadVariants()
+				.flatMapMaybe(variants -> {
+					System.err.println("Got variants for html");
+					String template = variants.getVariantTemplate(MediaType.TEXT_HTML_TYPE, null);
+					if(template == null)
+						return Maybe.empty();
+					TemplateRenderer renderer = AppGlobals.get().getTemplateRenderer(template);
+					if(renderer == null)
+						throw new RuntimeException("Failed to find template renderer for template "+template);
+					return renderer.render(template, variables).toMaybe();
+				}).map(response -> (Buffer)response.getEntity());
 	}
 }

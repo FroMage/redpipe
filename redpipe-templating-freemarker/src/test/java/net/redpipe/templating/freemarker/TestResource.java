@@ -77,4 +77,17 @@ public class TestResource {
 			.subject("Test email")
 			.send().toSingleDefault(Response.ok().build());
 	}
+
+	@Path("mail2")
+	@GET
+	public Single<Response> mail2(){
+		return new Mail("templates/mail2")
+			.set("title", "my title")
+			.set("message", "my message")
+			.to("foo@example.com")
+			.from("foo@example.com")
+			.subject("Test email")
+			.send().toSingleDefault(Response.ok().build());
+	}
 }
+

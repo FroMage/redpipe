@@ -23,8 +23,10 @@ public class AppGlobals {
 	
 	private static ThreadLocal<AppGlobals> global = new ThreadLocal<AppGlobals>();
 
-	static void init() {
-		global.set(new AppGlobals());
+	static AppGlobals init() {
+		AppGlobals globals = new AppGlobals();
+		global.set(globals);
+		return globals;
 	}
 
 	public static AppGlobals get() {
@@ -35,6 +37,10 @@ public class AppGlobals {
 		AppGlobals old = global.get();
 		global.set(globals);
 		return old;
+	}
+
+	public static void clear() {
+		global.remove();
 	}
 
 	private JsonObject config;
@@ -48,6 +54,10 @@ public class AppGlobals {
 	private VertxResteasyDeployment deployment;
 	private Mailer mailer;
 	private Mode mode = Mode.DEV;
+	
+	public AppGlobals() {
+		System.err.println("New AppGlobals: "+System.identityHashCode(this));
+	}
 	
 	public JsonObject getConfig() {
 		return config;

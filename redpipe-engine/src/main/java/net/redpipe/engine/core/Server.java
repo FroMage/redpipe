@@ -74,6 +74,7 @@ public class Server {
 	protected List<Plugin> plugins;
     private static final Logger log = LoggerFactory.getLogger(Server.class);
     protected String configFile = "conf/config.json";
+	private AppGlobals appGlobals;
 
 	public Server(){
 //		System.setProperty("co.paralleluniverse.fibers.verifyInstrumentation", "true");
@@ -88,12 +89,19 @@ public class Server {
 	}
 	
 	public Completable start(JsonObject defaultConfig, Class<?>... resourceOrProviderClasses){
+		/*
+		 * OK this sucks: since the rx hooks are static, we can start a second server and the hooks are still there,
+		 * which means that the new server's Single flow will capture the existing current AppGlobals, so we reset it
+		 * here, even though it's not correct because it should be in susbscribe/create but that'd be too late and that
+		 * flow would already be polluted with our globals…
+		 */
+		AppGlobals.clear();
+		appGlobals = AppGlobals.init();
 		return Single.<JsonObject>create(s -> {
 			setupLogging();
 
 			VertxOptions options = new VertxOptions();
 			options.setWarningExceptionTime(Long.MAX_VALUE);
-			AppGlobals.init();
 
 			// Propagate the Resteasy context on RxJava1
 			RxJavaHooks.setOnSingleCreate(new ResteasyContextPropagatingOnSingleCreateAction());
@@ -482,8 +490,13 @@ public class Server {
 		return vertx;
 	}
 
+	public AppGlobals getAppGlobals() {
+		return appGlobals;
+	}
+	
 	public static void main(String[] args) {
 		Server test = new Server();
 		test.start();
 	}
+
 }
