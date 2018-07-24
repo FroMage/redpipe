@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -67,6 +68,32 @@ public class ApiTest {
 		.as(BodyCodec.string())
 		.rxSend()
 		.map(r -> {
+			System.err.println("body: "+r.body());
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateWithTemplateExtension(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/indexWithTemplateExtension")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			System.err.println("body: "+r.body());
 			context.assertEquals(200, r.statusCode());
 			context.assertEquals("<html>\n" + 
 					" <head>\n" + 
@@ -117,6 +144,56 @@ public class ApiTest {
 
 		webClient
 		.get("/nego")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateWithHtmlExtension(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/negoWithHtmlExtension")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateWithHtmlAndTemplateExtension(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/negoWithHtmlAndTemplateExtension")
 		.as(BodyCodec.string())
 		.rxSend()
 		.map(r -> {
@@ -245,6 +322,56 @@ public class ApiTest {
 		.rxSend()
 		.map(r -> {
 			context.assertEquals(Status.NOT_ACCEPTABLE.getStatusCode(), r.statusCode());
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateNegociationSingleHtml(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/single")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
+			return r;
+		})
+		.doOnError(x -> context.fail(x))
+		.subscribe(response -> {
+			async.complete();
+		});
+	}
+
+	@Test
+	public void checkTemplateDefaultName(TestContext context) {
+		Async async = context.async();
+
+		webClient
+		.get("/defaultTemplate")
+		.as(BodyCodec.string())
+		.rxSend()
+		.map(r -> {
+			context.assertEquals(200, r.statusCode());
+			context.assertEquals("<html>\n" + 
+					" <head>\n" + 
+					"  <title>my title</title>\n" + 
+					" </head>\n" + 
+					" <body>my message</body>\n" + 
+					"</html>", r.body());
+			context.assertEquals("text/html", r.getHeader("Content-Type"));
 			return r;
 		})
 		.doOnError(x -> context.fail(x))

@@ -23,14 +23,13 @@ public class FreeMarkerTemplateRenderer implements TemplateRenderer {
 	}
 
 	@Override
-	public Single<Response> render(String name, Map<String, Object> variables, String variant) {
+	public Single<Response> render(String name, Map<String, Object> variables) {
 		RoutingContext context = ResteasyProviderFactory.getContextData(RoutingContext.class);
 		for (Entry<String, Object> entry : variables.entrySet()) {
 			context.put(entry.getKey(), entry.getValue());
 		}
 		context.put("route", new RouterFunction());
-		String template = variant != null ? variant : name;
-		return templateEngine.rxRender(context, template)
-				.map(buffer -> Response.ok(buffer, Template.parseMediaType(template, ".ftl")).build());
+		return templateEngine.rxRender(context, name)
+				.map(buffer -> Response.ok(buffer, Template.parseMediaType(name, ".ftl")).build());
 	}
 }

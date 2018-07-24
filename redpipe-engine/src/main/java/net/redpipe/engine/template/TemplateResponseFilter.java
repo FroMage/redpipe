@@ -60,43 +60,45 @@ public class TemplateResponseFilter implements ContainerResponseFilter {
 			templateDir = ""; // current dir
 			namePart = path;
 		}
-		int lastDot = namePart.lastIndexOf('.');
-		if(lastDot == -1)
-			throw new RuntimeException("Missing required template extension: "+namePart);
-		String templateExtension = namePart.substring(lastDot);
-		String namePartNoExtension = namePart.substring(0, lastDot);
 		FileSystem fs = AppGlobals.get().getVertx().fileSystem();
 		return fs.rxReadDir(templateDir)
-			.flatMap(list -> findVariantTemplate(fs, templateDir, namePartNoExtension, templateExtension, list, request));
+			.flatMap(list -> findVariantTemplate(fs, templateDir, namePart, list, request));
 	}
 
-	private Single<String> findVariantTemplate(FileSystem fs, String templateDir, String namePartNoExtension, String templateExtension,
+	private Single<String> findVariantTemplate(FileSystem fs, String templateDir, String namePart,
 			List<String> list, Request request) {
 		Map<Variant, String> variants = new HashMap<>();
-		String originalTemplate = namePartNoExtension+templateExtension;
+		String defaultTemplateExtension = "";
 		for (String entry : list) {
-			// FIXME: is this for real?!?!
+			// classpath dir entries are expanded into temp folders which we get as absolute paths
 			int lastSlash = entry.lastIndexOf('/');
 			if(lastSlash != -1)
 				entry = entry.substring(lastSlash+1);
-			if(!entry.equals(originalTemplate)
-					&& entry.startsWith(namePartNoExtension)
-					&& entry.endsWith(templateExtension)) {
-				String extensionWithDot = entry.substring(namePartNoExtension.length(), entry.length()-templateExtension.length());
+			if(!entry.equals(namePart)
+					&& entry.startsWith(namePart)) {
+				String extensionWithDot = entry.substring(namePart.length());
 				if(!extensionWithDot.startsWith("."))
 					continue;
-				MediaType mediaType = Template.parseMediaType(extensionWithDot.substring(1));
+				// get rid of the template extension
+				int templateExtension = extensionWithDot.indexOf('.', 1);
+				if(templateExtension == -1) {
+					// we have a single extension, it's probably the default template extension
+					defaultTemplateExtension = extensionWithDot;
+					continue;
+				}
+				String mediaExtension = extensionWithDot.substring(1, templateExtension);
+				MediaType mediaType = Template.parseMediaType(mediaExtension);
 				variants.put(new Variant(mediaType, (String)null, null), entry);
 			}
 		}
 		// no variant
 		if(variants.isEmpty())
-			return Single.just(templateDir+"/"+originalTemplate);
+			return Single.just(templateDir+"/"+namePart+defaultTemplateExtension);
 		Variant selectedVariant = request.selectVariant(new ArrayList<>(variants.keySet()));
 		// no acceptable variant
 		if(selectedVariant == null) {
 			// if it does not exist, that's special
-			String template = templateDir+"/"+originalTemplate;
+			String template = templateDir+"/"+namePart+defaultTemplateExtension;
 			return fs.rxExists(template)
 					.map(exists -> {
 						if(exists)

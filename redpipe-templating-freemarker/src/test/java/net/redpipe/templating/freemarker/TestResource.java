@@ -13,15 +13,55 @@ public class TestResource {
 
 	@GET
 	public Single<Template> index() {
+		return Single.just(new Template("templates/index")
+				.set("title", "my title")
+				.set("message", "my message"));
+	}
+
+	@Path("indexWithTemplateExtension")
+	@GET
+	public Single<Template> indexWithTemplateExtension() {
 		return Single.just(new Template("templates/index.ftl")
 				.set("title", "my title")
 				.set("message", "my message"));
 	}
-	
+
 	@Path("nego")
 	@GET
 	public Single<Template> nego() {
-		return Single.just(new Template("templates/nego.ftl")
+		return Single.just(new Template("templates/nego")
+				.set("title", "my title")
+				.set("message", "my message"));
+	}
+
+	@Path("negoWithHtmlExtension")
+	@GET
+	public Single<Template> negoWithHtmlExtension() {
+		return Single.just(new Template("templates/nego.html")
+				.set("title", "my title")
+				.set("message", "my message"));
+	}
+
+	@Path("negoWithHtmlAndTemplateExtension")
+	@GET
+	public Single<Template> negoWithHtmlAndTemplateExtension() {
+		return Single.just(new Template("templates/nego.html.ftl")
+				.set("title", "my title")
+				.set("message", "my message"));
+	}
+
+	@Path("single")
+	@GET
+	public Single<Template> single() {
+		return Single.just(new Template("templates/negoSingle")
+				.set("title", "my title")
+				.set("message", "my message"));
+	}
+
+	@Path("defaultTemplate")
+	@GET
+	public Single<Template> defaultTemplate() {
+		return Single.just(new Template()
 				.set("title", "my title")
 				.set("message", "my message"));
 	}
@@ -29,7 +69,7 @@ public class TestResource {
 	@Path("mail")
 	@GET
 	public Single<Response> mail(){
-		return new Mail("templates/mail.ftl")
+		return new Mail("templates/mail")
 			.set("title", "my title")
 			.set("message", "my message")
 			.to("foo@example.com")

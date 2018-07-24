@@ -3,8 +3,13 @@ package net.redpipe.engine.template;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.metadata.ResourceLocator;
+import org.jboss.resteasy.spi.metadata.ResourceMethod;
 
 import io.reactivex.Single;
 import net.redpipe.engine.core.AppGlobals;
@@ -22,6 +27,15 @@ public class Template {
 		this(name, new HashMap<>());
 	}
 
+	public Template(){
+		this(getActionName());
+	}
+
+	private static String getActionName() {
+		ResourceInfo resourceMethod = ResteasyProviderFactory.getContextData(ResourceInfo.class);
+		return "templates/"+resourceMethod.getResourceClass().getSimpleName()+"/"+resourceMethod.getResourceMethod().getName();
+	}
+
 	public Map<String, Object> getVariables() {
 		return variables;
 	}
@@ -36,10 +50,11 @@ public class Template {
 	}
 	
 	public Single<Response> render(String variant) {
-		TemplateRenderer renderer = AppGlobals.get().getTemplateRenderer(name);
+		String template = variant != null ? variant : name;
+		TemplateRenderer renderer = AppGlobals.get().getTemplateRenderer(template);
 		if(renderer == null)
-			throw new RuntimeException("Failed to find template renderer for template "+name);
-		return renderer.render(name, variables, variant);
+			throw new RuntimeException("Failed to find template renderer for template "+template);
+		return renderer.render(variant, variables);
 	}
 	
 	public static MediaType parseMediaType(String extension) {
