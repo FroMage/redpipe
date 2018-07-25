@@ -35,7 +35,6 @@ public class ProdMailer implements Mailer {
 		Single<Optional<Buffer>> htmlRender = email.renderHtml().map(buffer -> Optional.of(buffer)).toSingle(Optional.empty());
 		Single<Buffer> textRender = email.renderText();
 		return Single.zip(textRender, htmlRender, (text, html) -> {
-					System.err.println("Got txt and html!");
 					MailMessage message = new MailMessage();
 					message.setFrom(email.from);
 					if(email.to != null)
@@ -48,7 +47,6 @@ public class ProdMailer implements Mailer {
 					message.setText(text.toString());
 					if(html.isPresent())
 						message.setHtml(html.get().toString());
-					System.err.println("Sending mail via PROD mailer");
 					return mailClient.rxSendMail(message).ignoreElement();
 				}).flatMapCompletable(c -> c);
 	}

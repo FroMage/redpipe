@@ -337,7 +337,8 @@ Note that this uses [Weld](http://weld.cdi-spec.org) and the weld-vertx extensio
 Unless you call `Server.start()` with a `JsonObject` configuration to override it, 
 the `conf/config.json` file will be loaded and used for configuration. 
 
-In addition to the standard [Vertx options](https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html), 
+In addition to the standard [Vertx options](https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html)
+and [email options](#email-configuration), 
 these are the configuration options available:
 
 <table>
@@ -347,6 +348,12 @@ these are the configuration options available:
   <th>Type</th>
   <th>Description</th>
   <th>Default</th>
+ </tr>
+ <tr>
+  <td>mode</td>
+  <td>String</td>
+  <td>Configure Redpipe using defaults for DEV or PROD use.</td>
+  <td>DEV</td>
  </tr>
  <tr>
   <td>db_url</td>
@@ -381,7 +388,7 @@ these are the configuration options available:
 </table> 
 
 <table>
- <caption>For the `redpipe-fast-classpath-scanner` module</caption>
+ <caption>For the <code>redpipe-fast-classpath-scanner</code> module</caption>
  <tr>
   <th>Name</th>
   <th>Type</th>
@@ -485,7 +492,7 @@ We support the following plugable template engines, which you just have to add a
 </table>
 
 In order to declare templates, simply place them in the `src/main/resources/templates` folder. For
-example, here's our `src/main/resources/templates/index.ftl` template:
+example, here's our `src/main/resources/templates/Controller/index.html.ftl` template:
 
 {% highlight html %}
 <html>
@@ -500,13 +507,59 @@ In order to return a rendered template, just return them from your resource, dir
 
 {% highlight java %}
 @GET
-@Path("template")
-public Template template(){
-  return new Template("templates/index.ftl")
+@Path("/")
+public Template index(){
+  return new Template()
           .set("title", "My page")
           .set("message", "Hello");
 }
 {% endhighlight %}
+
+### Template files and negociation
+
+Templates are located by convention in the `templates` folder and looked up from your classpath. If you
+do not specify any template name to the `Template` constructor, the template will default to `<Class name>/<method name>`
+by using the current JAX-RS resource class and method names.
+
+You can override the template file by passing it in the constructor, to specify, for example, `MyFolder/myindex`.
+
+When looking up a template file, Redpipe will look for any file that begins with the template name, followed by a `.` (dot)
+with an extension. There should be at least one extension, which will be the template format extension (for example, `.ftl` for
+freemarker). If there is another extension before the template extension, it will be used as the file format extension (for example
+`.txt` for plain text).
+
+If there are more than one file format extension, one will be selected based on the 
+[HTTP content type negociation](https://www.w3.org/Protocols/rfc2616/rfc2616-sec12.html), such as the `Accept` request header.
+
+The file format extension defines the MIME type returned to the client in the `Content-Type` response header. If there
+is no file format extension, `application/octet-stream` is used.
+
+For example, if you have two files `foo.html.ftl` and `foo.txt.ftl` and specify a template name `foo`, Redpipe will
+select either of the two files depending on the client's preferred representation.
+
+<table>
+ <caption>Template look-up</caption>
+ <tr>
+  <th>Specified template name</th>
+  <th>Looked-up template files</th>
+ </tr>
+ <tr>
+  <td><i>_(empty)_</i></td>
+  <td><code>&lt;Class name>/&lt;method name>.&lt;file format>.&lt;template format></code></td>
+ </tr>
+ <tr>
+  <td>foo</td>
+  <td><code>foo.&lt;file format>.&lt;template format></code></td>
+ </tr>
+ <tr>
+  <td>foo.txt</td>
+  <td><code>foo.txt.&lt;template format></code></td>
+ </tr>
+ <tr>
+  <td>foo.txt.ftl</td>
+  <td><code>foo.txt.ftl</code></td>
+ </tr>
+</table>
 
 ### Writing your own template renderer
 
@@ -541,6 +594,116 @@ public class FreeMarkerTemplateRenderer implements TemplateRenderer {
 }
 {% endhighlight %}
 
+## Email
+
+You can send emails with the `Mail` class, which is a sort of `Template`:
+
+{% highlight java %}
+    @Path("mail")
+    @GET
+    public Single<Response> mail(){
+        return new Mail("templates/mail")
+            .set("title", "my title")
+            .set("message", "my message")
+            .to("foo@example.com")
+            .from("foo@example.com")
+            .subject("Test email")
+            .send().toSingleDefault(Response.ok().build());
+    }
+{% endhighlight %}
+
+This will use regular template look-up rules and look for `templates/mail.txt.<template extension>` and 
+`templates/mail.html.<template extension>`, and send the email asynchronously. Beware that unless you 
+subscribe to the `Email.send()` return value (type `Completable`), there is no guarantee that your email
+will be sent before the response is sent.
+
+Note that only the two file format variants `.txt` and `.html` will be looked-up.
+
+### Testing email delivery
+
+In `DEV` mode, emails will be delivered to a mock mailer of type `MockMailer` which you can obtain from
+`AppGlobals`, in order to test email delivery:
+
+{% highlight java %}
+    @Test
+    public void checkMail2(TestContext context) {
+        Async async = context.async();
+
+        webClient
+        .get("/mail")
+        .as(BodyCodec.string())
+        .rxSend()
+        .map(r -> {
+            context.assertEquals(200, r.statusCode());
+            MockMailer mailer = (MockMailer) server.getAppGlobals().getMailer();
+            List<SentMail> mails = mailer.getMailsSentTo("foo@example.com");
+            context.assertNotNull(mails);
+            context.assertEquals(1, mails.size());
+            context.assertEquals("<html>\n" + 
+                    " <head>\n" + 
+                    "  <title>my title</title>\n" + 
+                    " </head>\n" + 
+                    " <body>my message</body>\n" + 
+                    "</html>", mails.get(0).html);
+            context.assertEquals("## my title ##\n" + 
+                    "\n" + 
+                    "my message", mails.get(0).text);
+            return r;
+        })
+        .doOnError(x -> context.fail(x))
+        .subscribe(response -> {
+            async.complete();
+        });
+    }
+{% endhighlight %}
+
+### Email configuration
+
+In `PROD` mode, you can configure the following settings:
+
+<table>
+ <caption>Injectable global resources</caption>
+ <tr>
+  <th>Configuration key</th>
+  <th>Description</th>
+  <th>Default value</th>
+ </tr>
+ <tr>
+  <td>smtp.hostname</td>
+  <td>The SMTP host name.</td>
+  <td>localhost</td>
+ </tr>
+ <tr>
+  <td>smtp.hostname</td>
+  <td>The SMTP port.</td>
+  <td>25</td>
+ </tr>
+ <tr>
+  <td>smtp.username</td>
+  <td>The SMTP username.</td>
+  <td>None</td>
+ </tr>
+ <tr>
+  <td>smtp.password</td>
+  <td>The SMTP password.</td>
+  <td>None</td>
+ </tr>
+ <tr>
+  <td>smtp.keepAlive</td>
+  <td>Whether to keep the SMTP connection open.</td>
+  <td>true</td>
+ </tr>
+ <tr>
+  <td>smtp.trustAll</td>
+  <td>Whether to trust every SMTP connection.</td>
+  <td>true</td>
+ </tr>
+ <tr>
+  <td>smtp.starttls</td>
+  <td>Whether to start a TLS connection (supports DISABLED, OPTIONAL, REQUIRED).</td>
+  <td>OPTIONAL</td>
+ </tr>
+</table> 
 
 ## Serving static files
 

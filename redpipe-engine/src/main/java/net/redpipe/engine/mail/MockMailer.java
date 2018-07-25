@@ -30,7 +30,6 @@ public class MockMailer implements Mailer {
 
 	private void send(Mail email, Buffer text, Buffer html) {
 		SentMail sentMail = new SentMail(email, text.toString(), html != null ? html.toString() : null);
-		System.err.println("Sending mail via MOCK mailer");
 		if (email.to != null) {
 			for (String to : email.to) {
 				send(sentMail, to);

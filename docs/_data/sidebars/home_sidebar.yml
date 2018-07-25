@@ -59,8 +59,23 @@ entries:
     - title: Basics
       url: /#templating
       output: web
+    - title: Template files and negociation
+      url: /#template-files-and-negociation
+      output: web
     - title: Writing your own template renderer
       url: /#writing-your-own-template-renderer
+      output: web
+  - title: Email
+    output: web
+    folderitems:
+    - title: Basics
+      url: /#email
+      output: web
+    - title: Testing email delivery
+      url: /#testing-email-delivery
+      output: web
+    - title: Email configuration
+      url: /#email-configuration
       output: web
   - title: Serving static files
     output: web
