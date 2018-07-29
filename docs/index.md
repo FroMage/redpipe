@@ -3,7 +3,8 @@ layout: default
 title: Redpipe
 github_url: https://github.com/FroMage/redpipe
 github_source_url: https://github.com/FroMage/redpipe/tree/master
-version: 0.0.2
+version: 0.0.3
+rxjava2_version: 2.1.17
 ---
 
 ![Logo]({{ "images/redpipe-600.png" }})
@@ -84,8 +85,8 @@ public class Main {
     new Server()
      .start(HelloResource.class)
      .subscribe(
-        v -> System.err.println("Server started"),
-        x -> x.printStackTrace());
+        () -> System.err.println("Server started"),
+        Throwable::printStackTrace);
   }
 }
 {% endhighlight %}
@@ -179,6 +180,41 @@ resolved:
 - If the maybe is empty: an empty HTTP response using __HTTP status code `404`__ indicating the resource has not been found
 - If the maybe has been fulfilled with an object of type `T`: an HTTP response __with status code `200`__, 
 using the proper [`MessageBodyWriter<T>`](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/ext/MessageBodyWriter.html) 
+  
+### RxJava 2 support
+
+You need to import the following module in order to use RxJava 2:
+
+{% highlight xml %}
+<dependency>
+  <groupId>io.reactivex.rxjava2</groupId>
+  <artifactId>rxjava</artifactId>
+  <version>{{page.rxjava2_version}}</version>
+</dependency>
+{% endhighlight %}
+
+And your reactive resource should look like that:
+
+{% highlight java %}
+import io.vertx.core.json.JsonObject;
+
+import javax.ws.rs.Produces;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+import io.reactivex.Single;
+
+@Path("/reactive-hello")
+public class Hello {
+  @Produces("application/json; charset=utf-8")
+  @GET
+  public Single<JsonObject> hi() {
+    return Single.just(
+      new JsonObject().put("message", "Hello World!")
+    );
+  }
+}
+{% endhighlight %}
 
 ## Fibers
 
@@ -1099,8 +1135,8 @@ public class Main {
         new Server()
         .start(new JsonObject().put("http_port", 8080), HelloResource.class)
         .subscribe(
-                v -> System.err.println("Server started"),
-                x -> x.printStackTrace());
+                () -> System.err.println("Server started"),
+                Throwable::printStackTrace);
     }
 }
 {% endhighlight %}
