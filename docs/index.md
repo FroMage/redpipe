@@ -84,8 +84,8 @@ public class Main {
     new Server()
      .start(HelloResource.class)
      .subscribe(
-        v -> System.err.println("Server started"),
-        x -> x.printStackTrace());
+        () -> System.err.println("Server started"),
+        Throwable::printStackTrace);
   }
 }
 {% endhighlight %}
@@ -1099,8 +1099,8 @@ public class Main {
         new Server()
         .start(new JsonObject().put("http_port", 8080), HelloResource.class)
         .subscribe(
-                v -> System.err.println("Server started"),
-                x -> x.printStackTrace());
+                () -> System.err.println("Server started"),
+                Throwable::printStackTrace);
     }
 }
 {% endhighlight %}
