@@ -111,76 +111,79 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <!-- Only generate jooq files on demand, because otherwise it requires a running postgres DB -->
+            <id>generate-jooq</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- Specify the maven code generator plugin -->
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-codegen-maven</artifactId>
+                        <version>3.11.3</version>
+
+                        <!-- The plugin should hook into the generate goal -->
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <!-- -->
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.postgresql</groupId>
+                                <artifactId>postgresql</artifactId>
+                                <version>42.1.4</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>io.github.jklingsporn</groupId>
+                                <artifactId>vertx-jooq-generate</artifactId>
+                                <version>4.0.0-BETA2</version>
+                            </dependency>
+                        </dependencies>
+
+                        <!-- Specify the plugin configuration. The configuration format is the same as for the standalone code generator -->
+                        <configuration>
+                            <!-- JDBC connection parameters -->
+                            <jdbc>
+                                <driver>org.postgresql.Driver</driver>
+                                <url>jdbc:postgresql:redpipewiki</url>
+                                <user>redpipewiki</user>
+                                <password>redpipewiki</password>
+                            </jdbc>
+
+                            <!-- Generator parameters -->
+                            <generator>
+                                <name>io.github.jklingsporn.vertx.jooq.generate.rx.RXAsyncVertxGenerator</name>
+                                <database>
+                                    <name>org.jooq.meta.postgres.PostgresDatabase</name>
+                                    <includes>.*</includes>
+                                    <inputSchema>public</inputSchema>
+                                </database>
+                                <target>
+                                    <!-- This is where jOOQ will put your files -->
+                                    <packageName>net.redpipe.example.wiki.keycloakJooq.jooq</packageName>
+                                    <directory>src/main/java</directory>
+                                </target>
+                                <generate>
+                                    <interfaces>true</interfaces>
+                                    <daos>true</daos>
+                                    <fluentSetters>true</fluentSetters>
+                                </generate>
+
+
+                                <strategy>
+                                    <name>io.github.jklingsporn.vertx.jooq.generate.VertxGeneratorStrategy</name>
+                                </strategy>
+                            </generator>
+
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
-
-    <build>
-        <plugins>
-            <plugin>
-                <!-- Specify the maven code generator plugin -->
-                <groupId>org.jooq</groupId>
-                <artifactId>jooq-codegen-maven</artifactId>
-                <version>3.11.3</version>
-
-                <!-- The plugin should hook into the generate goal -->
-                <executions>
-                    <execution>
-                        <goals>
-                            <!-- -->
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
-                <dependencies>
-                    <dependency>
-                        <groupId>org.postgresql</groupId>
-                        <artifactId>postgresql</artifactId>
-                        <version>42.1.4</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.github.jklingsporn</groupId>
-                        <artifactId>vertx-jooq-generate</artifactId>
-                        <version>4.0.0-BETA2</version>
-                    </dependency>
-                </dependencies>
-
-                <!-- Specify the plugin configuration. The configuration format is the same as for the standalone code generator -->
-                <configuration>
-                    <!-- JDBC connection parameters -->
-                    <jdbc>
-                        <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql:redpipewiki</url>
-                        <user>redpipewiki</user>
-                        <password>redpipewiki</password>
-                    </jdbc>
-
-                    <!-- Generator parameters -->
-                    <generator>
-                        <name>io.github.jklingsporn.vertx.jooq.generate.rx.RXAsyncVertxGenerator</name>
-                        <database>
-                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
-                            <includes>.*</includes>
-                            <inputSchema>public</inputSchema>
-                        </database>
-                        <target>
-                            <!-- This is where jOOQ will put your files -->
-                            <packageName>net.redpipe.example.wiki.keycloakJooq.jooq</packageName>
-                            <directory>src/main/java</directory>
-                        </target>
-                        <generate>
-                            <interfaces>true</interfaces>
-                            <daos>true</daos>
-                            <fluentSetters>true</fluentSetters>
-                        </generate>
-
-
-                        <strategy>
-                            <name>io.github.jklingsporn.vertx.jooq.generate.VertxGeneratorStrategy</name>
-                        </strategy>
-                    </generator>
-
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
