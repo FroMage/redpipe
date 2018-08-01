@@ -37,7 +37,7 @@ public class PagesDao extends AbstractAsyncVertxDAO<PagesRecord, net.redpipe.exa
      * @param delegate A configured AsyncSQLClient that is used for query execution
      */
     public PagesDao(Configuration configuration,io.vertx.reactivex.ext.asyncsql.AsyncSQLClient delegate) {
-        super(Pages.PAGES, net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages.class, new AsyncRXQueryExecutor<PagesRecord,net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages,Integer>(configuration,delegate,net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages::new, Pages.PAGES));
+        super(Pages.PAGES, net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages.class, new AsyncRXQueryExecutor<PagesRecord,net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages,Integer>(configuration,delegate,json -> new net.redpipe.example.wiki.keycloakJooq.jooq.tables.pojos.Pages(json), Pages.PAGES));
     }
 
     /**
