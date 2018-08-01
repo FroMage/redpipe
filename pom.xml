@@ -28,6 +28,7 @@
         <version.vertx>3.5.1</version.vertx>
         <version.resteasy>4.0.0.Beta4</version.resteasy>
         <version.jackson>2.9.1</version.jackson>
+        <version.quasi>0.7.10-SNAPSHOT</version.quasi>
     </properties>
 
     <developers>
@@ -55,14 +56,21 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>com.vlkan</groupId>
-                    <artifactId>quasar-maven-plugin</artifactId>
-                    <version>0.7.9</version>
+                    <groupId>com.github.fromage.quasi</groupId>
+                    <artifactId>quasi-maven-plugin</artifactId>
+                    <version>${version.quasi}</version>
                     <configuration>
                         <check>true</check>
                         <debug>true</debug>
                         <verbose>true</verbose>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.github.fromage.quasi</groupId>
+                            <artifactId>quasi-core</artifactId>
+                            <version>${version.quasi}</version>
+                        </dependency>
+                    </dependencies>
                     <executions>
                         <execution>
                             <goals>
@@ -289,12 +297,11 @@
                 </exclusions>
             </dependency>
 
-            <!-- Quasar -->
+            <!-- Quasi -->
             <dependency>
-                <groupId>co.paralleluniverse</groupId>
-                <artifactId>quasar-core</artifactId>
-                <classifier>jdk8</classifier>
-                <version>0.7.9</version>
+                <groupId>com.github.fromage.quasi</groupId>
+                <artifactId>quasi-core</artifactId>
+                <version>${version.quasi}</version>
             </dependency>
 
             <!-- RxJava -->

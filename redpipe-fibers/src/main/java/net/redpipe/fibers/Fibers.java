@@ -4,41 +4,33 @@ import java.util.Map;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import co.paralleluniverse.fibers.Fiber;
-import co.paralleluniverse.fibers.FiberAsync;
-import co.paralleluniverse.fibers.FiberExecutorScheduler;
-import co.paralleluniverse.fibers.FiberScheduler;
-import co.paralleluniverse.fibers.SuspendExecution;
-import co.paralleluniverse.fibers.Suspendable;
-import co.paralleluniverse.strands.SuspendableCallable;
+import com.github.fromage.quasi.fibers.Suspendable;
+
 import io.reactivex.Single;
-import io.vertx.reactivex.core.Context;
-import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.sql.SQLConnection;
 import net.redpipe.engine.core.AppGlobals;
 import net.redpipe.engine.db.SQLUtil;
 
 public class Fibers {
 
-	private static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
+	static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
 
 	public interface SuspendableCallableWithConnection<T>  {
-	    T run(SQLConnection c) throws SuspendExecution, InterruptedException;
+		@Suspendable
+	    T run(SQLConnection c) throws Exception;
 	}
-	
-	@SuppressWarnings({ "serial" })
+
+	public interface SuspendableCallable<T>  {
+		@Suspendable
+	    T run() throws Exception;
+	}
+
 	@Suspendable
-	public static <T> T await(Single<T> single) throws SuspendExecution{
+	public static <T> T await(Single<T> single) throws Exception{
 		if(single == null)
 			throw new NullPointerException();
 		try {
-			return new FiberAsync<T, Throwable>(){
-				@Override
-				protected void requestAsync() {
-					single.subscribe(ret -> asyncCompleted(ret),
-							t -> asyncFailed(t));	
-				}
-			}.run();
+			return QuasiFibers.await(single);
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Throwable e) {
@@ -61,7 +53,7 @@ public class Fibers {
 		final Map<Class<?>, Object> contextDataMap = ResteasyProviderFactory.getContextDataMap();
 		AppGlobals globals = AppGlobals.get();
 		return Single.<T>create(sub -> {
-			Fiber<T> fiber = new Fiber<T>(getContextScheduler(), () -> {
+			QuasiFibers.start(() -> {
 				try{
 					// start by restoring the RE context in this Fiber's ThreadLocal
 					ResteasyProviderFactory.pushContextDataMap(contextDataMap);
@@ -76,55 +68,10 @@ public class Fibers {
 					ResteasyProviderFactory.removeContextDataLevel();
 					AppGlobals.set(null);
 				}
+				return null;
 			});
-			fiber.start();
 		});
 	}
 
-	public static <T> Fiber<T> rawFiber(SuspendableCallable<T> body){
-		final Map<Class<?>, Object> contextDataMap = ResteasyProviderFactory.getContextDataMap();
-		AppGlobals globals = AppGlobals.get();
-		return new Fiber<T>(getContextScheduler(), () -> {
-			try{
-				// start by restoring the RE context in this Fiber's ThreadLocal
-				ResteasyProviderFactory.pushContextDataMap(contextDataMap);
-				AppGlobals.set(globals);
-				return body.run();
-			}finally {
-				ResteasyProviderFactory.removeContextDataLevel();
-				AppGlobals.set(null);
-			}
-		});
-	}
-
-	public static FiberScheduler getContextScheduler() {
-		Context context = Vertx.currentContext();
-		if (context == null) {
-//	        final Fiber parent = Fiber.currentFiber();
-//	        if (parent == null)
-//	            return DefaultFiberScheduler.getInstance();
-//	        else
-//	            return parent.getScheduler();
-			throw new IllegalStateException("Not in context");
-		}
-		if (!context.isEventLoopContext()) {
-			throw new IllegalStateException("Not on event loop");
-		}
-		// We maintain one scheduler per context
-		FiberScheduler scheduler = context.get(FIBER_SCHEDULER_CONTEXT_KEY);
-		if (scheduler == null) {
-			Thread eventLoop = Thread.currentThread();
-			scheduler = new FiberExecutorScheduler("vertx.contextScheduler", command -> {
-				if (Thread.currentThread() != eventLoop) {
-					context.runOnContext(v -> command.run());
-				} else {
-					// Just run directly
-					command.run();
-				}
-			});
-			context.put(FIBER_SCHEDULER_CONTEXT_KEY, scheduler);
-		}
-		return scheduler;
-	}
 
 }

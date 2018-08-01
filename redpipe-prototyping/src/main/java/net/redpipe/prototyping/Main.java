@@ -9,11 +9,12 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import co.paralleluniverse.fibers.Fiber;
-import co.paralleluniverse.fibers.SuspendExecution;
-import co.paralleluniverse.fibers.Suspendable;
-import net.redpipe.engine.core.Server;
+import com.github.fromage.quasi.fibers.Fiber;
+import com.github.fromage.quasi.fibers.SuspendExecution;
+import com.github.fromage.quasi.fibers.Suspendable;
+
 import net.redpipe.fibers.Fibers;
+import net.redpipe.fibers.QuasiFibers;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
@@ -21,12 +22,13 @@ import rx.Subscription;
 
 public class Main {
 	private static void log(String s) {
-//		System.err.println("[debug] "+s);
+		System.err.println("[debug] "+s);
 	}
 	
 	public static void main(String[] args) throws IOException {
-		Server test = new Server();
-		test.start();
+//		Server test = new Server();
+//		test.start();
+//		testForeach();
 	}
 	
 	private static void testForeach() {
@@ -44,7 +46,7 @@ public class Main {
 		});
 		obs.subscribe(System.err::println, Throwable::printStackTrace);
 		
-		CompletableFuture<Void> future = new CompletableFuture<Void>();
+		CompletableFuture<Integer> future = new CompletableFuture<>();
 		Fibers.fiber(() -> {
 			log("Iterating fiber 1");
 			for(String s : toIterable(obs)) {
@@ -53,8 +55,8 @@ public class Main {
 				Fiber.sleep(1000);
 				log("Sleeping done");
 			}
-			return null;
-		}).subscribe(v -> future.complete(null),
+			return 42;
+		}).subscribe(v -> future.complete(v),
 				x -> future.completeExceptionally(x));
 		try {
 			future.get();
@@ -73,12 +75,12 @@ public class Main {
 
 	public static <T> Observable<T> emittingFiber(EmittingFunction<T> f){
 		return emitterToObservable(emitter -> {
-			Fibers.rawFiber(() -> {
+			QuasiFibers.rawFiber(() -> {
 				log("Emitting fiber start");
 				f.startEmitting(emitter);
 				log("Emitting fiber done");
 				return null;
-			}).start();
+			});
 		});
 	}
 
@@ -86,7 +88,7 @@ public class Main {
 
 		private Subscriber<? super T> observer;
 		private long requested;
-		private Fiber<?> waiter;
+		private Fiber waiter;
 
 		public SuspendingObserverImpl(Subscriber<? super T> observer) {
 			this.observer = observer;
@@ -99,7 +101,7 @@ public class Main {
 			requested += n;
 			if(waiter != null) {
 				log("Unparking observer");
-				waiter.unpark(this);
+				waiter.unpark();
 			}
 		}
 		
@@ -133,9 +135,9 @@ public class Main {
 		private void waitForReady() {
 			while(requested == 0 && !observer.isUnsubscribed()) {
 				try {
-					waiter = Fiber.currentFiber();
+					waiter = (Fiber)Fiber.currentStrand();
 					log("Observer not ready: parking");
-					Fiber.park(this);
+					Fiber.park();
 					log("Observer not ready: parking done");
 					waiter = null;
 				} catch (SuspendExecution e) {
@@ -182,7 +184,7 @@ public class Main {
 		private T next;
 		private Throwable error;
 		private boolean done;
-		private Fiber<?> waiting;
+		private Fiber waiting;
 		private Subscription sub;
 		private SuspendableIteratorImpl<T>.MySusbscriber subscriber;
 		
@@ -205,7 +207,7 @@ public class Main {
 				SuspendableIteratorImpl.this.done = true;
 				// don't clear next because we get next and completed in the same go,
 				// before we consume the last element
-				waiting.unpark(SuspendableIteratorImpl.this);
+				waiting.unpark();
 			}
 
 			@Override
@@ -213,7 +215,7 @@ public class Main {
 				log("onError: "+e);
 				SuspendableIteratorImpl.this.next = null;
 				SuspendableIteratorImpl.this.error = e;
-				waiting.unpark(SuspendableIteratorImpl.this);
+				waiting.unpark();
 			}
 
 			@Override
@@ -222,14 +224,14 @@ public class Main {
 				SuspendableIteratorImpl.this.next = t;
 				SuspendableIteratorImpl.this.error = null;
 				// FIXME: check that we didn't already have a value
-				waiting.unpark(SuspendableIteratorImpl.this);
+				waiting.unpark();
 			}
 		}
 
 		public SuspendableIteratorImpl(Observable<T> obs) {
 			subscriber = new MySusbscriber();
 			sub = obs.subscribe(subscriber);
-			waiting = Fiber.currentFiber();
+			waiting = (Fiber)Fiber.currentStrand();
 		}
 
 		@Suspendable
@@ -251,7 +253,7 @@ public class Main {
 					log("next request");
 					subscriber.publicRequest(1);
 					log("next park");
-					Fiber.park(this);
+					Fiber.park();
 					log("next park done");
 				} catch (SuspendExecution e) {
 					throw new AssertionError(e);
@@ -271,7 +273,7 @@ public class Main {
 					log("hasNext request");
 					subscriber.publicRequest(1);
 					log("hasNext park");
-					Fiber.park(this);
+					Fiber.park();
 					log("hasNext park done");
 				} catch (SuspendExecution e) {
 					throw new AssertionError(e);
