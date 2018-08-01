@@ -93,7 +93,7 @@
         <dependency>
             <groupId>io.github.jklingsporn</groupId>
             <artifactId>vertx-jooq-rx-async</artifactId>
-            <version>3.1.0</version>
+            <version>4.0.0-BETA2</version>
         </dependency>
     </dependencies>
 
@@ -119,7 +119,7 @@
                 <!-- Specify the maven code generator plugin -->
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
-                <version>3.10.5</version>
+                <version>3.11.3</version>
 
                 <!-- The plugin should hook into the generate goal -->
                 <executions>
@@ -140,7 +140,7 @@
                     <dependency>
                         <groupId>io.github.jklingsporn</groupId>
                         <artifactId>vertx-jooq-generate</artifactId>
-                        <version>3.1.0</version>
+                        <version>4.0.0-BETA2</version>
                     </dependency>
                 </dependencies>
 
@@ -156,9 +156,9 @@
 
                     <!-- Generator parameters -->
                     <generator>
-                        <name>io.github.jklingsporn.vertx.jooq.generate.VertxGenerator</name>
+                        <name>io.github.jklingsporn.vertx.jooq.generate.rx.RXAsyncVertxGenerator</name>
                         <database>
-                            <name>org.jooq.util.postgres.PostgresDatabase</name>
+                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
                             <inputSchema>public</inputSchema>
                         </database>
@@ -175,7 +175,7 @@
 
 
                         <strategy>
-                            <name>io.github.jklingsporn.vertx.jooq.generate.rx.AsyncRXVertxGeneratorStrategy</name>
+                            <name>io.github.jklingsporn.vertx.jooq.generate.VertxGeneratorStrategy</name>
                         </strategy>
                     </generator>
 
