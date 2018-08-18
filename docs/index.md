@@ -545,11 +545,13 @@ In order to return a rendered template, just return them from your resource, dir
 @GET
 @Path("/")
 public Template index(){
-  return new Template()
+  return new Template("templates/path_to_the_template_file.ftl")
           .set("title", "My page")
           .set("message", "Hello");
 }
 {% endhighlight %}
+
+*Remark: you need to import `net.redpipe.engine.template.Template`*
 
 ### Template files and negociation
 
