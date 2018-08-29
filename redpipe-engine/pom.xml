@@ -78,6 +78,14 @@
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-vertx</artifactId>
             </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-rxjava</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-rxjava2</artifactId>
+            </dependency>
 
             <!-- Hangers on? -->
             <dependency>
@@ -118,5 +126,12 @@
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-validator</artifactId>
             </dependency>
+
+            <!-- Reactive Contexts -->
+            <dependency>
+                <groupId>io.reactiverse</groupId>
+                <artifactId>reactive-contexts-core</artifactId>
+            </dependency>
+            
 	</dependencies>
 </project>

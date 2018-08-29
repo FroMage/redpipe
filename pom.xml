@@ -26,9 +26,10 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <version.vertx>3.5.1</version.vertx>
-        <version.resteasy>4.0.0.Beta4</version.resteasy>
+        <version.resteasy>4.0.0.Beta5</version.resteasy>
         <version.jackson>2.9.1</version.jackson>
         <version.quasi>0.7.10</version.quasi>
+        <version.reactive-contexts>1.0.0</version.reactive-contexts>
     </properties>
 
     <developers>
@@ -232,6 +233,18 @@
             </dependency>
 
             <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-rxjava</artifactId>
+                <version>${version.resteasy}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-rxjava2</artifactId>
+                <version>${version.resteasy}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
                 <version>${version.jackson}</version>
@@ -321,19 +334,26 @@
                 <version>2.1.14</version>
             </dependency>
 
-            <!-- Hibernate validator -->
+			<!-- Hibernate validator -->
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator</artifactId>
+				<version>5.4.1.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator-cdi</artifactId>
+				<version>5.4.1.Final</version>
+			</dependency>
+
+            <!-- Reactive contexts -->
             <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-validator</artifactId>
-                <version>5.4.1.Final</version>
+                <groupId>io.reactiverse</groupId>
+                <artifactId>reactive-contexts-core</artifactId>
+                <version>${version.reactive-contexts}</version>
             </dependency>
-            <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-validator-cdi</artifactId>
-                <version>5.4.1.Final</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+		</dependencies>
+	</dependencyManagement>
 
     <modules>
         <module>redpipe-engine</module>
