@@ -12,6 +12,7 @@ import javax.ws.rs.core.Variant;
 import io.reactivex.Single;
 import io.vertx.reactivex.core.file.FileSystem;
 import net.redpipe.engine.core.AppGlobals;
+import net.redpipe.engine.util.RedpipeUtil;
 
 public class Template extends AbstractTemplate {
 
@@ -40,6 +41,10 @@ public class Template extends AbstractTemplate {
 					if(renderer == null)
 						throw new RuntimeException("Failed to find template renderer for template "+template);
 					return renderer.render(template, variables);
+				}).onErrorReturn(t -> {
+					if(t instanceof WebApplicationException)
+						return ((WebApplicationException) t).getResponse();
+					return RedpipeUtil.rethrow(t);
 				});
 	}
 

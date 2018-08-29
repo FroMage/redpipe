@@ -22,7 +22,12 @@ public class TemplateResponseFilter implements ContainerResponseFilter {
 			try {
 				template.render(requestContext.getRequest())
 				.subscribe(resp -> {
-					ctx.setEntity(resp.getEntity(), null, resp.getMediaType());
+					// make sure we avoid setting a null media type because that causes
+					// an NPE further down
+					if(resp.getMediaType() != null)
+						ctx.setEntity(resp.getEntity(), null, resp.getMediaType());
+					else
+						ctx.setEntity(resp.getEntity());
 					ctx.setStatus(resp.getStatus());
 					ctx.resume();
 				}, err -> {

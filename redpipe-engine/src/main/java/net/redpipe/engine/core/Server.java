@@ -54,6 +54,7 @@ import net.redpipe.engine.resteasy.RedpipeServletContext;
 import net.redpipe.engine.spi.Plugin;
 import net.redpipe.engine.swagger.RxModelConverter;
 import net.redpipe.engine.template.TemplateRenderer;
+import net.redpipe.engine.util.RedpipeUtil;
 
 public class Server {
 	
@@ -433,15 +434,11 @@ public class Server {
 					deployment.start();
 				}catch(ExceptionInInitializerError err) {
 					// rxjava behaves badly on LinkageError
-					rethrow(err.getCause());
+					RedpipeUtil.rethrow(err.getCause());
 				}
 				return deployment;
 			}).doOnError(t -> t.printStackTrace());
 		});
-	}
-
-	private <T extends Throwable> void rethrow(Throwable cause) throws T {
-		throw (T)cause;
 	}
 
 	private void setupLogging() {
