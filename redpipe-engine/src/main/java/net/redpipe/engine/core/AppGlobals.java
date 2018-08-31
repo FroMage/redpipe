@@ -55,10 +55,6 @@ public class AppGlobals {
 	private Mailer mailer;
 	private Mode mode = Mode.DEV;
 	
-	public AppGlobals() {
-		System.err.println("New AppGlobals: "+System.identityHashCode(this));
-	}
-	
 	public JsonObject getConfig() {
 		return config;
 	}
