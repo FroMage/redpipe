@@ -59,7 +59,7 @@ public class VertxPluginRequestHandler implements Handler<HttpServerRequest>
          ResteasyUriInfo uriInfo = VertxUtil.extractUriInfo(request.getDelegate(), servletMappingPrefix);
          ResteasyHttpHeaders headers = VertxUtil.extractHttpHeaders(request.getDelegate());
          HttpServerResponse response = request.response();
-         VertxHttpResponse vertxResponse = new VertxHttpResponse(response.getDelegate(), dispatcher.getProviderFactory(), request.method());
+         VertxHttpResponse vertxResponse = new VertxHttpResponseWithWorkaround(response.getDelegate(), dispatcher.getProviderFactory(), request.method());
          VertxHttpRequest vertxRequest = new VertxHttpRequest(ctx.getDelegate(), headers, uriInfo, request.rawMethod(), dispatcher.getDispatcher(), vertxResponse, false);
          if (buff.length() > 0)
          {
