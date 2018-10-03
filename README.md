@@ -26,3 +26,9 @@ More info at http://redpipe.net
 $ cd docs
 $ bundle exec jekyll serve
 ```
+
+## Release
+
+```
+$ mvn -Prelease release:clean release:prepare release:perform
+```
