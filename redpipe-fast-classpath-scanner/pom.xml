@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>net.redpipe</groupId>
 		<artifactId>redpipe-parent</artifactId>
-		<version>0.0.4-SNAPSHOT</version>
+		<version>0.0.4</version>
 	</parent>
 	<artifactId>redpipe-fast-classpath-scanner</artifactId>
 	<name>redpipe-fast-classpath-scanner</name>
