@@ -1,24 +1,25 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>net.redpipe</groupId>
-		<artifactId>redpipe-parent</artifactId>
-		<version>0.0.4-SNAPSHOT</version>
-	</parent>
-	<artifactId>redpipe-cdi</artifactId>
-	<name>redpipe-cdi</name>
-	<url>http://maven.apache.org</url>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.redpipe</groupId>
+        <artifactId>redpipe-parent</artifactId>
+        <version>0.0.4-SNAPSHOT</version>
+    </parent>
+    <artifactId>redpipe-cdi</artifactId>
+    <name>redpipe-cdi</name>
+    <url>http://maven.apache.org</url>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
@@ -26,31 +27,47 @@
             <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>net.redpipe</groupId>
-			<artifactId>redpipe-engine</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>net.redpipe</groupId>
+            <artifactId>redpipe-engine</artifactId>
+            <version>${project.version}</version>
+            <!-- Required by latest HV/CDI -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-validator</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
-		<!-- CDI -->
-		<dependency>
-			<groupId>org.jboss.weld.vertx</groupId>
-			<artifactId>weld-vertx-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.weld.se</groupId>
-			<artifactId>weld-se-core</artifactId>
-		</dependency>
+        <!-- CDI -->
+        <dependency>
+            <groupId>org.jboss.weld.vertx</groupId>
+            <artifactId>weld-vertx-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.weld.se</groupId>
+            <artifactId>weld-se-core</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-cdi</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-cdi</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-validator-cdi</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator-cdi</artifactId>
+        </dependency>
 
-	</dependencies>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+        </dependency>
+
+    </dependencies>
 </project>

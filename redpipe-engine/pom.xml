@@ -65,10 +65,28 @@
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jaxrs</artifactId>
+                <!-- Required by latest HV/CDI -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-validator</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-validator-provider-11</artifactId>
+                <!-- Required by latest HV/CDI -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-validator</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
@@ -113,6 +131,17 @@
             <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-jaxrs</artifactId>
+                <!-- Required by latest HV/CDI -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-validator</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             
             <!-- RxJava -->
@@ -123,7 +152,7 @@
 
             <!-- Hibernate validator -->
             <dependency>
-                <groupId>org.hibernate</groupId>
+                <groupId>org.hibernate.validator</groupId>
                 <artifactId>hibernate-validator</artifactId>
             </dependency>
 

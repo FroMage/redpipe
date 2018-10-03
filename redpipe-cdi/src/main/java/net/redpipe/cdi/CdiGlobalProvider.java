@@ -21,6 +21,12 @@ public class CdiGlobalProvider {
 		return AppGlobals.get().getVertx();
 	}
 
+	// Required by CDI/Vertx
+	@Produces
+	public io.vertx.core.Vertx coreVertx() {
+		return vertx().getDelegate();
+	}
+
 	@Produces
 	public JsonObject config() {
 		return AppGlobals.get().getConfig();
