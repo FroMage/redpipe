@@ -4,7 +4,7 @@
     <parent>
         <groupId>net.redpipe</groupId>
         <artifactId>redpipe-parent</artifactId>
-        <version>0.0.4</version>
+        <version>0.0.5-SNAPSHOT</version>
     </parent>
     <artifactId>redpipe-example-wiki-shiro-jdbc</artifactId>
     <name>redpipe-example-wiki-shiro-jdbc</name>
