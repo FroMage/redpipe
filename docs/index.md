@@ -3,7 +3,7 @@ layout: default
 title: Redpipe
 github_url: https://github.com/FroMage/redpipe
 github_source_url: https://github.com/FroMage/redpipe/tree/master
-version: 0.0.3
+version: 0.0.4
 rxjava2_version: 2.1.17
 ---
 
@@ -367,6 +367,25 @@ will become CDI beans, with CDI injection supported.
 
 Note that this uses [Weld](http://weld.cdi-spec.org) and the weld-vertx extension which brings a 
 [lot of goodies for CDI and Vert.x](http://docs.jboss.org/weld/weld-vertx/latest/).
+
+Also note that we depend on CDI 2.0, which in turn depends on the latest version of Hibernate Validator,
+which is not supported by all transitive dependencies. This means you may have to override some dependencies to resolve
+conflicts between CDI 1 and 2, Hibernate Validator 5 and 6 (which changed `groupId` in version 6) and
+`javax.validation`, so sprinkle the following Maven exclusions if you see more than one version loaded,
+or too old a version (use `mvn dependency:tree -Dverbose` for help):
+
+{% highlight xml %}
+<exclusions>
+    <exclusion>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-validator</artifactId>
+    </exclusion>
+    <exclusion>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+    </exclusion>
+</exclusions>
+{% endhighlight %}
 
 ## Configuration
 
