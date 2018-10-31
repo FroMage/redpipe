@@ -242,7 +242,7 @@ public class Server {
 	protected void setupRoutes(Router router) {
 		AppGlobals globals = AppGlobals.get();
 
-		boolean sessionDisabled = new Boolean(true).equals(globals.getConfig().getBoolean("sessionDisabled"));
+		boolean sessionDisabled = Boolean.TRUE.equals(globals.getConfig().getBoolean("sessionDisabled"));
 
 		if (!sessionDisabled) {
 			router.route().handler(CookieHandler.create());
