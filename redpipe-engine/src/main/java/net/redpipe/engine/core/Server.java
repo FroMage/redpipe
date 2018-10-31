@@ -124,11 +124,11 @@ public class Server {
         options.setWarningExceptionTime(Long.MAX_VALUE);
         if (options.isClustered())
         {
-            return Vertx.rxClusteredVertx(this.applyExtraOptions(options));
+            return Vertx.rxClusteredVertx(this.configureVertxOptions(options));
         }
         else
         {
-            vertx = Vertx.vertx(this.applyExtraOptions(options));
+            vertx = Vertx.vertx(this.configureVertxOptions(options));
             return Single.just(vertx);
         }
     }
@@ -138,7 +138,7 @@ public class Server {
 	 * @param options
 	 * @return
 	 */
-	protected @NonNull VertxOptions applyExtraOptions(VertxOptions options) {
+	protected @NonNull VertxOptions configureVertxOptions(VertxOptions options) {
 		return options;
 	}
 	
