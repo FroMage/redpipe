@@ -16,6 +16,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import io.reactivex.annotations.NonNull;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -88,9 +89,6 @@ public class Server {
 		return Single.<JsonObject>create(s -> {
 			setupLogging();
 
-			VertxOptions options = new VertxOptions();
-			options.setWarningExceptionTime(Long.MAX_VALUE);
-
 			// Propagate the Resteasy/Redpipe/CDI contexts
 			Context.load();
 
@@ -126,14 +124,23 @@ public class Server {
         options.setWarningExceptionTime(Long.MAX_VALUE);
         if (options.isClustered())
         {
-            return Vertx.rxClusteredVertx(options);
+            return Vertx.rxClusteredVertx(this.configureVertxOptions(options));
         }
         else
         {
-            vertx = Vertx.vertx(options);
+            vertx = Vertx.vertx(this.configureVertxOptions(options));
             return Single.just(vertx);
         }
     }
+
+	/**
+	 * Allows to extended Server extended classes to enhance VertxOptions object which will be used to create the vertx instance
+	 * @param options
+	 * @return
+	 */
+	protected @NonNull VertxOptions configureVertxOptions(VertxOptions options) {
+		return options;
+	}
 	
 	private Completable setupPlugins() {
 		return Completable.defer(() -> {
@@ -233,59 +240,73 @@ public class Server {
     }
 
 	protected void setupRoutes(Router router) {
-		router.route().handler(CookieHandler.create());
-		
-		// Workaround for https://github.com/vert-x3/vertx-web/pull/880
-		router.route().handler(context -> {
-			context.addHeadersEndHandler(v -> {
-			      Session session = context.session();
-			      if (!session.isDestroyed()) {
-			        final int currentStatusCode = context.response().getStatusCode();
-			        // Store the session (only and only if there was no error)
-			        if (currentStatusCode < 200 || currentStatusCode >= 400) {
-			        	String previousValue = context.get("__REDPIPE_SAVED_COOKIE");
-			        	if(previousValue != null) {
-			        		io.netty.handler.codec.http.cookie.Cookie nettyCookie = ClientCookieDecoder.LAX.decode(previousValue);
-			        		Cookie newCookie = Cookie.newInstance(io.vertx.ext.web.Cookie.cookie(nettyCookie));
-			        		context.addCookie(newCookie);
-			        	}
-			        }
-			      }
+		AppGlobals globals = AppGlobals.get();
+
+		boolean sessionDisabled = Boolean.TRUE.equals(globals.getConfig().getBoolean("sessionDisabled"));
+
+		if (!sessionDisabled) {
+			router.route().handler(CookieHandler.create());
+
+
+			// Workaround for https://github.com/vert-x3/vertx-web/pull/880
+			router.route().handler(context -> {
+				context.addHeadersEndHandler(v -> {
+					Session session = context.session();
+					if (!session.isDestroyed()) {
+						final int currentStatusCode = context.response().getStatusCode();
+						// Store the session (only and only if there was no error)
+						if (currentStatusCode < 200 || currentStatusCode >= 400) {
+							String previousValue = context.get("__REDPIPE_SAVED_COOKIE");
+							if (previousValue != null) {
+								io.netty.handler.codec.http.cookie.Cookie nettyCookie = ClientCookieDecoder.LAX.decode(previousValue);
+								Cookie newCookie = Cookie.newInstance(io.vertx.ext.web.Cookie.cookie(nettyCookie));
+								context.addCookie(newCookie);
+							}
+						}
+					}
+				});
+
+				context.next();
 			});
-			
-			context.next();
-		});
-		SessionHandler sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
-		router.route().handler(sessionHandler);
+			SessionHandler sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
+			router.route().handler(sessionHandler);
+		}
 
 		AuthProvider auth = setupAuthenticationRoutes();
 		
 		router.route().handler(context -> {
-			
-			// Workaround for https://github.com/vert-x3/vertx-web/pull/880
-			context.addHeadersEndHandler(v -> {
-			      Session session = context.session();
-			      if (!session.isDestroyed()) {
-			        final int currentStatusCode = context.response().getStatusCode();
-			        // Store the session (only and only if there was no error)
-			        if (currentStatusCode < 200 || currentStatusCode >= 400) {
-			        	Cookie cookie = context.getCookie(io.vertx.ext.web.handler.SessionHandler.DEFAULT_SESSION_COOKIE_NAME);
-			        	context.put("__REDPIPE_SAVED_COOKIE", cookie.encode());
-			        }
-			      }
-			});
+
+			if (!sessionDisabled) {
+				// Workaround for https://github.com/vert-x3/vertx-web/pull/880
+				context.addHeadersEndHandler(v -> {
+					Session session = context.session();
+					if (!session.isDestroyed()) {
+						final int currentStatusCode = context.response().getStatusCode();
+						// Store the session (only and only if there was no error)
+						if (currentStatusCode < 200 || currentStatusCode >= 400) {
+							Cookie cookie = context.getCookie(io.vertx.ext.web.handler.SessionHandler.DEFAULT_SESSION_COOKIE_NAME);
+							context.put("__REDPIPE_SAVED_COOKIE", cookie.encode());
+						}
+					}
+				});
+
+				// rx2
+				ResteasyProviderFactory.pushContext(Session.class, context.session());
+				// rx1
+				ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.web.Session.class,
+						context.session() != null ? io.vertx.rxjava.ext.web.Session.newInstance(context.session().getDelegate()) : null);
+			}
 			
 			// rx2
 			ResteasyProviderFactory.pushContext(AuthProvider.class, auth);
 			ResteasyProviderFactory.pushContext(User.class, context.user());
-			ResteasyProviderFactory.pushContext(Session.class, context.session());
+
 			// rx1
 			ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.auth.AuthProvider.class, 
 					auth != null ? io.vertx.rxjava.ext.auth.AuthProvider.newInstance(auth.getDelegate()) : null);
 			ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.auth.User.class, 
 					context.user() != null ? io.vertx.rxjava.ext.auth.User.newInstance(context.user().getDelegate()) : null);
-			ResteasyProviderFactory.pushContext(io.vertx.rxjava.ext.web.Session.class, 
-					context.session() != null ? io.vertx.rxjava.ext.web.Session.newInstance(context.session().getDelegate()) : null);
+
 			context.next();
 		});
 	}
@@ -294,7 +315,7 @@ public class Server {
 		return null;
 	}
 
-    private JsonObject loadFileConfig(JsonObject config)
+    protected JsonObject loadFileConfig(JsonObject config)
     {
         if (config != null)
         {
@@ -334,7 +355,7 @@ public class Server {
         }
     }
 
-	private Single<JsonObject> loadConfig(JsonObject config) {
+	protected Single<JsonObject> loadConfig(JsonObject config) {
 		if(config != null) {
 			AppGlobals.get().setConfig(config);
 			return Single.just(config);
@@ -365,7 +386,7 @@ public class Server {
 				});
 	}
 
-	private void setupSwagger(VertxResteasyDeployment deployment) {
+	protected void setupSwagger(VertxResteasyDeployment deployment) {
 		ModelConverters.getInstance().addConverter(new RxModelConverter());
 		
 		// Swagger
