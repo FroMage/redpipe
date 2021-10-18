@@ -172,14 +172,14 @@ public class ApiTest {
 
 	@Test
     public void checkTemplateNegociationDefault(TestContext context) {
-       Async async = context.async();
-       webClient
-       .get("/nego")
-       .as(BodyCodec.string())
-       .rxSend()
-       .map(r -> {
-           context.assertEquals(200, r.statusCode());
-           context.assertTrue(r.body().equals("## my title ##\n"+
+        Async async = context.async();
+        webClient
+        .get("/nego")
+        .as(BodyCodec.string())
+        .rxSend()
+        .map(r -> {
+            context.assertEquals(200, r.statusCode());
+            context.assertTrue(r.body().equals("## my title ##\n"+
                                                "\n"+
                                                "my message")||r.body().equals("<html>\n" +
                    " <head>\n" +
@@ -187,14 +187,14 @@ public class ApiTest {
                    " </head>\n" +
                    " <body>my message</body>\n" +
                    "</html>"));
-           context.assertTrue(r.getHeader("Content-Type").equals("text/html") || r.getHeader("Content-Type").equals("text/plain"));
-           return r;
-       })
-       .doOnError(x -> context.fail(x))
-       .subscribe(response -> {
-           async.complete();
-       });
-   }
+            context.assertTrue(r.getHeader("Content-Type").equals("text/html") || r.getHeader("Content-Type").equals("text/plain"));
+            return r;
+        })
+        .doOnError(x -> context.fail(x))
+        .subscribe(response -> {
+            async.complete();
+        });
+    }
 
 	@Test
 	public void checkTemplateWithHtmlExtension(TestContext context) {
