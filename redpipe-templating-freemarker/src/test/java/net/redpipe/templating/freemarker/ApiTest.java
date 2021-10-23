@@ -180,13 +180,20 @@ public class ApiTest {
 		.rxSend()
 		.map(r -> {
 			context.assertEquals(200, r.statusCode());
-			context.assertEquals("<html>\n" + 
+			context.assertTrue(("<html>\n" +
 					" <head>\n" + 
 					"  <title>my title</title>\n" + 
 					" </head>\n" + 
 					" <body>my message</body>\n" + 
-					"</html>", r.body());
-			context.assertEquals("text/html", r.getHeader("Content-Type"));
+					"</html>").equals(r.body()) ||
+					("## my title ##\n" + 
+					"\n" + 
+					"my mewssage").equals(r.body()));
+			context.assertTrue(
+					r.getHeader("Content-Type").equals("text/html") ||
+					r.getHeader("Content-Type").equals("text/plain")
+					);
+
 			return r;
 		})
 		.doOnError(x -> context.fail(x))
